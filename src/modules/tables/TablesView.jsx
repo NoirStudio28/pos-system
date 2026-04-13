@@ -2,7 +2,19 @@ import { useEffect, useRef, useState } from 'react'
 import { usePOS, getAutoTableStatus, getItemCourse } from '../../context/POSContext'
 import useBreakpoint from '../../hooks/useBreakpoint'
 
-const TABLE_SIZE = 90
+const DEFAULT_SIZE = 90
+const SIZES = {
+  small:  { w: 70,  h: 70,  label: 'Small'  },
+  medium: { w: 90,  h: 90,  label: 'Medium' },
+  large:  { w: 110, h: 110, label: 'Large'  },
+  xl:     { w: 130, h: 130, label: 'XL'     },
+}
+const RECT_SIZES = {
+  small:  { w: 110, h: 70,  label: 'Small'  },
+  medium: { w: 140, h: 90,  label: 'Medium' },
+  large:  { w: 180, h: 100, label: 'Large'  },
+  xl:     { w: 220, h: 110, label: 'XL'     },
+}
 const CANVAS_W   = 1300
 const CANVAS_H   = 650
 const GRID_SIZE  = 40
@@ -475,8 +487,11 @@ function FloorCanvas({ floorId, editMode, onSelectTable }) {
     if (!dragging || !editMode) return
     const canvas = canvasRef.current; if (!canvas) return
     const rect = canvas.getBoundingClientRect()
-    const x = snapToGrid(Math.max(0, Math.min(e.clientX - rect.left - dragging.offsetX, CANVAS_W - TABLE_SIZE)))
-    const y = snapToGrid(Math.max(0, Math.min(e.clientY - rect.top  - dragging.offsetY, CANVAS_H - TABLE_SIZE)))
+    const tbl = tables.find(t => t.id === dragging.id)
+const tw  = tbl?.width  || DEFAULT_SIZE
+const th  = tbl?.height || DEFAULT_SIZE
+    const x = snapToGrid(Math.max(0, Math.min(e.clientX - rect.left - dragging.offsetX, CANVAS_W - tw)))
+    const y = snapToGrid(Math.max(0, Math.min(e.clientY - rect.top  - dragging.offsetY, CANVAS_H - th)))
     updateTablePosition(dragging.id, x, y)
   }
   const onMouseUp = () => setDragging(null)
@@ -486,8 +501,11 @@ function FloorCanvas({ floorId, editMode, onSelectTable }) {
     if (!dragging || !editMode) return
     const touch = e.touches[0]; const canvas = canvasRef.current; if (!canvas) return
     const rect = canvas.getBoundingClientRect()
-    const x = snapToGrid(Math.max(0, Math.min(touch.clientX - rect.left - dragging.offsetX, CANVAS_W - TABLE_SIZE)))
-    const y = snapToGrid(Math.max(0, Math.min(touch.clientY - rect.top  - dragging.offsetY, CANVAS_H - TABLE_SIZE)))
+    const tbl = tables.find(t => t.id === dragging.id)
+const tw  = tbl?.width  || DEFAULT_SIZE
+const th  = tbl?.height || DEFAULT_SIZE
+    const x = snapToGrid(Math.max(0, Math.min(e.clientX - rect.left - dragging.offsetX, CANVAS_W - tw)))
+    const y = snapToGrid(Math.max(0, Math.min(e.clientY - rect.top  - dragging.offsetY, CANVAS_H - th)))
     updateTablePosition(dragging.id, x, y)
   }
   const onTouchEnd = () => setDragging(null)
@@ -511,16 +529,26 @@ function FloorCanvas({ floorId, editMode, onSelectTable }) {
           <div style={{ background: '#0F0F17', border: '1px solid #1E1E2E', borderRadius: 14, padding: '1.3rem', width: '100%', maxWidth: 280, fontFamily: "'Courier New', monospace", color: '#E2E8F0' }} onClick={e => e.stopPropagation()}>
             <div style={{ fontSize: '0.82rem', fontWeight: 700, marginBottom: '1rem' }}>Table {editTable.id}</div>
             <div style={{ marginBottom: '0.7rem' }}>
-              <div style={{ fontSize: '0.58rem', color: '#475569', marginBottom: '0.3rem', letterSpacing: '0.1em' }}>SHAPE</div>
-              <div style={{ display: 'flex', gap: '0.4rem' }}>
-                {['square', 'round'].map(s => (
-                  <button key={s} onClick={() => { updateTableData({ ...editTable, shape: s }); setEditTable(p => ({ ...p, shape: s })) }}
-                    style={{ flex: 1, border: '1px solid', borderColor: editTable.shape === s ? '#F97316' : '#1E1E2E', background: editTable.shape === s ? '#F9731622' : '#13131A', color: editTable.shape === s ? '#F97316' : '#64748B', borderRadius: 8, padding: '0.4rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem', fontWeight: 700 }}>
-                    {s === 'square' ? '⬛' : '⭕'} {s.charAt(0).toUpperCase() + s.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
+  <div style={{ fontSize: '0.58rem', color: '#475569', marginBottom: '0.3rem', letterSpacing: '0.1em' }}>SHAPE</div>
+  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+    {[
+      { key: 'square', icon: '⬛', label: 'Square'    },
+      { key: 'round',  icon: '⭕', label: 'Round'     },
+      { key: 'rect',   icon: '▬',  label: 'Rectangle' },
+    ].map(s => (
+      <button key={s.key} onClick={() => {
+        const sizeKey = editTable.sizeKey || 'medium'
+        const dims    = s.key === 'rect' ? RECT_SIZES[sizeKey] : SIZES[sizeKey]
+        const updated = { ...editTable, shape: s.key, width: dims.w, height: dims.h }
+        updateTableData(updated)
+        setEditTable(updated)
+      }}
+        style={{ flex: 1, border: '1px solid', borderColor: editTable.shape === s.key ? '#F97316' : '#1E1E2E', background: editTable.shape === s.key ? '#F9731622' : '#13131A', color: editTable.shape === s.key ? '#F97316' : '#64748B', borderRadius: 8, padding: '0.4rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.68rem', fontWeight: 700 }}>
+        {s.icon} {s.label}
+      </button>
+    ))}
+  </div>
+</div>
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ fontSize: '0.58rem', color: '#475569', marginBottom: '0.3rem', letterSpacing: '0.1em' }}>SEATS</div>
               <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
@@ -536,6 +564,25 @@ function FloorCanvas({ floorId, editMode, onSelectTable }) {
               style={{ border: '1px solid #EF444433', background: '#EF444411', color: '#EF4444', borderRadius: 8, padding: '0.4rem 0.8rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem', fontWeight: 700, width: '100%' }}>
               🗑 Remove Table
             </button>
+            <div style={{ marginBottom: '1rem' }}>
+  <div style={{ fontSize: '0.58rem', color: '#475569', marginBottom: '0.3rem', letterSpacing: '0.1em' }}>SIZE</div>
+  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+    {Object.entries(editTable.shape === 'rect' ? RECT_SIZES : SIZES).map(([key, dims]) => {
+      const current = editTable.sizeKey || 'medium'
+      return (
+        <button key={key} onClick={() => {
+          const updated = { ...editTable, sizeKey: key, width: dims.w, height: dims.h }
+          updateTableData(updated)
+          setEditTable(updated)
+        }}
+          style={{ flex: 1, border: '1px solid', borderColor: current === key ? '#10B981' : '#1E1E2E', background: current === key ? '#10B98122' : '#13131A', color: current === key ? '#10B981' : '#64748B', borderRadius: 6, padding: '0.3rem 0.4rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.65rem', fontWeight: 700 }}>
+          {dims.label}<br />
+          <span style={{ fontSize: '0.55rem', opacity: 0.6 }}>{dims.w}×{dims.h}</span>
+        </button>
+      )
+    })}
+  </div>
+</div>
           </div>
         </div>
       )}
@@ -555,7 +602,11 @@ function FloorCanvas({ floorId, editMode, onSelectTable }) {
             const isRound = table.shape === 'round'
             const isDrag  = dragging?.id === table.id
             const hasFirableCourse = order?.courses && (order.courses.mains === 'waiting' || order.courses.desserts === 'waiting')
-
+            const tw           = table.width  || DEFAULT_SIZE
+            const th           = table.height || DEFAULT_SIZE
+            const borderRadius = table.shape === 'round' ? '50%' : table.shape === 'rect' ? 8 : 12
+            
+            
             return (
               <div key={table.id}
                 style={{ position: 'absolute', left: table.x, top: table.y, width: TABLE_SIZE, height: TABLE_SIZE, background: sc.bg, border: `2px solid ${isDrag ? '#F97316' : sc.border}`, borderRadius: isRound ? '50%' : 12, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: editMode ? 'grab' : 'pointer', transition: isDrag ? 'none' : 'box-shadow 0.15s', boxShadow: isDrag ? `0 0 0 3px #F97316` : `0 2px 8px rgba(0,0,0,0.4)`, zIndex: isDrag ? 10 : 1 }}
