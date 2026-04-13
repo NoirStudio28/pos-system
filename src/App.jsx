@@ -18,19 +18,20 @@ import useBreakpoint from './hooks/useBreakpoint'
 import EODView from './modules/eod/EODView'
 
 const ALL_LINKS = [
-  { to: '/dashboard', label: '🏠 Dashboard' },
-  { to: '/tables',    label: '🍽️ Tables'    },
-  { to: '/orders',    label: '📋 Orders'    },
-  { to: '/kds',       label: '👨‍🍳 Kitchen'   },
-  { to: '/bar',       label: '🍺 Bar'       },
-  { to: '/menu',      label: '📖 Menu'      },
-  { to: '/bookings',  label: '📅 Bookings'  },
-  { to: '/reports',   label: '📊 Reports'   },
-  { to: '/stock',     label: '📦 Stock'     },
-  { to: '/staff',     label: '👥 Staff'     },
-  { to: '/customers', label: '💳 Customers' },
-  { to: '/eod', label: '📋 EOD Report' },
-  { to: '/settings',  label: '⚙️ Settings'  },
+  { to: '/dashboard',       label: '🏠 Dashboard'   },
+  { to: '/tables',          label: '🍽️ Tables'       },
+  { to: '/orders',          label: '📋 Orders'       },
+  { to: '/kds',             label: '👨‍🍳 Kitchen'      },
+  { to: '/bar',             label: '🍺 Bar'          },
+  { to: '/menu',            label: '📖 Menu'         },
+  { to: '/bookings',        label: '📅 Bookings'     },
+  { to: '/reports',         label: '📊 Reports'      },
+  { to: '/stock',           label: '📦 Stock'        },
+  { to: '/staff',           label: '👥 Staff'        },
+  { to: '/staff-analytics', label: '📈 Performance'  },
+  { to: '/customers',       label: '💳 Customers'    },
+  { to: '/settings',        label: '⚙️ Settings'     },
+  { to: '/eod',             label: '📋 EOD Report'   },
 ]
 
 function Nav() {
