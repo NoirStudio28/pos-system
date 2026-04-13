@@ -13,6 +13,7 @@ import StaffView from './modules/staff/StaffView'
 import StockView from './modules/stock/StockView'
 import CustomersView from './modules/customers/CustomersView'
 import DashboardView from './modules/dashboard/DashboardView'
+import StaffAnalyticsView from './modules/staff/StaffAnalyticsView'
 import SettingsView from './modules/settings/SettingsView'
 import useBreakpoint from './hooks/useBreakpoint'
 import EODView from './modules/eod/EODView'
@@ -125,6 +126,7 @@ function AppRoutes() {
         <Route path="/reports"   element={<ProtectedRoute path="/reports"   element={<ReportsView />}    />} />
         <Route path="/stock"     element={<ProtectedRoute path="/stock"     element={<StockView />}      />} />
         <Route path="/staff"     element={<ProtectedRoute path="/staff"     element={<StaffView />}      />} />
+        <Route path="/staff-analytics" element={<ProtectedRoute path="/staff-analytics" element={<StaffAnalyticsView />} />} />
         <Route path="/customers" element={<ProtectedRoute path="/customers" element={<CustomersView />}  />} />
         <Route path="/eod" element={<ProtectedRoute path="/eod" element={<EODView />} />} />
         <Route path="/settings"  element={<ProtectedRoute path="/settings"  element={<SettingsView />}   />} />
