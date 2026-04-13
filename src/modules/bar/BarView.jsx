@@ -1,0 +1,180 @@
+import { useState, useEffect } from 'react'
+import { usePOS, getItemDestination } from '../../context/POSContext'
+
+function Ticker({ placedAt }) {
+  const [elapsed, setElapsed] = useState(0)
+  useEffect(() => {
+    const calc = () => setElapsed(Math.floor((Date.now() - new Date(placedAt).getTime()) / 60000))
+    calc()
+    const t = setInterval(calc, 30000)
+    return () => clearInterval(t)
+  }, [placedAt])
+  const color = elapsed >= 10 ? '#EF4444' : elapsed >= 5 ? '#F59E0B' : '#10B981'
+  return (
+    <span style={{ fontSize: '0.65rem', fontWeight: 700, color, background: color + '22', border: `1px solid ${color}44`, borderRadius: 5, padding: '1px 7px' }}>
+      {elapsed}m
+    </span>
+  )
+}
+
+export default function BarView() {
+  const { orders, menu, updateBarStatus } = usePOS()
+  const [filter, setFilter] = useState('pending')
+
+  // Only orders with drinks
+  const barOrders = orders.filter(o =>
+    o.items.some(i => getItemDestination(i.id, menu) === 'bar') &&
+    o.barStatus !== 'none'
+  )
+
+  const pending = barOrders.filter(o => o.barStatus === 'pending')
+  const done    = barOrders.filter(o => o.barStatus === 'ready')
+
+  const displayed = filter === 'pending' ? pending : done
+  const sorted    = [...displayed].sort((a, b) => new Date(a.placedAt || 0) - new Date(b.placedAt || 0))
+
+  const getDrinkItems = (order) =>
+    order.items.filter(i => getItemDestination(i.id, menu) === 'bar')
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#0A0A0F', fontFamily: "'Courier New', monospace", color: '#E2E8F0', padding: '1.5rem' }}>
+      <style>{`
+        .bar-btn{border:none;border-radius:8px;padding:0.45rem 0.9rem;cursor:pointer;font-family:'Courier New',monospace;font-size:0.72rem;font-weight:700;transition:all 0.15s}
+        .bar-btn:hover{opacity:0.85}
+        .filter-tab{padding:0.35rem 0.8rem;border-radius:6px;border:1px solid #1E1E2E;background:transparent;color:#64748B;cursor:pointer;font-family:'Courier New',monospace;font-size:0.68rem;font-weight:700;transition:all 0.15s}
+        .filter-tab.active{background:#3B82F622;border-color:#3B82F6;color:#3B82F6}
+        .ticket{background:#13131A;border:1px solid #1E1E2E;border-radius:14px;padding:1rem;display:flex;flex-direction:column;gap:0.6rem}
+        .ticket.new-drinks{border-color:#3B82F6 !important;box-shadow:0 0 0 1px #3B82F633}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+        @keyframes slidein{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+      `}</style>
+
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.8rem' }}>
+          <div>
+            <div style={{ fontSize: '0.6rem', letterSpacing: '0.2em', color: '#475569', marginBottom: '0.3rem' }}>BAR</div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Bar Display 🍺</h1>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ background: '#3B82F622', border: '1px solid #3B82F644', borderRadius: 8, padding: '0.35rem 0.8rem', textAlign: 'center' }}>
+              <div style={{ fontSize: '1rem', fontWeight: 700, color: '#3B82F6' }}>{pending.length}</div>
+              <div style={{ fontSize: '0.55rem', color: '#3B82F6', letterSpacing: '0.08em' }}>TO MAKE</div>
+            </div>
+            <div style={{ background: '#10B98122', border: '1px solid #10B98144', borderRadius: 8, padding: '0.35rem 0.8rem', textAlign: 'center' }}>
+              <div style={{ fontSize: '1rem', fontWeight: 700, color: '#10B981' }}>{done.length}</div>
+              <div style={{ fontSize: '0.55rem', color: '#10B981', letterSpacing: '0.08em' }}>DONE</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filter */}
+        <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.2rem' }}>
+          <button className={`filter-tab ${filter === 'pending' ? 'active' : ''}`} onClick={() => setFilter('pending')}>
+            🍹 To Make ({pending.length})
+          </button>
+          <button className={`filter-tab ${filter === 'ready' ? 'active' : ''}`} onClick={() => setFilter('ready')}>
+            ✓ Done ({done.length})
+          </button>
+        </div>
+
+        {/* New drinks alert */}
+        {pending.some(o => o.items.some(i => i.isNew && getItemDestination(i.id, menu) === 'bar')) && filter === 'pending' && (
+          <div style={{ background: '#3B82F622', border: '1px solid #3B82F655', borderRadius: 8, padding: '0.5rem 0.9rem', marginBottom: '1rem', fontSize: '0.7rem', color: '#3B82F6', fontWeight: 700, animation: 'pulse 1.5s infinite' }}>
+            ⚡ New drinks added to existing orders — check highlighted tickets
+          </div>
+        )}
+
+        {/* Tickets */}
+        {sorted.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '4rem', color: '#334155' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🍺</div>
+            <div style={{ fontSize: '0.85rem' }}>{filter === 'pending' ? 'No drinks to prepare' : 'No completed drinks'}</div>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1rem' }}>
+            {sorted.map(order => {
+              const drinkItems   = getDrinkItems(order)
+              const hasNewDrinks = drinkItems.some(i => i.isNew)
+              const isDone       = order.barStatus === 'ready'
+
+              return (
+                <div key={order.id} className={`ticket ${hasNewDrinks && !isDone ? 'new-drinks' : ''}`}
+                  style={{ opacity: isDone ? 0.55 : 1, animation: 'slidein 0.2s ease' }}>
+
+                  {/* New drinks banner */}
+                  {hasNewDrinks && !isDone && (
+                    <div style={{ background: '#3B82F622', border: '1px solid #3B82F644', borderRadius: 7, padding: '0.35rem 0.6rem', fontSize: '0.68rem', color: '#3B82F6', fontWeight: 700 }}>
+                      ⚡ Updated — new drinks added
+                    </div>
+                  )}
+
+                  {/* Ticket header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <div style={{ width: 38, height: 38, borderRadius: 10, background: isDone ? '#10B98122' : '#3B82F622', border: `2px solid ${isDone ? '#10B98144' : '#3B82F644'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ fontSize: '1.1rem', fontWeight: 700, color: isDone ? '#10B981' : '#3B82F6' }}>T{order.table}</span>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748B' }}>{order.placedBy}</div>
+                        <div style={{ fontSize: '0.62rem', color: '#334155' }}>{drinkItems.reduce((s, i) => s + i.qty, 0)} drink{drinkItems.reduce((s, i) => s + i.qty, 0) !== 1 ? 's' : ''}</div>
+                      </div>
+                    </div>
+                    {order.placedAt && <Ticker placedAt={order.placedAt} />}
+                  </div>
+
+                  {/* Drink items */}
+                  <div style={{ background: '#0D0D14', borderRadius: 8, padding: '0.6rem 0.7rem' }}>
+                    {drinkItems.map((item, idx) => (
+                      <div key={idx} style={{ marginBottom: idx < drinkItems.length - 1 ? '0.5rem' : 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            {item.isNew && (
+                              <span style={{ fontSize: '0.55rem', fontWeight: 700, background: '#3B82F6', color: '#fff', borderRadius: 3, padding: '1px 5px', flexShrink: 0 }}>
+                                {item._addedQty ? `+${item._addedQty}` : 'NEW'}
+                              </span>
+                            )}
+                            <span style={{ fontSize: '0.85rem', color: item.isNew ? '#3B82F6' : '#CBD5E1', fontWeight: item.isNew ? 700 : 600 }}>
+                              {item.name}
+                            </span>
+                          </div>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#64748B', background: '#13131A', borderRadius: 6, padding: '0.1rem 0.5rem', minWidth: 28, textAlign: 'center' }}>
+                            ×{item.qty}
+                          </span>
+                        </div>
+                        {item.modifiers?.length > 0 && (
+                          <div style={{ fontSize: '0.62rem', color: '#8B5CF6', marginTop: '0.15rem' }}>
+                            {item.modifiers.map(m => m.optionName).join(', ')}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Action button */}
+                  {!isDone ? (
+                    <button className="bar-btn"
+                      style={{ background: '#10B98122', color: '#10B981', border: '1px solid #10B98144', width: '100%' }}
+                      onClick={() => updateBarStatus(order.id, 'ready')}>
+                      ✓ Drinks Ready — T{order.table}
+                    </button>
+                  ) : (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 700 }}>✓ Done</span>
+                      <button className="bar-btn"
+                        style={{ background: '#13131A', color: '#64748B', border: '1px solid #1E1E2E', fontSize: '0.65rem', padding: '0.25rem 0.6rem' }}
+                        onClick={() => updateBarStatus(order.id, 'pending')}>
+                        Undo
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
