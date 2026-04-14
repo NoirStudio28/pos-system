@@ -299,17 +299,54 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
 
 // ─── Table Popup ──────────────────────────────────────────────────────────────
 function TablePopup({ table, status, order, booking, onClose, onOpenPicker, onOpenEditPicker }) {
-  const { closeOrder, openPayment, updateBookingStatus, fireCourse } = usePOS()
-  const sc      = STATUS_CONFIG[status]
-  const courses = order?.courses || {}
+  const { closeOrder, openPayment, updateBookingStatus, fireCourse, serveCourse } = usePOS()
+  const sc           = STATUS_CONFIG[status]
+  const courses      = order?.courses      || {}
+  const servedCourses= order?.servedCourses || {}
+  const kitchenReady = order?.status === 'ready'
+
+  // Work out what stage the table is at
+  const getTableStage = () => {
+    if (!order) return null
+
+    const hasFoodItems = order.items?.some(i => i.id?.startsWith('s') || i.id?.startsWith('m') || i.id?.startsWith('d'))
+
+    // Check each course in order
+    for (const course of ['starters', 'mains', 'desserts']) {
+      const hasCourse  = courses[course] && courses[course] !== 'none'
+      if (!hasCourse) continue
+      const isFired    = courses[course] === 'fired'
+      const isServed   = servedCourses[course]
+      const isWaiting  = courses[course] === 'waiting'
+
+      if (isWaiting) return { stage: 'waiting', course, label: `Waiting to fire ${course}`, color: '#475569', icon: '⏳' }
+      if (isFired && !isServed && kitchenReady) return { stage: 'collect', course, label: `🍽️ COLLECT ${course.toUpperCase()} — READY!`, color: '#10B981', icon: '🍽️', pulse: true }
+      if (isFired && !isServed && !kitchenReady) return { stage: 'cooking', course, label: `Kitchen cooking ${course}`, color: '#3B82F6', icon: '👨‍🍳' }
+      if (isFired && isServed) continue
+    }
+
+    // All courses served
+    const allFiredCourses = Object.entries(courses).filter(([, v]) => v === 'fired').map(([k]) => k)
+    const allServed = allFiredCourses.every(c => servedCourses[c])
+    if (allServed && allFiredCourses.length > 0) return { stage: 'done', label: 'All courses served', color: '#F97316', icon: '✅' }
+
+    return { stage: 'ordered', label: 'Order placed — waiting', color: '#475569', icon: '⏳' }
+  }
+
+  const stage = getTableStage()
   const canFireMains    = courses.mains    === 'waiting'
   const canFireDesserts = courses.desserts === 'waiting'
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 800, padding: '1rem' }} onClick={onClose}>
-      <div style={{ background: '#0F0F17', border: `1px solid ${sc.border}`, borderRadius: 16, padding: '1.5rem', width: '100%', maxWidth: 360, fontFamily: "'Courier New', monospace", color: '#E2E8F0', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-        <style>{`.tp-btn{border:none;border-radius:10px;padding:0.7rem 1rem;cursor:pointer;font-family:'Courier New',monospace;font-size:0.8rem;font-weight:700;transition:all 0.15s;width:100%;text-align:left;margin-bottom:0.4rem;display:block}.tp-btn:hover{opacity:0.85;transform:translateY(-1px)}`}</style>
+      <div style={{ background: '#0F0F17', border: `1px solid ${sc.border}`, borderRadius: 16, padding: '1.5rem', width: '100%', maxWidth: 380, fontFamily: "'Courier New', monospace", color: '#E2E8F0', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+        <style>{`
+          .tp-btn{border:none;border-radius:10px;padding:0.7rem 1rem;cursor:pointer;font-family:'Courier New',monospace;font-size:0.8rem;font-weight:700;transition:all 0.15s;width:100%;text-align:left;margin-bottom:0.4rem;display:block}
+          .tp-btn:hover{opacity:0.85;transform:translateY(-1px)}
+          @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+        `}</style>
 
+        {/* Table header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.2rem' }}>
           <div>
             <div style={{ fontSize: '1.4rem', fontWeight: 700 }}>Table {table.id}</div>
@@ -319,12 +356,14 @@ function TablePopup({ table, status, order, booking, onClose, onOpenPicker, onOp
           <button onClick={onClose} style={{ border: '1px solid #1E1E2E', background: 'transparent', color: '#64748B', borderRadius: 8, padding: '0.3rem 0.6rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem' }}>✕</button>
         </div>
 
+        {/* FREE */}
         {status === 'free' && (
           <button className="tp-btn" style={{ background: '#10B98122', color: '#10B981', border: '1px solid #10B98144' }} onClick={() => { onClose(); onOpenPicker() }}>
             🍽️ New Order
           </button>
         )}
 
+        {/* RESERVED */}
         {status === 'reserved' && booking && (
           <>
             <div style={{ background: '#3B82F611', border: '1px solid #3B82F633', borderRadius: 10, padding: '0.8rem', marginBottom: '1rem' }}>
@@ -339,9 +378,72 @@ function TablePopup({ table, status, order, booking, onClose, onOpenPicker, onOp
           </>
         )}
 
+        {/* OCCUPIED */}
         {status === 'occupied' && order && (
           <>
-            <div style={{ background: '#0D0D14', borderRadius: 10, padding: '0.8rem', marginBottom: '1rem', maxHeight: 160, overflowY: 'auto' }}>
+            {/* ── LIVE STATUS BANNER ── */}
+            {stage && (
+              <div style={{
+                background: stage.color + '22',
+                border: `2px solid ${stage.color}55`,
+                borderRadius: 12,
+                padding: '0.8rem 1rem',
+                marginBottom: '1rem',
+                animation: stage.pulse ? 'pulse 1.5s infinite' : 'none',
+                textAlign: 'center',
+              }}>
+                <div style={{ fontSize: '1.3rem', marginBottom: '0.3rem' }}>{stage.icon}</div>
+                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: stage.color }}>{stage.label}</div>
+                {stage.stage === 'collect' && (
+                  <button
+                    onClick={() => serveCourse(order.id, stage.course)}
+                    style={{ marginTop: '0.6rem', border: 'none', background: stage.color, color: '#000', borderRadius: 8, padding: '0.5rem 1.2rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.78rem', fontWeight: 700, width: '100%' }}>
+                    ✓ Served to Table
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* ── COURSE TIMELINE ── */}
+            <div style={{ background: '#0D0D14', border: '1px solid #1E1E2E', borderRadius: 10, padding: '0.7rem 0.8rem', marginBottom: '1rem' }}>
+              <div style={{ fontSize: '0.58rem', color: '#475569', letterSpacing: '0.1em', marginBottom: '0.6rem' }}>COURSE STATUS</div>
+              {['starters', 'mains', 'desserts'].map(course => {
+                const courseStatus = courses[course]
+                if (!courseStatus || courseStatus === 'none') return null
+                const isServed  = servedCourses[course]
+                const isFired   = courseStatus === 'fired'
+                const isWaiting = courseStatus === 'waiting'
+                const icons     = { starters: '🥗', mains: '🍽️', desserts: '🍰' }
+                const colors    = { starters: '#10B981', mains: '#F97316', desserts: '#8B5CF6' }
+                const c         = colors[course]
+
+                const stateLabel = isServed ? '✅ Served' : isFired && kitchenReady ? '🍽️ Ready' : isFired ? '👨‍🍳 Cooking' : '⏳ Waiting'
+                const stateColor = isServed ? '#334155' : isFired && kitchenReady ? '#10B981' : isFired ? '#3B82F6' : '#334155'
+
+                return (
+                  <div key={course} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem', opacity: isServed ? 0.45 : 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <span style={{ fontSize: '0.75rem' }}>{icons[course]}</span>
+                      <span style={{ fontSize: '0.72rem', color: isServed ? '#334155' : c, fontWeight: 600 }}>
+                        {course.charAt(0).toUpperCase() + course.slice(1)}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.62rem', color: stateColor, fontWeight: 700 }}>{stateLabel}</span>
+                      {isWaiting && (
+                        <button onClick={() => fireCourse(order.id, course)}
+                          style={{ border: `1px solid ${c}55`, background: c + '22', color: c, borderRadius: 6, padding: '0.15rem 0.5rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.6rem', fontWeight: 700 }}>
+                          🔥 Fire
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* ── ORDER ITEMS ── */}
+            <div style={{ background: '#0D0D14', borderRadius: 10, padding: '0.8rem', marginBottom: '1rem', maxHeight: 140, overflowY: 'auto' }}>
               {order.items.map((item, idx) => (
                 <div key={idx} style={{ marginBottom: '0.4rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -358,37 +460,7 @@ function TablePopup({ table, status, order, booking, onClose, onOpenPicker, onOp
               </div>
             </div>
 
-            {(canFireMains || canFireDesserts || courses.mains === 'fired' || courses.desserts === 'fired') && (
-              <div style={{ background: '#0D0D14', border: '1px solid #1E1E2E', borderRadius: 10, padding: '0.7rem 0.8rem', marginBottom: '0.8rem' }}>
-                <div style={{ fontSize: '0.58rem', color: '#475569', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>COURSES</div>
-                {['starters', 'mains', 'desserts'].map(course => {
-                  const courseStatus = courses[course]
-                  if (courseStatus === 'none') return null
-                  const icons  = { starters: '🥗', mains: '🍽️', desserts: '🍰' }
-                  const colors = { starters: '#10B981', mains: '#F97316', desserts: '#8B5CF6' }
-                  const c = colors[course]
-                  return (
-                    <div key={course} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <span style={{ fontSize: '0.75rem' }}>{icons[course]}</span>
-                        <span style={{ fontSize: '0.72rem', color: courseStatus === 'fired' ? c : '#475569', fontWeight: 600 }}>
-                          {course.charAt(0).toUpperCase() + course.slice(1)}
-                        </span>
-                      </div>
-                      {courseStatus === 'fired' ? (
-                        <span style={{ fontSize: '0.6rem', color: c, background: c + '22', border: `1px solid ${c}33`, borderRadius: 4, padding: '1px 6px' }}>🔥 Fired</span>
-                      ) : (
-                        <button onClick={() => fireCourse(order.id, course)}
-                          style={{ border: `1px solid ${c}55`, background: c + '22', color: c, borderRadius: 6, padding: '0.2rem 0.6rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.65rem', fontWeight: 700 }}>
-                          🔥 Fire {course.charAt(0).toUpperCase() + course.slice(1)}
-                        </button>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
+            {/* ── ACTIONS ── */}
             <button className="tp-btn" style={{ background: '#F9731622', color: '#F97316', border: '1px solid #F9731644' }} onClick={() => { onClose(); onOpenEditPicker(order) }}>✏️ Edit Order</button>
             <button className="tp-btn" style={{ background: '#10B98122', color: '#10B981', border: '1px solid #10B98144' }} onClick={() => { onClose(); openPayment(order.id) }}>💳 Pay — €{order.total.toFixed(2)}</button>
             <button className="tp-btn" style={{ background: '#EF444422', color: '#EF4444', border: '1px solid #EF444433' }} onClick={() => { closeOrder(order.id); onClose() }}>🗑 Cancel Order</button>
@@ -619,6 +691,7 @@ function FloorCanvas({ floorId, editMode, onSelectTable }) {
             const th       = table.height || DEFAULT_SIZE
             const br       = table.shape === 'round' ? '50%' : table.shape === 'rect' ? 8 : 12
             const hasFirableCourse = order?.courses && (order.courses.mains === 'waiting' || order.courses.desserts === 'waiting')
+            const isReadyToCollect = order?.status === 'ready'
 
             return (
               <div key={table.id}
@@ -629,6 +702,11 @@ function FloorCanvas({ floorId, editMode, onSelectTable }) {
                 onMouseEnter={e => { if (!editMode) e.currentTarget.style.filter = 'brightness(1.25)' }}
                 onMouseLeave={e => { e.currentTarget.style.filter = 'brightness(1)' }}
               >
+                {isReadyToCollect && !editMode && (
+                  <div style={{ position: 'absolute', top: -4, left: -4, width: 16, height: 16, borderRadius: '50%', background: '#10B981', border: '2px solid #0A0A0F', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', zIndex: 3, animation: 'pulse 1.5s infinite' }}>
+                    🍽️
+                  </div>
+                )}
                 {hasFirableCourse && !editMode && (
                   <div style={{ position: 'absolute', top: -4, right: -4, width: 14, height: 14, borderRadius: '50%', background: '#F97316', border: '2px solid #0A0A0F', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.5rem', zIndex: 3 }}>
                     🔥

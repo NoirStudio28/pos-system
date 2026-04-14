@@ -380,6 +380,14 @@ export function POSProvider({ children }) {
     }))
   }
 
+  const serveCourse = (orderId, course) => {
+    setOrders(prev => prev.map(o => o.id !== orderId ? o : {
+      ...o,
+      servedCourses: { ...(o.servedCourses || {}), [course]: true },
+      status: 'in-progress',
+    }))
+  }
+
   // ── Kitchen acknowledges ──
   const acknowledgeOrder = (id) => {
     setOrders(prev => prev.map(o => o.id !== id ? o : {
@@ -445,7 +453,7 @@ export function POSProvider({ children }) {
       addFloor, updateFloor, deleteFloor,
       updateTableStatus, updateTablePosition, updateTableData, addTableToFloor, removeTable,
       placeOrder, closeOrder, toggleOrderStatus, advanceOrderStatus, toggleUrgent,
-      updateOrder, fireCourse, acknowledgeOrder, updateBarStatus,
+      updateOrder, fireCourse, serveCourse, acknowledgeOrder, updateBarStatus,
       openPayment, closePayment, processPayment, checkGiftCard,
       addBooking, updateBooking, deleteBooking, updateBookingStatus,
       addCategory, deleteCategory, addMenuItem, updateMenuItem, deleteMenuItem, toggleItemAvailability,
