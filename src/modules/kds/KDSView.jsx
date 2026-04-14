@@ -24,7 +24,7 @@ function Ticker({ placedAt }) {
 }
 
 export default function KDSView() {
-  const { orders, menu, advanceOrderStatus, toggleUrgent, acknowledgeOrder } = usePOS()
+  const { orders, menu, advanceOrderStatus, toggleUrgent, acknowledgeOrder, serveCourse } = usePOS()
   const [filter, setFilter] = useState('all')
 
   // Only show orders that have food items
@@ -255,7 +255,14 @@ export default function KDSView() {
                               {cc.label.toUpperCase()}
                             </span>
                           </div>
-                          {isFired ? (
+                          {isServed ? (
+                            <span style={{ fontSize: '0.58rem', color: '#334155', background: '#1E1E2E', borderRadius: 4, padding: '1px 6px' }}>✓ SERVED</span>
+                          ) : isFired && order.status === 'ready' ? (
+                            <button onClick={() => serveCourse(order.id, course)}
+                              style={{ fontSize: '0.58rem', color: '#10B981', background: '#10B98122', border: '1px solid #10B98144', borderRadius: 4, padding: '1px 8px', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontWeight: 700 }}>
+                              ✓ Served
+                            </button>
+                          ) : isFired ? (
                             <span style={{ fontSize: '0.58rem', color: cc.color, background: cc.color + '22', borderRadius: 4, padding: '1px 6px', border: `1px solid ${cc.color}33` }}>🔥 FIRED</span>
                           ) : (
                             <span style={{ fontSize: '0.58rem', color: '#334155', background: '#1E1E2E', borderRadius: 4, padding: '1px 6px' }}>⏳ WAITING</span>
