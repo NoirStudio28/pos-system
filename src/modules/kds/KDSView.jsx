@@ -301,7 +301,7 @@ export default function KDSView() {
 
                   {order.placedBy && <div style={{ fontSize: '0.6rem', color: '#334155' }}>by {order.placedBy}</div>}
 
-                  {order.status !== 'ready' && STATUS_NEXT[order.status] && (
+                  {STATUS_NEXT[order.status] && (
                     <button className="kds-btn" style={{ background: sc + '22', color: sc, border: `1px solid ${sc}44`, width: '100%', marginTop: '0.2rem' }}
                       onClick={() => advanceOrderStatus(order.id)}>
                       {STATUS_LABEL[order.status]} →
