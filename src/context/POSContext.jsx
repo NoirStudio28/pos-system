@@ -334,11 +334,7 @@ export function POSProvider({ children }) {
   const advanceOrderStatus = (id) => {
     setOrders(prev => prev.map(o => {
       if (o.id !== id) return o
-      // Only mark ready if all fired courses are served
-      const courses = o.courses || {}
-      const firedCourses = Object.entries(courses).filter(([, v]) => v === 'fired').map(([k]) => k)
-      const allServed = firedCourses.every(c => o.servedCourses?.[c])
-      const newStatus = o.status === 'pending' ? 'in-progress' : allServed ? 'ready' : 'in-progress'
+      const newStatus = o.status === 'pending' ? 'in-progress' : 'ready'
       return { ...o, status: newStatus }
     }))
   }
@@ -383,6 +379,7 @@ export function POSProvider({ children }) {
     setOrders(prev => prev.map(o => o.id !== orderId ? o : {
       ...o,
       courses:    { ...o.courses, [course]: 'fired' },
+      status:     'in-progress',
       modified:   true,
       modifiedAt: new Date().toISOString(),
       items:      o.items.map(i => {

@@ -46,8 +46,8 @@ export default function KDSView() {
   })
 
   const modifiedCount = active.filter(o => o.modified).length
-  const STATUS_NEXT   = { pending: 'in-progress', 'in-progress': 'ready' }
-  const STATUS_LABEL  = { pending: 'Start Cooking', 'in-progress': 'Mark Ready' }
+  const STATUS_NEXT   = { pending: 'in-progress', 'in-progress': 'ready', ready: 'ready' }
+  const STATUS_LABEL  = { pending: 'Start Cooking', 'in-progress': '✓ Mark Ready', ready: '✓ Mark Ready' }
   const STATUS_COLOR  = { pending: '#F59E0B', 'in-progress': '#3B82F6', ready: '#10B981' }
 
   const getFoodItems = (order, course) =>
