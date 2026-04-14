@@ -27,11 +27,8 @@ export default function BarView() {
     o.barStatus !== 'none'
   )
 
-  const pending = barOrders.filter(o => o.barStatus === 'pending')
-  const done    = barOrders.filter(o => o.barStatus === 'ready')
-
-  const displayed = filter === 'pending' ? pending : done
-  const sorted    = [...displayed].sort((a, b) => new Date(a.placedAt || 0) - new Date(b.placedAt || 0))
+  const pending = barOrders
+  const sorted  = [...pending].sort((a, b) => new Date(a.placedAt || 0) - new Date(b.placedAt || 0))
 
   const getDrinkItems = (order) =>
     order.items.filter(i => getItemDestination(i.id, menu) === 'bar')
@@ -60,24 +57,11 @@ export default function BarView() {
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
             <div style={{ background: '#3B82F622', border: '1px solid #3B82F644', borderRadius: 8, padding: '0.35rem 0.8rem', textAlign: 'center' }}>
               <div style={{ fontSize: '1rem', fontWeight: 700, color: '#3B82F6' }}>{pending.length}</div>
-              <div style={{ fontSize: '0.55rem', color: '#3B82F6', letterSpacing: '0.08em' }}>TO MAKE</div>
-            </div>
-            <div style={{ background: '#10B98122', border: '1px solid #10B98144', borderRadius: 8, padding: '0.35rem 0.8rem', textAlign: 'center' }}>
-              <div style={{ fontSize: '1rem', fontWeight: 700, color: '#10B981' }}>{done.length}</div>
-              <div style={{ fontSize: '0.55rem', color: '#10B981', letterSpacing: '0.08em' }}>DONE</div>
+              <div style={{ fontSize: '0.55rem', color: '#3B82F6', letterSpacing: '0.08em' }}>ACTIVE</div>
             </div>
           </div>
         </div>
 
-        {/* Filter */}
-        <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.2rem' }}>
-          <button className={`filter-tab ${filter === 'pending' ? 'active' : ''}`} onClick={() => setFilter('pending')}>
-            🍹 To Make ({pending.length})
-          </button>
-          <button className={`filter-tab ${filter === 'ready' ? 'active' : ''}`} onClick={() => setFilter('ready')}>
-            ✓ Done ({done.length})
-          </button>
-        </div>
 
         {/* ── ADDITIONS PANEL — new drinks only ── */}
         {pending.some(o => o.items.some(i => i.isNew && getItemDestination(i.id, menu) === 'bar')) && filter === 'pending' && (
@@ -122,21 +106,21 @@ export default function BarView() {
         {sorted.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '4rem', color: '#334155' }}>
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🍺</div>
-            <div style={{ fontSize: '0.85rem' }}>{filter === 'pending' ? 'No drinks to prepare' : 'No completed drinks'}</div>
+            <div style={{ fontSize: '0.85rem' }}>No active drink orders</div>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1rem' }}>
             {sorted.map(order => {
               const drinkItems   = getDrinkItems(order)
               const hasNewDrinks = drinkItems.some(i => i.isNew)
-              const isDone       = order.barStatus === 'ready'
+              
 
               return (
                 <div key={order.id} className={`ticket ${hasNewDrinks && !isDone ? 'new-drinks' : ''}`}
-                  style={{ opacity: isDone ? 0.55 : 1, animation: 'slidein 0.2s ease' }}>
+                  style={{ animation: 'slidein 0.2s ease' }}>
 
                   {/* New drinks banner */}
-                  {hasNewDrinks && !isDone && (
+                  {hasNewDrinks && (
                     <div style={{ background: '#3B82F622', border: '1px solid #3B82F644', borderRadius: 7, padding: '0.35rem 0.6rem', fontSize: '0.68rem', color: '#3B82F6', fontWeight: 700 }}>
                       ⚡ Updated — new drinks added
                     </div>
@@ -184,23 +168,7 @@ export default function BarView() {
                     ))}
                   </div>
 
-                  {/* Action button */}
-                  {!isDone ? (
-                    <button className="bar-btn"
-                      style={{ background: '#10B98122', color: '#10B981', border: '1px solid #10B98144', width: '100%' }}
-                      onClick={() => updateBarStatus(order.id, 'ready')}>
-                      ✓ Drinks Ready — T{order.table}
-                    </button>
-                  ) : (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 700 }}>✓ Done</span>
-                      <button className="bar-btn"
-                        style={{ background: '#13131A', color: '#64748B', border: '1px solid #1E1E2E', fontSize: '0.65rem', padding: '0.25rem 0.6rem' }}
-                        onClick={() => updateBarStatus(order.id, 'pending')}>
-                        Undo
-                      </button>
-                    </div>
-                  )}
+                  
                 </div>
               )
             })}
