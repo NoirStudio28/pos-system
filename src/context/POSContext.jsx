@@ -80,10 +80,10 @@ const DEFAULT_TABLES = [
 
 export const ROLE_CONFIG = {
   admin:   { label: 'Admin',   color: '#EF4444', routes: ['*'] },
-  manager: { label: 'Manager', color: '#F97316', routes: ['/dashboard', '/tables', '/orders', '/kds', '/bar', '/menu', '/bookings', '/reports', '/stock', '/customers', '/settings', '/staff', '/eod', '/staff-analytics'] },
-  waiter:  { label: 'Waiter',  color: '#3B82F6', routes: ['/tables', '/orders', '/bookings'] },
-  kitchen: { label: 'Kitchen', color: '#10B981', routes: ['/kds', '/bookings'] },
-  cashier: { label: 'Cashier', color: '#8B5CF6', routes: ['/tables', '/orders', '/bar'] },
+  manager: { label: 'Manager', color: '#F97316', routes: ['/dashboard', '/tables', '/orders', '/kds', '/bar', '/menu', '/bookings', '/reports', '/stock', '/customers', '/settings', '/staff', '/eod', '/history', '/staff-analytics'] },
+  waiter:  { label: 'Waiter',  color: '#3B82F6', routes: ['/tables', '/orders', '/bookings','/history'] },
+  kitchen: { label: 'Kitchen', color: '#10B981', routes: ['/kds', '/bookings','/history'] },
+  cashier: { label: 'Cashier', color: '#8B5CF6', routes: ['/tables', '/orders', '/bar','/history'] },
 }
 
 export const TIER_CONFIG = {

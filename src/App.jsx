@@ -17,6 +17,7 @@ import StaffAnalyticsView from './modules/staff/StaffAnalyticsView'
 import SettingsView from './modules/settings/SettingsView'
 import useBreakpoint from './hooks/useBreakpoint'
 import EODView from './modules/eod/EODView'
+import OrderHistoryView from './modules/history/OrderHistoryView'
 
 const ALL_LINKS = [
   { to: '/dashboard',       label: '🏠 Dashboard'   },
@@ -33,6 +34,7 @@ const ALL_LINKS = [
   { to: '/customers',       label: '💳 Customers'    },
   { to: '/settings',        label: '⚙️ Settings'     },
   { to: '/eod',             label: '📋 EOD Report'   },
+  { to: '/history',         label: '🗂️ History'      },
 ]
 
 function Nav() {
@@ -164,6 +166,7 @@ function AppRoutes() {
         <Route path="/staff-analytics" element={<ProtectedRoute path="/staff-analytics" element={<StaffAnalyticsView />} />} />
         <Route path="/customers" element={<ProtectedRoute path="/customers" element={<CustomersView />}  />} />
         <Route path="/eod" element={<ProtectedRoute path="/eod" element={<EODView />} />} />
+        <Route path="/history" element={<ProtectedRoute path="/history" element={<OrderHistoryView />} />} />
         <Route path="/settings"  element={<ProtectedRoute path="/settings"  element={<SettingsView />}   />} />
       </Routes>
       <PaymentModal />
