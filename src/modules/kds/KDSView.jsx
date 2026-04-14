@@ -32,8 +32,8 @@ export default function KDSView() {
     o.items.some(i => getItemDestination(i.id, menu) === 'kitchen')
   )
 
-  const active = ordersWithFood.filter(o => o.status !== 'ready')
-  const ready  = ordersWithFood.filter(o => o.status === 'ready')
+  const active = ordersWithFood.filter(o => o.status !== 'ready' || !Object.values(o.servedCourses || {}).some(v => v))
+  const ready  = ordersWithFood.filter(o => o.status === 'ready' && Object.values(o.servedCourses || {}).every(v => v) && Object.keys(o.servedCourses || {}).length > 0)
 
   const filtered = filter === 'all'    ? active
     : filter === 'urgent'              ? active.filter(o => o.urgent)
@@ -216,9 +216,15 @@ export default function KDSView() {
                   </div>
 
                   {/* Status */}
-                  <div style={{ fontSize: '0.62rem', fontWeight: 700, color: sc, background: sc + '22', border: `1px solid ${sc}44`, borderRadius: 5, padding: '2px 8px', display: 'inline-block' }}>
-                    {order.status.toUpperCase().replace('-', ' ')}
-                  </div>
+                  {order.status === 'ready' ? (
+                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#10B981', background: '#10B98122', border: '1px solid #10B98144', borderRadius: 5, padding: '3px 10px', display: 'inline-block', animation: 'pulse 1.5s infinite' }}>
+                      🍽️ READY — Waiting for collection
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '0.62rem', fontWeight: 700, color: sc, background: sc + '22', border: `1px solid ${sc}44`, borderRadius: 5, padding: '2px 8px', display: 'inline-block' }}>
+                      {order.status.toUpperCase().replace('-', ' ')}
+                    </div>
+                  )}
 
                   {/* Allergens — food only */}
                   {foodAllergens.length > 0 && (
@@ -234,10 +240,14 @@ export default function KDSView() {
                     if (courseItems.length === 0) return null
                     const courseStatus = courses[course] || 'waiting'
                     const isFired      = courseStatus === 'fired'
+                    const isServed     = order.servedCourses?.[course]
 
                     return (
-                      <div key={course} className={`course-section ${isFired ? 'fired' : 'waiting'}`}
-                        style={isFired ? { borderColor: cc.color + '55', background: cc.color + '0A' } : {}}>
+                      <div key={course} className={`course-section ${isFired && !isServed ? 'fired' : 'waiting'}`}
+                        style={{
+                          ...(isFired && !isServed ? { borderColor: cc.color + '55', background: cc.color + '0A' } : {}),
+                          ...(isServed ? { opacity: 0.25 } : {}),
+                        }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                             <span style={{ fontSize: '0.7rem' }}>{cc.icon}</span>
@@ -291,7 +301,7 @@ export default function KDSView() {
 
                   {order.placedBy && <div style={{ fontSize: '0.6rem', color: '#334155' }}>by {order.placedBy}</div>}
 
-                  {STATUS_NEXT[order.status] && (
+                  {order.status !== 'ready' && STATUS_NEXT[order.status] && (
                     <button className="kds-btn" style={{ background: sc + '22', color: sc, border: `1px solid ${sc}44`, width: '100%', marginTop: '0.2rem' }}
                       onClick={() => advanceOrderStatus(order.id)}>
                       {STATUS_LABEL[order.status]} →

@@ -328,7 +328,17 @@ export function POSProvider({ children }) {
   }
 
   const toggleOrderStatus  = (id) => setOrders(prev => prev.map(o => o.id !== id ? o : { ...o, status: o.status === 'pending' ? 'ready' : 'pending' }))
-  const advanceOrderStatus = (id) => setOrders(prev => prev.map(o => o.id !== id ? o : { ...o, status: o.status === 'pending' ? 'in-progress' : 'ready' }))
+  const advanceOrderStatus = (id) => {
+    setOrders(prev => prev.map(o => {
+      if (o.id !== id) return o
+      // Only mark ready if all fired courses are served
+      const courses = o.courses || {}
+      const firedCourses = Object.entries(courses).filter(([, v]) => v === 'fired').map(([k]) => k)
+      const allServed = firedCourses.every(c => o.servedCourses?.[c])
+      const newStatus = o.status === 'pending' ? 'in-progress' : allServed ? 'ready' : 'in-progress'
+      return { ...o, status: newStatus }
+    }))
+  }
   const toggleUrgent       = (id) => setOrders(prev => prev.map(o => o.id !== id ? o : { ...o, urgent: !o.urgent }))
 
   // ── Bar status ──
