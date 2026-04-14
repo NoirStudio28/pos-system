@@ -237,7 +237,10 @@ export function POSProvider({ children }) {
   const clockIn       = (id) => setStaff(prev => prev.map(s => { if (s.id !== id || s.clockRecords.some(r => !r.out)) return s; return { ...s, clockRecords: [...s.clockRecords, { in: new Date().toISOString(), out: null }] } }))
   const clockOut      = (id) => setStaff(prev => prev.map(s => s.id !== id ? s : { ...s, clockRecords: s.clockRecords.map(r => !r.out ? { ...r, out: new Date().toISOString() } : r) }))
   const isClockedIn   = (id) => staff.find(s => s.id === id)?.clockRecords.some(r => !r.out) || false
-  const getTotalHours = (id) => (staff.find(s => s.id === id)?.clockRecords || []).reduce((t, r) => !r.out ? t : t + (new Date(r.out) - new Date(r.in)) / 3600000, 0)
+  const getTotalHours = (id) => (staff.find(s => s.id === id)?.clockRecords || []).reduce((t, r) => {
+    if (!r.out) return t + (Date.now() - new Date(r.in).getTime()) / 3600000
+    return t + (new Date(r.out) - new Date(r.in)) / 3600000
+  }, 0)
   const addStaff      = (m)  => setStaff(prev => [...prev, { ...m, id: Date.now(), clockRecords: [] }])
   const updateStaff   = (m)  => setStaff(prev => prev.map(s => s.id === m.id ? m : s))
   const deleteStaff   = (id) => setStaff(prev => prev.filter(s => s.id !== id))
