@@ -18,28 +18,25 @@ function Ticker({ placedAt }) {
 }
 
 export default function BarView() {
-  const { orders, menu, updateBarStatus } = usePOS()
-  const [filter, setFilter] = useState('pending')
+  const { orders, menu } = usePOS()
 
-  // Only orders with drinks
   const barOrders = orders.filter(o =>
     o.items.some(i => getItemDestination(i.id, menu) === 'bar') &&
     o.barStatus !== 'none'
   )
 
-  const pending = barOrders
-  const sorted  = [...pending].sort((a, b) => new Date(a.placedAt || 0) - new Date(b.placedAt || 0))
+  const sorted = [...barOrders].sort((a, b) => new Date(a.placedAt || 0) - new Date(b.placedAt || 0))
 
   const getDrinkItems = (order) =>
     order.items.filter(i => getItemDestination(i.id, menu) === 'bar')
+
+  const hasAdditions = barOrders.some(o => o.items.some(i => i.isNew && getItemDestination(i.id, menu) === 'bar'))
 
   return (
     <div style={{ minHeight: '100vh', background: '#0A0A0F', fontFamily: "'Courier New', monospace", color: '#E2E8F0', padding: '1.5rem' }}>
       <style>{`
         .bar-btn{border:none;border-radius:8px;padding:0.45rem 0.9rem;cursor:pointer;font-family:'Courier New',monospace;font-size:0.72rem;font-weight:700;transition:all 0.15s}
         .bar-btn:hover{opacity:0.85}
-        .filter-tab{padding:0.35rem 0.8rem;border-radius:6px;border:1px solid #1E1E2E;background:transparent;color:#64748B;cursor:pointer;font-family:'Courier New',monospace;font-size:0.68rem;font-weight:700;transition:all 0.15s}
-        .filter-tab.active{background:#3B82F622;border-color:#3B82F6;color:#3B82F6}
         .ticket{background:#13131A;border:1px solid #1E1E2E;border-radius:14px;padding:1rem;display:flex;flex-direction:column;gap:0.6rem}
         .ticket.new-drinks{border-color:#3B82F6 !important;box-shadow:0 0 0 1px #3B82F633}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
@@ -54,24 +51,21 @@ export default function BarView() {
             <div style={{ fontSize: '0.6rem', letterSpacing: '0.2em', color: '#475569', marginBottom: '0.3rem' }}>BAR</div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Bar Display 🍺</h1>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-            <div style={{ background: '#3B82F622', border: '1px solid #3B82F644', borderRadius: 8, padding: '0.35rem 0.8rem', textAlign: 'center' }}>
-              <div style={{ fontSize: '1rem', fontWeight: 700, color: '#3B82F6' }}>{pending.length}</div>
-              <div style={{ fontSize: '0.55rem', color: '#3B82F6', letterSpacing: '0.08em' }}>ACTIVE</div>
-            </div>
+          <div style={{ background: '#3B82F622', border: '1px solid #3B82F644', borderRadius: 8, padding: '0.35rem 0.8rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#3B82F6' }}>{barOrders.length}</div>
+            <div style={{ fontSize: '0.55rem', color: '#3B82F6', letterSpacing: '0.08em' }}>ACTIVE</div>
           </div>
         </div>
 
-
-        {/* ── ADDITIONS PANEL — new drinks only ── */}
-        {pending.some(o => o.items.some(i => i.isNew && getItemDestination(i.id, menu) === 'bar')) && filter === 'pending' && (
+        {/* Additions panel */}
+        {hasAdditions && (
           <div style={{ marginBottom: '1.5rem' }}>
             <div style={{ fontSize: '0.6rem', letterSpacing: '0.15em', color: '#3B82F6', marginBottom: '0.6rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span style={{ animation: 'pulse 1.5s infinite', display: 'inline-block' }}>⚡</span>
               ADDITIONS — NEW DRINKS ONLY
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.6rem' }}>
-              {pending.filter(o => o.items.some(i => i.isNew && getItemDestination(i.id, menu) === 'bar')).map(order => {
+              {barOrders.filter(o => o.items.some(i => i.isNew && getItemDestination(i.id, menu) === 'bar')).map(order => {
                 const newDrinks = order.items.filter(i => i.isNew && getItemDestination(i.id, menu) === 'bar')
                 return (
                   <div key={order.id} style={{ background: '#3B82F611', border: '2px solid #3B82F655', borderRadius: 12, padding: '0.8rem 1rem' }}>
@@ -113,24 +107,21 @@ export default function BarView() {
             {sorted.map(order => {
               const drinkItems   = getDrinkItems(order)
               const hasNewDrinks = drinkItems.some(i => i.isNew)
-              
 
               return (
-                <div key={order.id} className={`ticket ${hasNewDrinks && !isDone ? 'new-drinks' : ''}`}
+                <div key={order.id} className={`ticket ${hasNewDrinks ? 'new-drinks' : ''}`}
                   style={{ animation: 'slidein 0.2s ease' }}>
 
-                  {/* New drinks banner */}
                   {hasNewDrinks && (
                     <div style={{ background: '#3B82F622', border: '1px solid #3B82F644', borderRadius: 7, padding: '0.35rem 0.6rem', fontSize: '0.68rem', color: '#3B82F6', fontWeight: 700 }}>
                       ⚡ Updated — new drinks added
                     </div>
                   )}
 
-                  {/* Ticket header */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                      <div style={{ width: 38, height: 38, borderRadius: 10, background: isDone ? '#10B98122' : '#3B82F622', border: `2px solid ${isDone ? '#10B98144' : '#3B82F644'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ fontSize: '1.1rem', fontWeight: 700, color: isDone ? '#10B981' : '#3B82F6' }}>T{order.table}</span>
+                      <div style={{ width: 38, height: 38, borderRadius: 10, background: '#3B82F622', border: '2px solid #3B82F644', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#3B82F6' }}>T{order.table}</span>
                       </div>
                       <div>
                         <div style={{ fontSize: '0.72rem', color: '#64748B' }}>{order.placedBy}</div>
@@ -140,7 +131,6 @@ export default function BarView() {
                     {order.placedAt && <Ticker placedAt={order.placedAt} />}
                   </div>
 
-                  {/* Drink items */}
                   <div style={{ background: '#0D0D14', borderRadius: 8, padding: '0.6rem 0.7rem' }}>
                     {drinkItems.map((item, idx) => (
                       <div key={idx} style={{ marginBottom: idx < drinkItems.length - 1 ? '0.5rem' : 0 }}>
@@ -167,8 +157,6 @@ export default function BarView() {
                       </div>
                     ))}
                   </div>
-
-                  
                 </div>
               )
             })}
