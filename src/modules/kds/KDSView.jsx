@@ -112,6 +112,58 @@ export default function KDSView() {
           ))}
         </div>
 
+        {/* ── ADDITIONS PANEL ── */}
+        {active.some(o => o.modified) && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ fontSize: '0.6rem', letterSpacing: '0.15em', color: '#F59E0B', marginBottom: '0.6rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ animation: 'pulse 1.5s infinite', display: 'inline-block' }}>⚡</span>
+              ADDITIONS — NEW ITEMS ONLY
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.6rem' }}>
+              {active.filter(o => o.modified).map(order => {
+                const newFoodItems = order.items.filter(i =>
+                  i.isNew && getItemDestination(i.id, menu) === 'kitchen'
+                )
+                if (newFoodItems.length === 0) return null
+                return (
+                  <div key={order.id} style={{ background: '#F59E0B11', border: '2px solid #F59E0B55', borderRadius: 12, padding: '0.8rem 1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ fontSize: '1rem', fontWeight: 700, color: '#F59E0B' }}>T{order.table}</span>
+                        {order.modifiedAt && (
+                          <span style={{ fontSize: '0.6rem', color: '#94A3B8' }}>
+                            {new Date(order.modifiedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                      </div>
+                      <button onClick={() => acknowledgeOrder(order.id)}
+                        style={{ border: 'none', background: '#F59E0B', color: '#000', borderRadius: 6, padding: '0.2rem 0.6rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.65rem', fontWeight: 700 }}>
+                        ✓ Ack
+                      </button>
+                    </div>
+                    {newFoodItems.map((item, idx) => (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <span style={{ fontSize: '0.6rem', fontWeight: 700, background: '#F59E0B', color: '#000', borderRadius: 3, padding: '1px 5px', flexShrink: 0 }}>
+                            {item._addedQty ? `+${item._addedQty}` : 'NEW'}
+                          </span>
+                          <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#F59E0B' }}>{item.name}</span>
+                        </div>
+                        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#64748B' }}>×{item.qty}</span>
+                      </div>
+                    ))}
+                    {newFoodItems.filter(i => i.note).map((item, idx) => (
+                      <div key={idx} style={{ fontSize: '0.62rem', color: '#FCD34D', marginTop: '0.2rem' }}>📝 {item.name}: {item.note}</div>
+                    ))}
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{ borderBottom: '1px solid #1E1E2E', marginTop: '1.2rem' }} />
+          </div>
+        )}
+
+
         {/* Tickets */}
         {sorted.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '4rem', color: '#334155', fontSize: '0.85rem' }}>No active food orders</div>

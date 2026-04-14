@@ -79,10 +79,42 @@ export default function BarView() {
           </button>
         </div>
 
-        {/* New drinks alert */}
+        {/* ── ADDITIONS PANEL — new drinks only ── */}
         {pending.some(o => o.items.some(i => i.isNew && getItemDestination(i.id, menu) === 'bar')) && filter === 'pending' && (
-          <div style={{ background: '#3B82F622', border: '1px solid #3B82F655', borderRadius: 8, padding: '0.5rem 0.9rem', marginBottom: '1rem', fontSize: '0.7rem', color: '#3B82F6', fontWeight: 700, animation: 'pulse 1.5s infinite' }}>
-            ⚡ New drinks added to existing orders — check highlighted tickets
+          <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ fontSize: '0.6rem', letterSpacing: '0.15em', color: '#3B82F6', marginBottom: '0.6rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ animation: 'pulse 1.5s infinite', display: 'inline-block' }}>⚡</span>
+              ADDITIONS — NEW DRINKS ONLY
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.6rem' }}>
+              {pending.filter(o => o.items.some(i => i.isNew && getItemDestination(i.id, menu) === 'bar')).map(order => {
+                const newDrinks = order.items.filter(i => i.isNew && getItemDestination(i.id, menu) === 'bar')
+                return (
+                  <div key={order.id} style={{ background: '#3B82F611', border: '2px solid #3B82F655', borderRadius: 12, padding: '0.8rem 1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                      <span style={{ fontSize: '1rem', fontWeight: 700, color: '#3B82F6' }}>T{order.table}</span>
+                      {order.modifiedAt && (
+                        <span style={{ fontSize: '0.6rem', color: '#94A3B8' }}>
+                          {new Date(order.modifiedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      )}
+                    </div>
+                    {newDrinks.map((item, idx) => (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <span style={{ fontSize: '0.6rem', fontWeight: 700, background: '#3B82F6', color: '#fff', borderRadius: 3, padding: '1px 5px', flexShrink: 0 }}>
+                            {item._addedQty ? `+${item._addedQty}` : 'NEW'}
+                          </span>
+                          <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#3B82F6' }}>{item.name}</span>
+                        </div>
+                        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#64748B' }}>×{item.qty}</span>
+                      </div>
+                    ))}
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{ borderBottom: '1px solid #1E1E2E', marginTop: '1.2rem' }} />
           </div>
         )}
 
