@@ -218,6 +218,7 @@ export function POSProvider({ children }) {
   const [orders,               setOrders]               = useState([])
   const [activePaymentOrderId, setActivePaymentOrderId] = useState(null)
   const [currentUser,          setCurrentUser]          = useState(null)
+  const [kitchenAlerts, setKitchenAlerts] = useState([])
 
   // ── Auth ──
   const login = (username, password) => {
@@ -432,7 +433,19 @@ export function POSProvider({ children }) {
   const addMenuItem            = (c, i)  => setMenu(prev => ({ ...prev, [c]: [...(prev[c] || []), { ...i, id: Date.now().toString(), available: true }] }))
   const updateMenuItem         = (c, i)  => setMenu(prev => ({ ...prev, [c]: prev[c].map(x => x.id === i.id ? i : x) }))
   const deleteMenuItem         = (c, id) => setMenu(prev => ({ ...prev, [c]: prev[c].filter(i => i.id !== id) }))
-  const toggleItemAvailability = (c, id) => setMenu(prev => ({ ...prev, [c]: prev[c].map(i => i.id === id ? { ...i, available: !i.available } : i) }))
+  const toggleItemAvailability = (c, id) => {
+    const item = (menu[c] || []).find(i => i.id === id)
+    if (!item) return
+    setMenu(prev => ({ ...prev, [c]: prev[c].map(i => i.id === id ? { ...i, available: !i.available } : i) }))
+    if (item.available) {
+      // Going unavailable — fire an alert
+      const alert = { id: Date.now(), itemName: item.name, category: c, time: new Date().toISOString() }
+      setKitchenAlerts(prev => [...prev, alert])
+    }
+  }
+
+  const dismissAlert = (id) => setKitchenAlerts(prev => prev.filter(a => a.id !== id))
+  const dismissAllAlerts = () => setKitchenAlerts([])
 
   // ── Settings ──
   const updateSettings = (updated) => {
@@ -467,6 +480,7 @@ export function POSProvider({ children }) {
       openPayment, closePayment, processPayment, checkGiftCard,
       addBooking, updateBooking, deleteBooking, updateBookingStatus,
       addCategory, deleteCategory, addMenuItem, updateMenuItem, deleteMenuItem, toggleItemAvailability,
+      kitchenAlerts, dismissAlert, dismissAllAlerts,
       addStockItem, updateStockItem, deleteStockItem, adjustStock,
       addCustomer, updateCustomer, deleteCustomer, awardPoints, redeemPoints,
       updateSettings,

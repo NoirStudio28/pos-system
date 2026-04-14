@@ -17,6 +17,7 @@ import StaffAnalyticsView from './modules/staff/StaffAnalyticsView'
 import SettingsView from './modules/settings/SettingsView'
 import useBreakpoint from './hooks/useBreakpoint'
 import EODView from './modules/eod/EODView'
+import { usePOS } from './context/POSContext'
 
 const ALL_LINKS = [
   { to: '/dashboard',       label: '🏠 Dashboard'   },
@@ -104,6 +105,41 @@ function ProtectedRoute({ path, element }) {
   return canAccess(path) ? element : <Navigate to="/" replace />
 }
 
+function KitchenAlertPopup() {
+  const { kitchenAlerts, dismissAlert, dismissAllAlerts } = usePOS()
+  if (kitchenAlerts.length === 0) return null
+
+  return (
+    <div style={{ position: 'fixed', bottom: 80, right: '1rem', zIndex: 2000, display: 'flex', flexDirection: 'column', gap: '0.5rem', maxWidth: 320, fontFamily: "'Courier New', monospace" }}>
+      {kitchenAlerts.length > 1 && (
+        <button onClick={dismissAllAlerts}
+          style={{ border: 'none', background: '#EF4444', color: '#fff', borderRadius: 8, padding: '0.4rem 0.8rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.7rem', fontWeight: 700, alignSelf: 'flex-end' }}>
+          Dismiss All ({kitchenAlerts.length})
+        </button>
+      )}
+      {kitchenAlerts.map(alert => (
+        <div key={alert.id} style={{ background: '#0F0F17', border: '2px solid #EF444466', borderRadius: 12, padding: '0.9rem 1rem', boxShadow: '0 4px 20px rgba(0,0,0,0.5)', animation: 'slideInRight 0.3s ease' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+            <div>
+              <div style={{ fontSize: '0.65rem', color: '#EF4444', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '0.3rem' }}>⚠ KITCHEN ALERT</div>
+              <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#CBD5E1' }}>
+                <span style={{ color: '#EF4444' }}>86'd:</span> {alert.itemName}
+              </div>
+              <div style={{ fontSize: '0.65rem', color: '#475569', marginTop: '0.2rem' }}>
+                Out of stock · {new Date(alert.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </div>
+            </div>
+            <button onClick={() => dismissAlert(alert.id)}
+              style={{ border: '1px solid #EF444433', background: '#EF444411', color: '#EF4444', borderRadius: 6, padding: '0.2rem 0.5rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.65rem', fontWeight: 700, flexShrink: 0 }}>
+              ✕
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function AppRoutes() {
   const { currentUser } = usePOS()
   if (!currentUser) return <LoginScreen />
@@ -132,6 +168,7 @@ function AppRoutes() {
         <Route path="/settings"  element={<ProtectedRoute path="/settings"  element={<SettingsView />}   />} />
       </Routes>
       <PaymentModal />
+      <KitchenAlertPopup />
     </>
   )
 }

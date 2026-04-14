@@ -24,7 +24,16 @@ function Ticker({ placedAt }) {
 }
 
 export default function KDSView() {
-  const { orders, menu, advanceOrderStatus, toggleUrgent, acknowledgeOrder, serveCourse } = usePOS()
+  const { orders, menu, advanceOrderStatus, toggleUrgent, acknowledgeOrder, serveCourse, toggleItemAvailability } = usePOS()
+
+  const handle86 = (itemId) => {
+    for (const [cat, items] of Object.entries(menu)) {
+      if (items.find(i => i.id === itemId)) {
+        toggleItemAvailability(cat, itemId)
+        return
+      }
+    }
+  }
   const [filter, setFilter] = useState('all')
 
   // Only show orders that have food items
@@ -280,6 +289,12 @@ export default function KDSView() {
                                 <span style={{ fontSize: '0.78rem', color: item.isNew && isFired ? '#F59E0B' : '#CBD5E1', fontWeight: item.isNew ? 700 : 600 }}>
                                   {item.name}
                                 </span>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handle86(item.id) }}
+                                  title="Mark as 86'd — out of stock"
+                                  style={{ fontSize: '0.55rem', fontWeight: 700, background: '#EF444411', color: '#EF4444', border: '1px solid #EF444433', borderRadius: 3, padding: '1px 5px', cursor: 'pointer', fontFamily: "'Courier New', monospace", flexShrink: 0 }}>
+                                  86
+                                </button>
                               </div>
                               <span style={{ fontSize: '0.78rem', color: '#475569', fontWeight: 700 }}>×{item.qty}</span>
                             </div>
