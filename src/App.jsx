@@ -17,7 +17,6 @@ import StaffAnalyticsView from './modules/staff/StaffAnalyticsView'
 import SettingsView from './modules/settings/SettingsView'
 import useBreakpoint from './hooks/useBreakpoint'
 import EODView from './modules/eod/EODView'
-import { usePOS } from './context/POSContext'
 
 const ALL_LINKS = [
   { to: '/dashboard',       label: '🏠 Dashboard'   },
