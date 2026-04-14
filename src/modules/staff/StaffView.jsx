@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePOS, ROLE_CONFIG } from '../../context/POSContext'
 
 const EXPERIENCE_LEVELS = ['Junior', 'Mid', 'Senior']
@@ -14,6 +14,8 @@ function formatHours(h) {
 
 export default function StaffView() {
   const { staff, currentUser, addStaff, updateStaff, deleteStaff, clockIn, clockOut, isClockedIn, getTotalHours, orderHistory } = usePOS()
+  const [, setTick] = useState(0)
+  useEffect(() => { const t = setInterval(() => setTick(n => n + 1), 60000); return () => clearInterval(t) }, [])
   const [editingId, setEditingId] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState(EMPTY_FORM)
