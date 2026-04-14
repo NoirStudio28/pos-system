@@ -237,7 +237,9 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
                     {hasMods && <span style={{ fontSize: '0.58rem', color: '#8B5CF6', background: '#8B5CF622', border: '1px solid #8B5CF644', borderRadius: 4, padding: '1px 5px' }}>customisable</span>}
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#F97316', marginTop: '0.1rem' }}>€{item.price.toFixed(2)}</div>
-                  {item.allergens && item.allergens !== 'None' && <div style={{ fontSize: '0.62rem', color: '#F59E0B', marginTop: '0.1rem' }}>⚠ {item.allergens}</div>}
+                  {item.allergens && item.allergens !== 'None' && (
+                    <span title={item.allergens} style={{ fontSize: '0.62rem', color: '#F59E0B', cursor: 'help', marginTop: '0.1rem', display: 'inline-block' }}>⚠</span>
+                  )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   {totalQty > 0 && !hasMods && (
@@ -451,7 +453,6 @@ function TablePopup({ table, status, order, booking, onClose, onOpenPicker, onOp
                     <span style={{ fontSize: '0.73rem', color: '#CBD5E1' }}>€{((item.price + (item.modifierTotal || 0)) * item.qty).toFixed(2)}</span>
                   </div>
                   {item.modifiers?.length > 0 && <div style={{ fontSize: '0.6rem', color: '#8B5CF6' }}>{item.modifiers.map(m => m.optionName).join(', ')}</div>}
-                  {item.allergens && item.allergens !== 'None' && <div style={{ fontSize: '0.6rem', color: '#F59E0B' }}>⚠ {item.allergens}</div>}
                 </div>
               ))}
               <div style={{ borderTop: '1px solid #1E1E2E', marginTop: '0.5rem', paddingTop: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
