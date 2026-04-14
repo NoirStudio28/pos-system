@@ -225,15 +225,16 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
               <button key={cat} className={`ip-tab ${activeCategory === cat ? 'active' : ''}`} onClick={() => setActiveCategory(cat)}>{cat}</button>
             ))}
           </div>
-          {(menu[activeCategory] || []).filter(item => item.available).map(item => {
+          {(menu[activeCategory] || []).map(item => {
             const inOrder  = currentItems.filter(i => i.id === item.id)
             const totalQty = inOrder.reduce((s, i) => s + i.qty, 0)
             const hasMods  = item.modifiers?.length > 0
             return (
-              <div className="ip-item" key={item.id}>
+              <div className="ip-item" key={item.id} style={{ opacity: item.available ? 1 : 0.45, pointerEvents: item.available ? 'auto' : 'none' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#CBD5E1' }}>{item.name}</span>
+                    {!item.available && <span style={{ fontSize: '0.58rem', background: '#EF444422', color: '#EF4444', border: '1px solid #EF444433', borderRadius: 4, padding: '1px 6px', flexShrink: 0 }}>86'd</span>}
                     {hasMods && <span style={{ fontSize: '0.58rem', color: '#8B5CF6', background: '#8B5CF622', border: '1px solid #8B5CF644', borderRadius: 4, padding: '1px 5px' }}>customisable</span>}
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#F97316', marginTop: '0.1rem' }}>€{item.price.toFixed(2)}</div>
