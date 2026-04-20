@@ -31,9 +31,25 @@ function TodayLog() {
   const lastClockIn = member?.clockRecords?.filter(r => r.in)?.slice(-1)[0]?.in
   const shiftStart  = lastClockIn ? new Date(lastClockIn) : new Date(new Date().setHours(0, 0, 0, 0))
 
-  const shiftOrders = orderHistory
+  const { orders } = usePOS()
+
+  // Orders fully served by kitchen but not yet paid
+  const servedNotPaid = orders.filter(o => {
+    const firedCourses = Object.entries(o.courses || {}).filter(([, v]) => v === 'fired').map(([k]) => k)
+    if (firedCourses.length === 0) return false
+    return firedCourses.every(c => o.servedCourses?.[c]) &&
+      o.items?.some(i => getItemDestination(i.id, menu) === 'kitchen') &&
+      new Date(o.placedAt || 0) >= shiftStart
+  })
+
+  // Paid orders from this shift
+  const paidThisShift = orderHistory
     .filter(o => o.closedAt && new Date(o.closedAt) >= shiftStart && o.items?.some(i => getItemDestination(i.id, menu) === 'kitchen'))
-    .sort((a, b) => new Date(b.closedAt) - new Date(a.closedAt))
+
+  const shiftOrders = [
+    ...servedNotPaid.map(o => ({ ...o, _pending: true })),
+    ...paidThisShift,
+  ].sort((a, b) => new Date(b.closedAt || b.placedAt || 0) - new Date(a.closedAt || a.placedAt || 0))
 
   return (
     <div style={{ borderTop: '1px solid #1E1E2E', paddingTop: '1rem', marginTop: '1.5rem' }}>
@@ -52,8 +68,8 @@ function TodayLog() {
               <div key={order.id} style={{ background: '#13131A', border: '1px solid #1E1E2E', borderRadius: 10, padding: '0.7rem 0.9rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                   <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>T{order.table}</span>
-                  <span style={{ fontSize: '0.62rem', color: '#334155' }}>
-                    {new Date(order.closedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  <span style={{ fontSize: '0.62rem', color: order._pending ? '#F59E0B' : '#334155' }}>
+                    {order._pending ? '⏳ Awaiting payment' : new Date(order.closedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
                 {foodItems.map((item, idx) => (
