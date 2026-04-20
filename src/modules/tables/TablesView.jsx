@@ -610,8 +610,8 @@ function FloorCanvas({ floorId, editMode, onSelectTable, scale = 1 }) {
   const onMouseMove = (e) => {
     if (!dragging || !editMode) return
     const canvas = canvasRef.current; if (!canvas) return
-    const rect = e.currentTarget.getBoundingClientRect()
-    setDragging({ id: tableId, offsetX: (e.clientX - rect.left) / scale, offsetY: (e.clientY - rect.top) / scale })
+    const rect = canvas.getBoundingClientRect()
+    const tbl  = tables.find(t => t.id === dragging.id)
     const tw   = tbl?.width  || DEFAULT_SIZE
     const th   = tbl?.height || DEFAULT_SIZE
     const x = snapToGrid(Math.max(0, Math.min((e.clientX - rect.left) / scale - dragging.offsetX, canvasW - tw)))
