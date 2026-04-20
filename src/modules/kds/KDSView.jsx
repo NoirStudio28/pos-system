@@ -23,6 +23,54 @@ function Ticker({ placedAt }) {
   )
 }
 
+function TodayLog() {
+  const { orderHistory, menu, currentUser, staff } = usePOS()
+  const [open, setOpen] = useState(false)
+
+  const member      = staff.find(s => s.id === currentUser?.id)
+  const lastClockIn = member?.clockRecords?.filter(r => r.in)?.slice(-1)[0]?.in
+  const shiftStart  = lastClockIn ? new Date(lastClockIn) : new Date(new Date().setHours(0, 0, 0, 0))
+
+  const shiftOrders = orderHistory
+    .filter(o => o.closedAt && new Date(o.closedAt) >= shiftStart && o.items?.some(i => getItemDestination(i.id, menu) === 'kitchen'))
+    .sort((a, b) => new Date(b.closedAt) - new Date(a.closedAt))
+
+  return (
+    <div style={{ borderTop: '1px solid #1E1E2E', paddingTop: '1rem', marginTop: '1.5rem' }}>
+      <button onClick={() => setOpen(o => !o)}
+        style={{ border: '1px solid #1E1E2E', background: 'transparent', color: '#334155', borderRadius: 8, padding: '0.4rem 0.9rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.68rem', fontWeight: 700, marginBottom: '0.8rem' }}>
+        {open ? '▲' : '▼'} Shift Log ({shiftOrders.length} orders since {shiftStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
+      </button>
+
+      {open && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.6rem', opacity: 0.6 }}>
+          {shiftOrders.length === 0 ? (
+            <div style={{ fontSize: '0.75rem', color: '#334155' }}>No completed orders this shift</div>
+          ) : shiftOrders.map(order => {
+            const foodItems = order.items.filter(i => getItemDestination(i.id, menu) === 'kitchen')
+            return (
+              <div key={order.id} style={{ background: '#13131A', border: '1px solid #1E1E2E', borderRadius: 10, padding: '0.7rem 0.9rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>T{order.table}</span>
+                  <span style={{ fontSize: '0.62rem', color: '#334155' }}>
+                    {new Date(order.closedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                {foodItems.map((item, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#334155', marginBottom: '0.15rem' }}>
+                    <span>{item.name}</span>
+                    <span>×{item.qty}</span>
+                  </div>
+                ))}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function KDSView() {
   const { orders, menu, advanceOrderStatus, toggleUrgent, acknowledgeOrder, serveCourse, toggleItemAvailability } = usePOS()
 
@@ -352,6 +400,9 @@ export default function KDSView() {
             </div>
           </>
         )}
+
+        <TodayLog />
+
       </div>
     </div>
   )
