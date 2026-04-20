@@ -795,7 +795,74 @@ function FloorCanvas({ floorId, editMode, onSelectTable, scale = 1 }) {
     </>
   )
 }
+function TableListView({ floors, tables, orders, bookings, onSelectTable }) {
+  return (
+    <div>
+      {floors.map(floor => {
+        const floorTables = tables.filter(t => t.floorId === floor.id)
+        if (floorTables.length === 0) return null
+        return (
+          <div key={floor.id} style={{ marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.6rem' }}>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: floor.color }} />
+              <span style={{ fontSize: '0.65rem', fontWeight: 700, color: floor.color, letterSpacing: '0.1em' }}>{floor.name.toUpperCase()}</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.6rem' }}>
+              {floorTables.map(table => {
+                const status  = getAutoTableStatus(table.id, orders, bookings)
+                const sc      = STATUS_CONFIG[status]
+                const order   = orders.find(o => o.table === table.id)
+                const booking = bookings.find(b => {
+                  if (b.preferredTable !== table.id || b.status === 'cancelled') return false
+                  const today = new Date().toISOString().split('T')[0]
+                  if (b.date !== today) return false
+                  const now = new Date()
+                  const [h, m] = b.time.split(':').map(Number)
+                  const start = new Date(); start.setHours(h, m, 0, 0)
+                  const warn  = new Date(start.getTime() - 60 * 60000)
+                  const end   = new Date(start.getTime() + (b.duration || 90) * 60000)
+                  return now >= warn && now < end
+                })
+                const hasFire  = order?.courses && (order.courses.mains === 'waiting' || order.courses.desserts === 'waiting')
+                const isReady  = order?.status === 'ready'
 
+                return (
+                  <div key={table.id} onClick={() => onSelectTable(table.id)}
+                    style={{ background: sc.bg, border: `2px solid ${sc.border}`, borderRadius: 12, padding: '0.8rem 1rem', cursor: 'pointer', transition: 'all 0.15s', position: 'relative' }}
+                    onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.2)'}
+                    onMouseLeave={e => e.currentTarget.style.filter = 'brightness(1)'}
+                  >
+                    <div style={{ position: 'absolute', top: 6, right: 8, display: 'flex', gap: '0.2rem' }}>
+                      {isReady && <span style={{ fontSize: '0.7rem', animation: 'pulse 1.5s infinite' }}>🍽️</span>}
+                      {hasFire && <span style={{ fontSize: '0.65rem' }}>🔥</span>}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.3rem', marginBottom: '0.2rem' }}>
+                      <span style={{ fontSize: '0.6rem', color: '#475569' }}>T</span>
+                      <span style={{ fontSize: '1.4rem', fontWeight: 700, color: sc.color, lineHeight: 1 }}>{table.id}</span>
+                    </div>
+                    <div style={{ fontSize: '0.6rem', fontWeight: 700, color: sc.color, letterSpacing: '0.06em', marginBottom: '0.3rem' }}>
+                      {sc.label.toUpperCase()}
+                    </div>
+                    <div style={{ fontSize: '0.62rem', color: '#475569' }}>{table.seats} seats</div>
+                    {order && (
+                      <div style={{ marginTop: '0.3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#F97316' }}>€{order.total.toFixed(0)}</span>
+                        <TableTimer placedAt={order.placedAt} />
+                      </div>
+                    )}
+                    {booking && !order && (
+                      <div style={{ marginTop: '0.3rem', fontSize: '0.62rem', color: '#3B82F6' }}>📅 {booking.time} · {booking.name.split(' ')[0]}</div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
 // ─── Main TablesView ──────────────────────────────────────────────────────────
 export default function TablesView() {
   const { tables, floors, orders, bookings, addTableToFloor } = usePOS()
