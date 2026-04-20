@@ -218,7 +218,7 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
         </div>
       </div>
 
-      <div style={{ flex: 1, display: pickerMobile ? 'flex' : 'grid', flexDirection: 'column', gridTemplateColumns: '1fr 300px', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: pickerMobile ? '1fr' : '1fr 300px', gridTemplateRows: pickerMobile ? '1fr auto' : '1fr', overflow: 'hidden' }}>
         <div style={{ overflow: 'auto', padding: '1rem' }}>
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
             {Object.keys(menu).map(cat => (
@@ -265,7 +265,7 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
           })}
         </div>
 
-        <div style={{ borderLeft: pickerMobile ? 'none' : '1px solid #1E1E2E', borderTop: pickerMobile ? '1px solid #1E1E2E' : 'none', display: 'flex', flexDirection: 'column', overflow: 'hidden', maxHeight: pickerMobile ? 260 : 'none' }}>
+        <div style={{ borderLeft: pickerMobile ? 'none' : '1px solid #1E1E2E', borderTop: pickerMobile ? '1px solid #1E1E2E' : 'none', display: 'flex', flexDirection: 'column', overflow: 'hidden', maxHeight: pickerMobile ? 220 : 'none', background: '#0A0A0F' }}>
           <div style={{ padding: '0.8rem 1rem', borderBottom: '1px solid #1E1E2E', fontSize: '0.6rem', color: '#475569', letterSpacing: '0.12em' }}>ORDER SUMMARY</div>
           <div style={{ flex: 1, overflowY: 'auto', padding: '0.8rem' }}>
             {currentItems.length === 0 ? (
@@ -676,10 +676,10 @@ function FloorCanvas({ floorId, editMode, onSelectTable }) {
         </div>
       )}
 
-      <div style={{ overflowX: 'auto', overflowY: 'auto' }}>
+      <div style={{ overflowX: 'auto', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <div
           ref={canvasRef}
-          style={{ position: 'relative', width: CANVAS_W, height: CANVAS_H, background: `linear-gradient(to right, #1E1E2E 1px, transparent 1px), linear-gradient(to bottom, #1E1E2E 1px, transparent 1px), #0D0D14`, backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`, borderRadius: 10, border: '1px solid #1E1E2E', cursor: editMode ? 'crosshair' : 'default', userSelect: 'none' }}
+          style={{ position: 'relative', width: CANVAS_W, height: CANVAS_H, background: `linear-gradient(to right, #1E1E2E 1px, transparent 1px), linear-gradient(to bottom, #1E1E2E 1px, transparent 1px), #0D0D14`, backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`, borderRadius: 10, border: '1px solid #1E1E2E', cursor: editMode ? 'crosshair' : 'default', userSelect: 'none', touchAction: editMode ? 'none' : 'pan-x pan-y' }}
           onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}
           onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
         >
@@ -805,7 +805,7 @@ export default function TablesView() {
             <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Tables</h1>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            {Object.entries(counts).map(([status, count]) => {
+            {!isMobile && Object.entries(counts).map(([status, count]) => {
               const sc = STATUS_CONFIG[status]
               return (
                 <div key={status} style={{ background: sc.bg, border: `1px solid ${sc.border}`, borderRadius: 8, padding: '0.4rem 0.8rem', textAlign: 'center' }}>
@@ -814,7 +814,7 @@ export default function TablesView() {
                 </div>
               )
             })}
-            <div style={{ width: 1, height: 32, background: '#1E1E2E' }} />
+            {!isMobile && <div style={{ width: 1, height: 32, background: '#1E1E2E' }} />}
             <button onClick={() => setEditMode(m => !m)}
               style={{ border: '1px solid', borderColor: editMode ? '#F97316' : '#1E1E2E', background: editMode ? '#F9731622' : '#13131A', color: editMode ? '#F97316' : '#64748B', borderRadius: 8, padding: '0.45rem 0.9rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem', fontWeight: 700 }}>
               {editMode ? '✓ Done Editing' : '✏️ Edit Layout'}
@@ -822,17 +822,31 @@ export default function TablesView() {
             {editMode && (
               <>
                 <button onClick={() => addTableToFloor(activeFloor)}
-                  style={{ border: 'none', background: '#10B981', color: '#000', borderRadius: 8, padding: '0.45rem 0.9rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem', fontWeight: 700 }}>
-                  + Add Table
+                  style={{ border: 'none', background: '#10B981', color: '#000', borderRadius: 8, padding: '0.45rem 0.9rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: isMobile ? '0.65rem' : '0.72rem', fontWeight: 700 }}>
+                  + Table
                 </button>
                 <button onClick={() => setShowFloorEditor(true)}
-                  style={{ border: '1px solid #1E1E2E', background: '#13131A', color: '#94A3B8', borderRadius: 8, padding: '0.45rem 0.9rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem', fontWeight: 700 }}>
+                  style={{ border: '1px solid #1E1E2E', background: '#13131A', color: '#94A3B8', borderRadius: 8, padding: '0.45rem 0.9rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: isMobile ? '0.65rem' : '0.72rem', fontWeight: 700 }}>
                   ⚙️ Floors
                 </button>
               </>
             )}
           </div>
         </div>
+
+        {isMobile && (
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.8rem' }}>
+            {Object.entries(counts).map(([status, count]) => {
+              const sc = STATUS_CONFIG[status]
+              return (
+                <div key={status} style={{ flex: 1, background: sc.bg, border: `1px solid ${sc.border}`, borderRadius: 8, padding: '0.4rem', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1rem', fontWeight: 700, color: sc.color }}>{count}</div>
+                  <div style={{ fontSize: '0.5rem', color: '#475569', letterSpacing: '0.06em' }}>{sc.label.toUpperCase()}</div>
+                </div>
+              )
+            })}
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
           {floors.map(floor => {
