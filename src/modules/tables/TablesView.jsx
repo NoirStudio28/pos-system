@@ -15,8 +15,8 @@ const RECT_SIZES = {
   large:  { w: 180, h: 100, label: 'Large'  },
   xl:     { w: 220, h: 110, label: 'XL'     },
 }
-const CANVAS_W  = 1300
-const CANVAS_H  = 650
+const CANVAS_W  = 1600
+const CANVAS_H  = 800
 const GRID_SIZE = 40
 
 const STATUS_CONFIG = {
@@ -590,7 +590,7 @@ function FloorEditor({ onClose }) {
 }
 
 // ─── Floor Canvas ─────────────────────────────────────────────────────────────
-function FloorCanvas({ floorId, editMode, onSelectTable }) {
+function FloorCanvas({ floorId, editMode, onSelectTable, scale = 1 }) {
   const { tables, orders, bookings, updateTablePosition, removeTable, updateTableData } = usePOS()
   const canvasRef  = useRef(null)
   const [dragging, setDragging]  = useState(null)
@@ -602,19 +602,20 @@ function FloorCanvas({ floorId, editMode, onSelectTable }) {
   const onMouseDown = (e, tableId) => {
     if (!editMode) return
     e.preventDefault(); e.stopPropagation()
-    const rect = e.currentTarget.getBoundingClientRect()
-    setDragging({ id: tableId, offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top })
+    const canvasRect = canvasRef.current.getBoundingClientRect()
+    const tbl = tables.find(t => t.id === tableId)
+    setDragging({ id: tableId, offsetX: (e.clientX - canvasRect.left) / scale - (tbl?.x || 0), offsetY: (e.clientY - canvasRect.top) / scale - (tbl?.y || 0) })
   }
 
   const onMouseMove = (e) => {
     if (!dragging || !editMode) return
     const canvas = canvasRef.current; if (!canvas) return
-    const rect = canvas.getBoundingClientRect()
-    const tbl  = tables.find(t => t.id === dragging.id)
+    const rect = e.currentTarget.getBoundingClientRect()
+    setDragging({ id: tableId, offsetX: (e.clientX - rect.left) / scale, offsetY: (e.clientY - rect.top) / scale })
     const tw   = tbl?.width  || DEFAULT_SIZE
     const th   = tbl?.height || DEFAULT_SIZE
-    const x = snapToGrid(Math.max(0, Math.min(e.clientX - rect.left - dragging.offsetX, CANVAS_W - tw)))
-    const y = snapToGrid(Math.max(0, Math.min(e.clientY - rect.top  - dragging.offsetY, CANVAS_H - th)))
+    const x = snapToGrid(Math.max(0, Math.min((e.clientX - rect.left) / scale - dragging.offsetX, canvasW - tw)))
+    const y = snapToGrid(Math.max(0, Math.min((e.clientY - rect.top)  / scale - dragging.offsetY, canvasH - th)))
     updateTablePosition(dragging.id, x, y)
   }
 
@@ -624,8 +625,9 @@ function FloorCanvas({ floorId, editMode, onSelectTable }) {
     if (!editMode) return
     e.preventDefault()
     const touch = e.touches[0]
-    const rect  = e.currentTarget.getBoundingClientRect()
-    setDragging({ id: tableId, offsetX: touch.clientX - rect.left, offsetY: touch.clientY - rect.top })
+    const canvasRect = canvasRef.current.getBoundingClientRect()
+    const tbl = tables.find(t => t.id === tableId)
+    setDragging({ id: tableId, offsetX: (touch.clientX - canvasRect.left) / scale - (tbl?.x || 0), offsetY: (touch.clientY - canvasRect.top) / scale - (tbl?.y || 0) })
   }
 
   const onTouchMove = (e) => {
@@ -636,8 +638,8 @@ function FloorCanvas({ floorId, editMode, onSelectTable }) {
     const tbl  = tables.find(t => t.id === dragging.id)
     const tw   = tbl?.width  || DEFAULT_SIZE
     const th   = tbl?.height || DEFAULT_SIZE
-    const x = snapToGrid(Math.max(0, Math.min(touch.clientX - rect.left - dragging.offsetX, CANVAS_W - tw)))
-    const y = snapToGrid(Math.max(0, Math.min(touch.clientY - rect.top  - dragging.offsetY, CANVAS_H - th)))
+    const x = snapToGrid(Math.max(0, Math.min((touch.clientX - rect.left) / scale - dragging.offsetX, canvasW - tw)))
+    const y = snapToGrid(Math.max(0, Math.min((touch.clientY - rect.top)  / scale - dragging.offsetY, canvasH - th)))
     updateTablePosition(dragging.id, x, y)
   }
 
@@ -728,7 +730,8 @@ function FloorCanvas({ floorId, editMode, onSelectTable }) {
         </div>
       )}
 
-      <div style={{ overflowX: 'auto', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <div style={{ width: '100%', overflow: 'hidden', height: CANVAS_H * scale, borderRadius: 10 }}>
+        <div style={{ width: CANVAS_W, height: CANVAS_H, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
         <div
           ref={canvasRef}
           style={{ position: 'relative', width: CANVAS_W, height: CANVAS_H, background: `linear-gradient(to right, #1E1E2E 1px, transparent 1px), linear-gradient(to bottom, #1E1E2E 1px, transparent 1px), #0D0D14`, backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`, borderRadius: 10, border: '1px solid #1E1E2E', cursor: editMode ? 'crosshair' : 'default', userSelect: 'none', touchAction: dragging ? 'none' : 'pan-x pan-y' }}
@@ -787,6 +790,7 @@ function FloorCanvas({ floorId, editMode, onSelectTable }) {
             </div>
           )}
         </div>
+        </div>
       </div>
     </>
   )
@@ -795,7 +799,8 @@ function FloorCanvas({ floorId, editMode, onSelectTable }) {
 // ─── Main TablesView ──────────────────────────────────────────────────────────
 export default function TablesView() {
   const { tables, floors, orders, bookings, addTableToFloor } = usePOS()
-  const { isMobile } = useBreakpoint()
+  const { isMobile, isTablet } = useBreakpoint()
+  const canvasScale = isMobile ? 0.32 : isTablet ? 0.55 : 0.88
   const [, setTick]       = useState(0)
   const [activeFloor,     setActiveFloor]     = useState(null)
   const [editMode,        setEditMode]        = useState(false)
@@ -803,6 +808,10 @@ export default function TablesView() {
   const [pickerTable,     setPickerTable]     = useState(null)
   const [editingOrder,    setEditingOrder]    = useState(null)
   const [showFloorEditor, setShowFloorEditor] = useState(false)
+  const [viewMode,        setViewMode]        = useState(isMobile ? 'list' : 'canvas')
+  const { isTablet } = useBreakpoint()
+
+  const canvasScale = isMobile ? 0.35 : isTablet ? 0.55 : 0.88
 
   useEffect(() => { if (floors.length > 0 && !activeFloor) setActiveFloor(floors[0].id) }, [floors])
   useEffect(() => { if (activeFloor && !floors.find(f => f.id === activeFloor)) setActiveFloor(floors[0]?.id || null) }, [floors])
@@ -932,7 +941,33 @@ export default function TablesView() {
           </div>
         )}
 
-        {activeFloor && <FloorCanvas floorId={activeFloor} editMode={editMode} onSelectTable={setSelectedTable} />}
+        {/* View toggle */}
+        {!editMode && (
+          <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem' }}>
+            <button onClick={() => setViewMode('canvas')}
+              style={{ border: '1px solid', borderColor: viewMode === 'canvas' ? '#F97316' : '#1E1E2E', background: viewMode === 'canvas' ? '#F9731622' : '#13131A', color: viewMode === 'canvas' ? '#F97316' : '#64748B', borderRadius: 8, padding: '0.35rem 0.8rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.7rem', fontWeight: 700 }}>
+              🗺️ Canvas
+            </button>
+            <button onClick={() => setViewMode('list')}
+              style={{ border: '1px solid', borderColor: viewMode === 'list' ? '#F97316' : '#1E1E2E', background: viewMode === 'list' ? '#F9731622' : '#13131A', color: viewMode === 'list' ? '#F97316' : '#64748B', borderRadius: 8, padding: '0.35rem 0.8rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.7rem', fontWeight: 700 }}>
+              📋 List
+            </button>
+          </div>
+        )}
+
+        {(viewMode === 'canvas' || editMode) && activeFloor && (
+          <FloorCanvas floorId={activeFloor} editMode={editMode} onSelectTable={setSelectedTable} scale={canvasScale} />
+        )}
+
+        {viewMode === 'list' && !editMode && (
+          <TableListView
+            floors={floors}
+            tables={tables}
+            orders={orders}
+            bookings={bookings}
+            onSelectTable={setSelectedTable}
+          />
+        )}
       </div>
     </div>
   )
