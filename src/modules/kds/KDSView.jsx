@@ -107,8 +107,11 @@ export default function KDSView() {
 
   const allCoursesServed = (order) => {
     const courses = order.courses || {}
-    const firedCourses = Object.entries(courses).filter(([, v]) => v === 'fired').map(([k]) => k)
+    const firedCourses   = Object.entries(courses).filter(([, v]) => v === 'fired').map(([k]) => k)
+    const waitingCourses = Object.entries(courses).filter(([, v]) => v === 'waiting').map(([k]) => k)
     if (firedCourses.length === 0) return false
+    // Still has courses waiting to be fired — not done yet
+    if (waitingCourses.length > 0) return false
     return firedCourses.every(c => order.servedCourses?.[c])
   }
 
