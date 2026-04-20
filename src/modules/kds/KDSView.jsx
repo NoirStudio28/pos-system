@@ -89,8 +89,15 @@ export default function KDSView() {
     o.items.some(i => getItemDestination(i.id, menu) === 'kitchen')
   )
 
-  const active = ordersWithFood.filter(o => o.status !== 'ready' || !Object.values(o.servedCourses || {}).some(v => v))
-  const ready  = ordersWithFood.filter(o => o.status === 'ready' && Object.values(o.servedCourses || {}).every(v => v) && Object.keys(o.servedCourses || {}).length > 0)
+  const allCoursesServed = (order) => {
+    const courses = order.courses || {}
+    const firedCourses = Object.entries(courses).filter(([, v]) => v === 'fired').map(([k]) => k)
+    if (firedCourses.length === 0) return false
+    return firedCourses.every(c => order.servedCourses?.[c])
+  }
+
+  const active = ordersWithFood.filter(o => !allCoursesServed(o))
+  const ready  = ordersWithFood.filter(o => allCoursesServed(o))
 
   const filtered = filter === 'all'    ? active
     : filter === 'urgent'              ? active.filter(o => o.urgent)
