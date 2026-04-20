@@ -339,6 +339,10 @@ function TablePopup({ table, status, order, booking, onClose, onOpenPicker, onOp
       if (isFired && isServed) continue
     }
 
+    // Check if any courses still waiting or in progress
+    const hasWaiting = Object.values(courses).some(v => v === 'waiting')
+    if (hasWaiting) return { stage: 'waiting', course: null, label: 'Waiting to fire next course', color: '#475569', icon: '⏳' }
+
     // All courses served
     const allFiredCourses = Object.entries(courses).filter(([, v]) => v === 'fired').map(([k]) => k)
     const allServed = allFiredCourses.every(c => servedCourses[c])
