@@ -809,9 +809,8 @@ export default function TablesView() {
   const [editingOrder,    setEditingOrder]    = useState(null)
   const [showFloorEditor, setShowFloorEditor] = useState(false)
   const [viewMode,        setViewMode]        = useState(isMobile ? 'list' : 'canvas')
-  const { isTablet } = useBreakpoint()
+  
 
-  const canvasScale = isMobile ? 0.35 : isTablet ? 0.55 : 0.88
 
   useEffect(() => { if (floors.length > 0 && !activeFloor) setActiveFloor(floors[0].id) }, [floors])
   useEffect(() => { if (activeFloor && !floors.find(f => f.id === activeFloor)) setActiveFloor(floors[0]?.id || null) }, [floors])
