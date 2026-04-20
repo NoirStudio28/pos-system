@@ -679,7 +679,7 @@ function FloorCanvas({ floorId, editMode, onSelectTable }) {
       <div style={{ overflowX: 'auto', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <div
           ref={canvasRef}
-          style={{ position: 'relative', width: CANVAS_W, height: CANVAS_H, background: `linear-gradient(to right, #1E1E2E 1px, transparent 1px), linear-gradient(to bottom, #1E1E2E 1px, transparent 1px), #0D0D14`, backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`, borderRadius: 10, border: '1px solid #1E1E2E', cursor: editMode ? 'crosshair' : 'default', userSelect: 'none', touchAction: editMode ? 'none' : 'pan-x pan-y' }}
+          style={{ position: 'relative', width: CANVAS_W, height: CANVAS_H, background: `linear-gradient(to right, #1E1E2E 1px, transparent 1px), linear-gradient(to bottom, #1E1E2E 1px, transparent 1px), #0D0D14`, backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`, borderRadius: 10, border: '1px solid #1E1E2E', cursor: editMode ? 'crosshair' : 'default', userSelect: 'none', touchAction: dragging ? 'none' : 'pan-x pan-y' }}
           onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}
           onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
         >
