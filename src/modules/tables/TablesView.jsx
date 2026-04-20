@@ -302,7 +302,18 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
 
 // ─── Table Popup ──────────────────────────────────────────────────────────────
 function TablePopup({ table, status, order, booking, onClose, onOpenPicker, onOpenEditPicker }) {
-  const { closeOrder, openPayment, updateBookingStatus, fireCourse, serveCourse } = usePOS()
+  const { closeOrder, openPayment, updateBookingStatus, fireCourse, serveCourse, orderHistory, staff, currentUser } = usePOS()
+
+  const shiftStart = (() => {
+    const member = staff.find(s => s.id === currentUser?.id)
+    const lastIn  = member?.clockRecords?.filter(r => r.in)?.slice(-1)[0]?.in
+    return lastIn ? new Date(lastIn) : new Date(new Date().setHours(0, 0, 0, 0))
+  })()
+
+  const tableHistory = orderHistory
+    .filter(o => o.table === table.id && o.closedAt && new Date(o.closedAt) >= shiftStart)
+    .sort((a, b) => new Date(b.closedAt) - new Date(a.closedAt))
+    .slice(0, 5)
   const sc           = STATUS_CONFIG[status]
   const courses      = order?.courses      || {}
   const servedCourses= order?.servedCourses || {}
@@ -361,9 +372,27 @@ function TablePopup({ table, status, order, booking, onClose, onOpenPicker, onOp
 
         {/* FREE */}
         {status === 'free' && (
-          <button className="tp-btn" style={{ background: '#10B98122', color: '#10B981', border: '1px solid #10B98144' }} onClick={() => { onClose(); onOpenPicker() }}>
-            🍽️ New Order
-          </button>
+          <>
+            <button className="tp-btn" style={{ background: '#10B98122', color: '#10B981', border: '1px solid #10B98144' }} onClick={() => { onClose(); onOpenPicker() }}>
+              🍽️ New Order
+            </button>
+            {tableHistory.length > 0 && (
+              <div style={{ marginTop: '0.5rem', borderTop: '1px solid #1E1E2E', paddingTop: '0.7rem' }}>
+                <div style={{ fontSize: '0.58rem', color: '#475569', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>LAST ORDER THIS SHIFT</div>
+                {tableHistory.slice(0, 2).map(o => (
+                  <div key={o.id} style={{ background: '#0D0D14', border: '1px solid #1E1E2E', borderRadius: 8, padding: '0.5rem 0.7rem', marginBottom: '0.3rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.2rem' }}>
+                      <span style={{ fontSize: '0.68rem', color: '#475569' }}>{new Date(o.closedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#F97316' }}>€{o.total.toFixed(2)}</span>
+                    </div>
+                    <div style={{ fontSize: '0.62rem', color: '#334155' }}>
+                      {(o.items || []).slice(0, 3).map(i => `${i.name} ×${i.qty}`).join(' · ')}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         {/* RESERVED */}
@@ -466,6 +495,25 @@ function TablePopup({ table, status, order, booking, onClose, onOpenPicker, onOp
             <button className="tp-btn" style={{ background: '#F9731622', color: '#F97316', border: '1px solid #F9731644' }} onClick={() => { onClose(); onOpenEditPicker(order) }}>✏️ Edit Order</button>
             <button className="tp-btn" style={{ background: '#10B98122', color: '#10B981', border: '1px solid #10B98144' }} onClick={() => { onClose(); openPayment(order.id) }}>💳 Pay — €{order.total.toFixed(2)}</button>
             <button className="tp-btn" style={{ background: '#EF444422', color: '#EF4444', border: '1px solid #EF444433' }} onClick={() => { closeOrder(order.id); onClose() }}>🗑 Cancel Order</button>
+
+            {/* Shift history for this table */}
+            {tableHistory.length > 0 && (
+              <div style={{ marginTop: '0.8rem', borderTop: '1px solid #1E1E2E', paddingTop: '0.8rem' }}>
+                <div style={{ fontSize: '0.58rem', color: '#475569', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>THIS TABLE — SHIFT HISTORY</div>
+                {tableHistory.map(o => (
+                  <div key={o.id} style={{ background: '#0D0D14', border: '1px solid #1E1E2E', borderRadius: 8, padding: '0.5rem 0.7rem', marginBottom: '0.3rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.2rem' }}>
+                      <span style={{ fontSize: '0.68rem', color: '#475569' }}>{new Date(o.closedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#F97316' }}>€{o.total.toFixed(2)}</span>
+                    </div>
+                    <div style={{ fontSize: '0.62rem', color: '#334155' }}>
+                      {(o.items || []).slice(0, 3).map(i => `${i.name} ×${i.qty}`).join(' · ')}
+                      {(o.items || []).length > 3 ? ` +${o.items.length - 3} more` : ''}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>
