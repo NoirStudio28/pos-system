@@ -118,9 +118,21 @@ export default function KDSView() {
   const active = ordersWithFood.filter(o => !allCoursesServed(o))
   const ready  = ordersWithFood.filter(o => allCoursesServed(o))
 
-  const filtered = filter === 'all'    ? active
+  const filtered = filter === 'previous' ? []
+    : filter === 'all'    ? active
     : filter === 'urgent'              ? active.filter(o => o.urgent)
     : active.filter(o => o.status === filter)
+
+  // Get previous orders when filter is 'previous'
+  const displayOrders = filter === 'previous' 
+    ? (orderHistory || [])
+        .filter(o => {
+          const hasKitchenItems = o.items?.some(i => getItemDestination(i.id, menu) === 'kitchen')
+          return hasKitchenItems && o.closedAt
+        })
+        .sort((a, b) => new Date(b.closedAt) - new Date(a.closedAt))
+        .slice(0, 50)
+    : filtered
 
   const sorted = [...filtered].sort((a, b) => {
     if (a.urgent && !b.urgent) return -1
@@ -190,6 +202,7 @@ export default function KDSView() {
             { id: 'pending',     label: `Pending (${active.filter(o => o.status === 'pending').length})` },
             { id: 'in-progress', label: `In Progress (${active.filter(o => o.status === 'in-progress').length})` },
             { id: 'urgent',      label: `🔴 Urgent (${active.filter(o => o.urgent).length})` },
+            { id: 'previous',    label: `📋 Previous Orders` },
           ].map(t => (
             <button key={t.id} className={`filter-tab ${filter === t.id ? 'active' : ''}`} onClick={() => setFilter(t.id)}>{t.label}</button>
           ))}
@@ -248,11 +261,11 @@ export default function KDSView() {
 
 
         {/* Tickets */}
-        {sorted.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '4rem', color: '#334155', fontSize: '0.85rem' }}>No active food orders</div>
+        {(filter === 'previous' ? displayOrders : sorted).length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '4rem', color: '#334155', fontSize: '0.85rem' }}>No {filter === 'previous' ? 'previous' : 'active'} food orders</div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-            {sorted.map(order => {
+            {(filter === 'previous' ? displayOrders : sorted).map(order => {
               const sc       = STATUS_COLOR[order.status] || '#F59E0B'
               const hasNew   = order.modified
               const courses  = order.courses || {}
