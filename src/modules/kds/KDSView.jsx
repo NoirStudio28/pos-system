@@ -312,13 +312,20 @@ export default function KDSView() {
                   </div>
 
                   {/* Status */}
-                  {order.status === 'ready' ? (
-                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#10B981', background: '#10B98122', border: '1px solid #10B98144', borderRadius: 5, padding: '3px 10px', display: 'inline-block', animation: 'pulse 1.5s infinite' }}>
-                      🍽️ READY — Waiting for collection
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: '0.62rem', fontWeight: 700, color: sc, background: sc + '22', border: `1px solid ${sc}44`, borderRadius: 5, padding: '2px 8px', display: 'inline-block' }}>
-                      {order.status.toUpperCase().replace('-', ' ')}
+                  {filter !== 'previous' && order.status && (
+                    order.status === 'ready' ? (
+                      <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#10B981', background: '#10B98122', border: '1px solid #10B98144', borderRadius: 5, padding: '3px 10px', display: 'inline-block', animation: 'pulse 1.5s infinite' }}>
+                        🍽️ READY — Waiting for collection
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '0.62rem', fontWeight: 700, color: sc, background: sc + '22', border: `1px solid ${sc}44`, borderRadius: 5, padding: '2px 8px', display: 'inline-block' }}>
+                        {order.status.toUpperCase().replace('-', ' ')}
+                      </div>
+                    )
+                  )}
+                  {filter === 'previous' && (
+                    <div style={{ fontSize: '0.62rem', fontWeight: 700, color: '#10B981', background: '#10B98122', border: '1px solid #10B98144', borderRadius: 5, padding: '2px 8px', display: 'inline-block' }}>
+                      ✓ COMPLETED
                     </div>
                   )}
 
