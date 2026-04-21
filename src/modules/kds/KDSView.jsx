@@ -128,7 +128,7 @@ export default function KDSView() {
     ? (orderHistory || [])
         .filter(o => {
           const hasKitchenItems = o.items?.some(i => getItemDestination(i.id, menu) === 'kitchen')
-          return hasKitchenItems && o.closedAt
+          return hasKitchenItems && o.closedAt && o.status === 'closed'
         })
         .sort((a, b) => new Date(b.closedAt) - new Date(a.closedAt))
         .slice(0, 50)
