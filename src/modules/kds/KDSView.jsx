@@ -88,7 +88,7 @@ function TodayLog() {
 }
 
 export default function KDSView() {
-  const { orders, menu, advanceOrderStatus, toggleUrgent, acknowledgeOrder, serveCourse, toggleItemAvailability } = usePOS()
+  const { orders, menu, orderHistory, tables, advanceOrderStatus, toggleUrgent, acknowledgeOrder, serveCourse, toggleItemAvailability } = usePOS()
 
   const handle86 = (itemId) => {
     for (const [cat, items] of Object.entries(menu)) {
