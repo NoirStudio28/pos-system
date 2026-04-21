@@ -128,7 +128,7 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
 
   const total = currentItems.reduce((s, i) => s + (i.price + (i.modifierTotal || 0)) * i.qty, 0)
 
-  const handleAddItem = (item) => { if (item.modifiers?.length > 0) { setModifierItem(item); return } addItemDirect(item, [], 0) }
+  const handleAddItem = (item) => { if (item.modifiers?.length > 0) { setPendingItem(item); setModifierItem(item); return } setPendingItem(item) }
 
   const [pendingItem, setPendingItem] = useState(null)
 
