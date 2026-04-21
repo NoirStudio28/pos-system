@@ -130,13 +130,24 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
 
   const handleAddItem = (item) => { if (item.modifiers?.length > 0) { setModifierItem(item); return } addItemDirect(item, [], 0) }
 
-  const addItemDirect = (item, modifiers, modifierTotal, note = '') => {
+  const [pendingItem, setPendingItem] = useState(null)
+
+  const addItemDirect = (item, modifiers, modifierTotal, note = '', shouldCook = true) => {
     setCurrentItems(prev => {
       const key    = item.id + JSON.stringify(modifiers)
       const exists = prev.find(i => i._key === key)
       if (exists) return prev.map(i => i._key === key ? { ...i, qty: i.qty + 1 } : i)
-      return [...prev, { ...item, qty: 1, modifiers, modifierTotal, note, _key: key }]
+      return [...prev, { ...item, qty: 1, modifiers, modifierTotal, note, _key: key, shouldCook, isAddition: !existing }]
     })
+  }
+
+  const handleAddItemWithCookPrompt = (item) => {
+    if (item.modifiers?.length > 0) {
+      setPendingItem(item)
+      setModifierItem(item)
+      return
+    }
+    setPendingItem(item)
   }
 
   const removeItem = (key) => {
@@ -186,7 +197,30 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
       `}</style>
 
       {modifierItem && (
-        <ModifierPicker item={modifierItem} onConfirm={(mods, extra, note) => { addItemDirect(modifierItem, mods, extra, note); setModifierItem(null) }} onCancel={() => setModifierItem(null)} />
+        <ModifierPicker item={modifierItem} onConfirm={(mods, extra, note) => { setPendingItem(modifierItem); setModifierItem(null) }} onCancel={() => setModifierItem(null)} />
+      )}
+
+      {pendingItem && !modifierItem && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: '1rem' }}>
+          <div style={{ background: '#0F0F17', border: '1px solid #1E1E2E', borderRadius: 14, padding: '1.5rem', width: '100%', maxWidth: 320, fontFamily: "'Courier New', monospace", color: '#E2E8F0', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.8rem' }}>
+              {pendingItem.name}
+            </div>
+            <div style={{ fontSize: '0.7rem', color: '#94A3B8', marginBottom: '1.2rem' }}>
+              Cook now or add for later?
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button onClick={() => { addItemDirect(pendingItem, [], 0, ''); setPendingItem(null) }}
+                style={{ flex: 1, border: 'none', borderRadius: 8, padding: '0.6rem', background: '#10B981', color: '#000', fontFamily: "'Courier New', monospace", fontWeight: 700, cursor: 'pointer', fontSize: '0.75rem' }}>
+                🔥 Cook Now
+              </button>
+              <button onClick={() => { addItemDirect(pendingItem, [], 0, '', false); setPendingItem(null) }}
+                style={{ flex: 1, border: 'none', borderRadius: 8, padding: '0.6rem', background: '#3B82F6', color: '#000', fontFamily: "'Courier New', monospace", fontWeight: 700, cursor: 'pointer', fontSize: '0.75rem' }}>
+                ⏳ Add Later
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <div style={{ background: '#13131A', borderBottom: '1px solid #1E1E2E', padding: '0.8rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
