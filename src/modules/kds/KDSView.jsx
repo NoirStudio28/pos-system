@@ -123,12 +123,17 @@ export default function KDSView() {
     : filter === 'urgent'              ? active.filter(o => o.urgent)
     : active.filter(o => o.status === filter)
 
+  // Get shift start time
+  const member = staff.find(s => s.id === currentUser?.id)
+  const lastClockIn = member?.clockRecords?.filter(r => r.in)?.slice(-1)[0]?.in
+  const shiftStart = lastClockIn ? new Date(lastClockIn) : new Date(new Date().setHours(0, 0, 0, 0))
+
   // Get previous orders when filter is 'previous'
   const displayOrders = filter === 'previous' 
     ? (orderHistory || [])
         .filter(o => {
           const hasKitchenItems = o.items?.some(i => getItemDestination(i.id, menu) === 'kitchen')
-          return hasKitchenItems && o.closedAt && o.status === 'closed'
+          return hasKitchenItems && o.closedAt && o.status === 'closed' && new Date(o.closedAt) >= shiftStart
         })
         .sort((a, b) => new Date(b.closedAt) - new Date(a.closedAt))
         .slice(0, 50)
