@@ -132,12 +132,12 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
 
   const [pendingItem, setPendingItem] = useState(null)
 
-  const addItemDirect = (item, modifiers, modifierTotal, note = '', shouldCook = true) => {
+  const addItemDirect = (item, modifiers, modifierTotal, note = '') => {
     setCurrentItems(prev => {
       const key    = item.id + JSON.stringify(modifiers)
-      const exists = prev.find(i => i._key === key)
-      if (exists) return prev.map(i => i._key === key ? { ...i, qty: i.qty + 1 } : i)
-      return [...prev, { ...item, qty: 1, modifiers, modifierTotal, note, _key: key, shouldCook, isAddition: !existing }]
+      const exists = prev.find(i => i._key === key && !i.isAddition)
+      if (exists) return prev.map(i => i._key === key && !i.isAddition ? { ...i, qty: i.qty + 1 } : i)
+      return [...prev, { ...item, qty: 1, modifiers, modifierTotal, note, _key: key + Date.now(), isAddition: !!existing }]
     })
   }
 
