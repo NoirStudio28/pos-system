@@ -313,7 +313,7 @@ function ItemPicker({ tableId, existingOrder, onClose, covers }) {
                     <input
                       placeholder="note..."
                       value={currentItems.find(i => i.id === item.id)?.note || ''}
-                      onChange={e => setCurrentItems(prev => prev.map(i => i.id === item.id ? { ...i, note: e.target.value } : i))}
+                      onChange={e => setCurrentItems(prev => prev.map(i => i._key === currentItems.find(ci => ci.id === item.id)?._key ? { ...i, note: e.target.value } : i))}
                       onClick={e => e.stopPropagation()}
                       style={{ width: pickerMobile ? 60 : 80, background: '#0D0D14', border: '1px solid #2D2D3F', borderRadius: 6, padding: '0.2rem 0.4rem', color: '#F59E0B', fontFamily: "'Courier New', monospace", fontSize: '0.6rem', outline: 'none' }}
                     />
