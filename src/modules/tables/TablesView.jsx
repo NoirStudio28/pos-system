@@ -1016,7 +1016,7 @@ function FloorCanvas({ floorId, editMode, onSelectTable, scale = 1 }) {
                 <div style={{ fontSize: '1.3rem', fontWeight: 700, color: sc.color, lineHeight: 1 }}>{table.id}</div>
                 <div style={{ fontSize: '0.5rem', color: sc.color, fontWeight: 700, letterSpacing: '0.06em' }}>{sc.label.toUpperCase()}</div>
                 {booking && !order && <div style={{ fontSize: '0.45rem', color: '#3B82F6', marginTop: '0.15rem', textAlign: 'center', lineHeight: 1.2 }}>📅{booking.time}</div>}
-                {table.note && <div style={{ fontSize: '0.7rem', marginTop: '0.1rem', textAlign: 'center' }}>{table.note.startsWith('🎂') ? '🎂' : table.note.startsWith('💍') ? '💍' : table.note.startsWith('🪟') ? '🪟' : table.note.startsWith('👑') ? '👑' : table.note.startsWith('🍼') ? '🍼' : table.note.startsWith('♿') ? '♿' : table.note.startsWith('🎉') ? '🎉' : '📝'}</div>}
+                {table.note && <div style={{ fontSize: '1.1rem', marginTop: '0.1rem', textAlign: 'center', lineHeight: 1 }}>{table.note.startsWith('🎂') ? '🎂' : table.note.startsWith('💍') ? '💍' : table.note.startsWith('🪟') ? '🪟' : table.note.startsWith('👑') ? '👑' : table.note.startsWith('🍼') ? '🍼' : table.note.startsWith('♿') ? '♿' : table.note.startsWith('🎉') ? '🎉' : '📝'}</div>}
                 {order && (
   <>
     <div style={{ fontSize: '0.5rem', color: '#F97316', fontWeight: 700, marginTop: '0.1rem' }}>€{order.total.toFixed(0)}</div>
