@@ -487,6 +487,33 @@ function ItemPicker({ tableId, existingOrder, onClose, covers }) {
   )
 }
 
+function NoteEditor({ table }) {
+  const { updateTableData } = usePOS()
+  const [editing, setEditing] = useState(false)
+  const [note, setNote] = useState(table.note || '')
+  if (!editing) return (
+    <button className="tp-btn" style={{ background: '#13131A', color: '#475569', border: '1px solid #1E1E2E', fontSize: '0.72rem' }}
+      onClick={() => setEditing(true)}>
+      📝 {table.note ? `Note: ${table.note}` : 'Add Table Note'}
+    </button>
+  )
+  return (
+    <div style={{ marginBottom: '0.4rem' }}>
+      <input autoFocus value={note} onChange={e => setNote(e.target.value)}
+        placeholder="e.g. Window seat, Birthday, VIP..."
+        style={{ width: '100%', background: '#0D0D14', border: '1px solid #F97316', borderRadius: 8, padding: '0.6rem', color: '#E2E8F0', fontFamily: "'Courier New', monospace", fontSize: '0.75rem', outline: 'none', boxSizing: 'border-box', marginBottom: '0.4rem' }} />
+      <div style={{ display: 'flex', gap: '0.4rem' }}>
+        <button className="tp-btn" style={{ background: '#F97316', color: '#000', border: 'none', marginBottom: 0 }}
+          onClick={() => { updateTableData({ ...table, note }); setEditing(false) }}>✓ Save</button>
+        <button className="tp-btn" style={{ background: '#13131A', color: '#94A3B8', border: '1px solid #1E1E2E', marginBottom: 0 }}
+          onClick={() => { setNote(table.note || ''); setEditing(false) }}>Cancel</button>
+        {table.note && <button className="tp-btn" style={{ background: '#EF444411', color: '#EF4444', border: '1px solid #EF444433', marginBottom: 0 }}
+          onClick={() => { updateTableData({ ...table, note: '' }); setEditing(false) }}>✕ Clear</button>}
+      </div>
+    </div>
+  )
+}
+
 // ─── Table Popup ──────────────────────────────────────────────────────────────
 function TablePopup({ table, status, order, booking, onClose, onOpenPicker, onOpenEditPicker }) {
   const { closeOrder, openPayment, updateBookingStatus, fireCourse, serveCourse, orderHistory, staff, currentUser } = usePOS()
@@ -558,6 +585,9 @@ function TablePopup({ table, status, order, booking, onClose, onOpenPicker, onOp
             <div style={{ fontSize: '1.4rem', fontWeight: 700 }}>Table {table.id}</div>
             <div style={{ fontSize: '0.65rem', color: sc.color, fontWeight: 700, letterSpacing: '0.1em', marginTop: '0.15rem' }}>● {sc.label.toUpperCase()}</div>
             <div style={{ fontSize: '0.6rem', color: '#334155', marginTop: '0.1rem' }}>{table.seats} seats · {table.shape}</div>
+{table.note && (
+  <div style={{ fontSize: '0.65rem', color: '#F59E0B', marginTop: '0.2rem' }}>📝 {table.note}</div>
+)}
           </div>
           <button onClick={onClose} style={{ border: '1px solid #1E1E2E', background: 'transparent', color: '#64748B', borderRadius: 8, padding: '0.3rem 0.6rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem' }}>✕</button>
         </div>
@@ -700,6 +730,7 @@ function TablePopup({ table, status, order, booking, onClose, onOpenPicker, onOp
             </div>
 
             {/* ── ACTIONS ── */}
+            <NoteEditor table={table} />
             <button className="tp-btn" style={{ background: '#F9731622', color: '#F97316', border: '1px solid #F9731644' }} onClick={() => { onClose(); onOpenEditPicker(order) }}>✏️ Edit Order</button>
             <button className="tp-btn" style={{ background: '#10B98122', color: '#10B981', border: '1px solid #10B98144' }} onClick={() => { onClose(); openPayment(order.id) }}>💳 Pay — €{order.total.toFixed(2)}</button>
             <button className="tp-btn" style={{ background: '#EF444422', color: '#EF4444', border: '1px solid #EF444433' }} onClick={() => { closeOrder(order.id); onClose() }}>🗑 Cancel Order</button>
@@ -977,6 +1008,7 @@ function FloorCanvas({ floorId, editMode, onSelectTable, scale = 1 }) {
                 <div style={{ fontSize: '1.3rem', fontWeight: 700, color: sc.color, lineHeight: 1 }}>{table.id}</div>
                 <div style={{ fontSize: '0.5rem', color: sc.color, fontWeight: 700, letterSpacing: '0.06em' }}>{sc.label.toUpperCase()}</div>
                 {booking && !order && <div style={{ fontSize: '0.45rem', color: '#3B82F6', marginTop: '0.15rem', textAlign: 'center', lineHeight: 1.2 }}>📅{booking.time}</div>}
+                {table.note && !order && <div style={{ fontSize: '0.42rem', color: '#F59E0B', marginTop: '0.1rem', textAlign: 'center' }}>📝</div>}
                 {order && (
   <>
     <div style={{ fontSize: '0.5rem', color: '#F97316', fontWeight: 700, marginTop: '0.1rem' }}>€{order.total.toFixed(0)}</div>
