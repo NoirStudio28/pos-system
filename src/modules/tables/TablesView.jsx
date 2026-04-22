@@ -1079,7 +1079,7 @@ export default function TablesView() {
   const [editingOrder,    setEditingOrder]    = useState(null)
   const [showFloorEditor, setShowFloorEditor] = useState(false)
   const [viewMode,        setViewMode]        = useState(isMobile ? 'list' : 'canvas')
-  const [tableCovers, setTableCovers] = useState({})
+  
   
 
 
