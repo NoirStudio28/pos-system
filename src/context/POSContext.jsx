@@ -501,7 +501,7 @@ return { ...newItem, isNew: noteChanged || modsChanged }
       addFloor, updateFloor, deleteFloor,
       updateTableStatus, updateTablePosition, updateTableData, addTableToFloor, removeTable,
       placeOrder, closeOrder, toggleOrderStatus, advanceOrderStatus, toggleUrgent,
-      updateOrder, fireCourse, serveCourse, acknowledgeOrder, updateBarStatus,
+      updateOrder, mergeTables, fireCourse, serveCourse, acknowledgeOrder, updateBarStatus,
       openPayment, closePayment, processPayment, checkGiftCard,
       addBooking, updateBooking, deleteBooking, updateBookingStatus,
       addCategory, deleteCategory, addMenuItem, updateMenuItem, deleteMenuItem, toggleItemAvailability,
