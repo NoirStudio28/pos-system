@@ -43,6 +43,27 @@ function TableTimer({ placedAt }) {
   )
 }
 
+function SeatedTimer({ placedAt }) {
+  const [elapsed, setElapsed] = useState(0)
+  useEffect(() => {
+    const calc = () => setElapsed(Math.floor((Date.now() - new Date(placedAt).getTime()) / 60000))
+    calc()
+    const t = setInterval(calc, 60000)
+    return () => clearInterval(t)
+  }, [placedAt])
+  const hrs  = Math.floor(elapsed / 60)
+  const mins = elapsed % 60
+  const color = elapsed >= 90 ? '#EF4444' : elapsed >= 60 ? '#F59E0B' : '#94A3B8'
+  return (
+    <div>
+      <div style={{ fontSize: '0.75rem', color, fontWeight: 700 }}>
+        {hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`}
+      </div>
+      <div style={{ fontSize: '0.55rem', color: '#475569' }}>seated</div>
+    </div>
+  )
+}
+
 // ─── Modifier Picker ──────────────────────────────────────────────────────────
 function ModifierPicker({ item, onConfirm, onCancel }) {
   const [selections,         setSelections]         = useState({})
@@ -742,12 +763,20 @@ const [transferring, setTransferring] = useState(false)
             </div>
 
             {/* ── ORDER ITEMS ── */}
-            {order.covers > 0 && (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem', background: '#0D0D14', border: '1px solid #1E1E2E', borderRadius: 10, padding: '0.6rem 0.8rem' }}>
-    <span style={{ fontSize: '0.75rem' }}>👥</span>
-    <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>{order.covers} {order.covers === 1 ? 'cover' : 'covers'}</span>
-  </div>
-)}
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.8rem' }}>
+  {order.covers > 0 && (
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#0D0D14', border: '1px solid #1E1E2E', borderRadius: 10, padding: '0.6rem 0.8rem' }}>
+      <span style={{ fontSize: '0.75rem' }}>👥</span>
+      <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>{order.covers} {order.covers === 1 ? 'cover' : 'covers'}</span>
+    </div>
+  )}
+  {order.placedAt && (
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#0D0D14', border: '1px solid #1E1E2E', borderRadius: 10, padding: '0.6rem 0.8rem' }}>
+      <span style={{ fontSize: '0.75rem' }}>⏱️</span>
+      <SeatedTimer placedAt={order.placedAt} />
+    </div>
+  )}
+</div>
             <div style={{ background: '#0D0D14', borderRadius: 10, padding: '0.8rem', marginBottom: '1rem', maxHeight: 140, overflowY: 'auto' }}>
               {order.items.map((item, idx) => (
                 <div key={idx} style={{ marginBottom: '0.4rem' }}>
