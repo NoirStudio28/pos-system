@@ -522,10 +522,37 @@ function NoteEditor({ table }) {
   )
 }
 
+function TransferPicker({ order, onClose, onDone }) {
+  const { tables, orders, updateOrder } = usePOS()
+  const freeTables = tables.filter(t => t.id !== order.table && !orders.find(o => o.table === t.id))
+  return (
+    <div style={{ background: '#0D0D14', border: '1px solid #3B82F644', borderRadius: 10, padding: '0.8rem', marginBottom: '0.8rem' }}>
+      <div style={{ fontSize: '0.6rem', color: '#3B82F6', letterSpacing: '0.1em', marginBottom: '0.6rem', fontWeight: 700 }}>TRANSFER TO TABLE</div>
+      {freeTables.length === 0 ? (
+        <div style={{ fontSize: '0.72rem', color: '#475569' }}>No free tables available</div>
+      ) : (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.6rem' }}>
+          {freeTables.map(t => (
+            <button key={t.id} onClick={() => { updateOrder({ ...order, table: t.id }); onDone() }}
+              style={{ width: 40, height: 40, borderRadius: 8, border: '1px solid #3B82F644', background: '#3B82F622', color: '#3B82F6', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.78rem', fontWeight: 700 }}>
+              {t.id}
+            </button>
+          ))}
+        </div>
+      )}
+      <button onClick={onClose}
+        style={{ border: '1px solid #1E1E2E', background: '#13131A', color: '#94A3B8', borderRadius: 8, padding: '0.3rem 0.8rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.68rem', fontWeight: 700 }}>
+        Cancel
+      </button>
+    </div>
+  )
+}
+
 // ─── Table Popup ──────────────────────────────────────────────────────────────
 function TablePopup({ table, status, order, booking, onClose, onOpenPicker, onOpenEditPicker }) {
   const { closeOrder, openPayment, updateBookingStatus, fireCourse, serveCourse, orderHistory, staff, currentUser } = usePOS()
   const [covers, setCovers] = useState(2)
+const [transferring, setTransferring] = useState(false)
 
   const shiftStart = (() => {
     const member = staff.find(s => s.id === currentUser?.id)
@@ -737,9 +764,14 @@ function TablePopup({ table, status, order, booking, onClose, onOpenPicker, onOp
               </div>
             </div>
 
+            {transferring && (
+  <TransferPicker order={order} onClose={() => setTransferring(false)} onDone={() => { setTransferring(false); onClose() }} />
+)}
+
             {/* ── ACTIONS ── */}
             <NoteEditor table={table} />
             <button className="tp-btn" style={{ background: '#F9731622', color: '#F97316', border: '1px solid #F9731644' }} onClick={() => { onClose(); onOpenEditPicker(order) }}>✏️ Edit Order</button>
+            <button className="tp-btn" style={{ background: '#3B82F622', color: '#3B82F6', border: '1px solid #3B82F644' }} onClick={() => setTransferring(true)}>🔀 Transfer Table</button>
             <button className="tp-btn" style={{ background: '#10B98122', color: '#10B981', border: '1px solid #10B98144' }} onClick={() => { onClose(); openPayment(order.id) }}>💳 Pay — €{order.total.toFixed(2)}</button>
             <button className="tp-btn" style={{ background: '#EF444422', color: '#EF4444', border: '1px solid #EF444433' }} onClick={() => { closeOrder(order.id); onClose() }}>🗑 Cancel Order</button>
 
