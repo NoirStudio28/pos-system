@@ -116,7 +116,7 @@ function ModifierPicker({ item, onConfirm, onCancel }) {
 }
 
 // ─── Item Picker ──────────────────────────────────────────────────────────────
-function ItemPicker({ tableId, existingOrder, onClose }) {
+function ItemPicker({ tableId, existingOrder, onClose, covers }) {
   const [editingItem, setEditingItem] = useState(null)
   const { menu, placeOrder, updateOrder, orders, currentUser, customers } = usePOS()
   const { isMobile: pickerMobile } = useBreakpoint()
@@ -171,7 +171,7 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
     if (existing) {
       updateOrder({ ...existing, items: itemsWithAllergens, total, customerId: linkedCustomerId })
     } else {
-      placeOrder({ id: Date.now(), table: tableId, items: itemsWithAllergens, total, status: 'pending', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), customerId: linkedCustomerId })
+      placeOrder({ id: Date.now(), table: tableId, items: itemsWithAllergens, total, status: 'pending', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), customerId: linkedCustomerId, covers: covers || 0 })
     }
     onClose()
   }
@@ -487,6 +487,7 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
 // ─── Table Popup ──────────────────────────────────────────────────────────────
 function TablePopup({ table, status, order, booking, onClose, onOpenPicker, onOpenEditPicker }) {
   const { closeOrder, openPayment, updateBookingStatus, fireCourse, serveCourse, orderHistory, staff, currentUser } = usePOS()
+  const [covers, setCovers] = useState(2)
 
   const shiftStart = (() => {
     const member = staff.find(s => s.id === currentUser?.id)
@@ -559,11 +560,21 @@ function TablePopup({ table, status, order, booking, onClose, onOpenPicker, onOp
         </div>
 
         {/* FREE */}
-        {status === 'free' && (
-          <>
-            <button className="tp-btn" style={{ background: '#10B98122', color: '#10B981', border: '1px solid #10B98144' }} onClick={() => { onClose(); onOpenPicker() }}>
-              🍽️ New Order
-            </button>
+{status === 'free' && (
+  <>
+    <div style={{ fontSize: '0.6rem', color: '#475569', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>COVERS</div>
+    <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.8rem' }}>
+      {[1,2,3,4,5,6,7,8,9,10].map(n => (
+        <button key={n} onClick={() => setCovers(n)}
+          style={{ width: 36, height: 36, borderRadius: 8, border: '1px solid', borderColor: covers === n ? '#F97316' : '#1E1E2E', background: covers === n ? '#F9731622' : '#13131A', color: covers === n ? '#F97316' : '#64748B', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.78rem', fontWeight: 700 }}>
+          {n}
+        </button>
+      ))}
+    </div>
+    <button className="tp-btn" style={{ background: '#10B98122', color: '#10B981', border: '1px solid #10B98144' }} onClick={() => { onClose(); onOpenPicker(covers) }}>
+      🍽️ New Order · {covers} {covers === 1 ? 'cover' : 'covers'}
+    </button>
+    
             {tableHistory.length > 0 && (
               <div style={{ marginTop: '0.5rem', borderTop: '1px solid #1E1E2E', paddingTop: '0.7rem' }}>
                 <div style={{ fontSize: '0.58rem', color: '#475569', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>LAST ORDER THIS SHIFT</div>
@@ -663,6 +674,12 @@ function TablePopup({ table, status, order, booking, onClose, onOpenPicker, onOp
             </div>
 
             {/* ── ORDER ITEMS ── */}
+            {order.covers > 0 && (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem', background: '#0D0D14', border: '1px solid #1E1E2E', borderRadius: 10, padding: '0.6rem 0.8rem' }}>
+    <span style={{ fontSize: '0.75rem' }}>👥</span>
+    <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>{order.covers} {order.covers === 1 ? 'cover' : 'covers'}</span>
+  </div>
+)}
             <div style={{ background: '#0D0D14', borderRadius: 10, padding: '0.8rem', marginBottom: '1rem', maxHeight: 140, overflowY: 'auto' }}>
               {order.items.map((item, idx) => (
                 <div key={idx} style={{ marginBottom: '0.4rem' }}>
@@ -958,11 +975,12 @@ function FloorCanvas({ floorId, editMode, onSelectTable, scale = 1 }) {
                 <div style={{ fontSize: '0.5rem', color: sc.color, fontWeight: 700, letterSpacing: '0.06em' }}>{sc.label.toUpperCase()}</div>
                 {booking && !order && <div style={{ fontSize: '0.45rem', color: '#3B82F6', marginTop: '0.15rem', textAlign: 'center', lineHeight: 1.2 }}>📅{booking.time}</div>}
                 {order && (
-                  <>
-                    <div style={{ fontSize: '0.5rem', color: '#F97316', fontWeight: 700, marginTop: '0.1rem' }}>€{order.total.toFixed(0)}</div>
-                    <TableTimer placedAt={order.placedAt} />
-                  </>
-                )}
+  <>
+    <div style={{ fontSize: '0.5rem', color: '#F97316', fontWeight: 700, marginTop: '0.1rem' }}>€{order.total.toFixed(0)}</div>
+    {order.covers && <div style={{ fontSize: '0.45rem', color: '#94A3B8' }}>{order.covers} cvr</div>}
+    <TableTimer placedAt={order.placedAt} />
+  </>
+)}
                 {editMode && <div style={{ position: 'absolute', top: 3, right: 4, fontSize: '0.5rem', color: '#334155' }}>{table.seats}p</div>}
               </div>
             )
@@ -1049,6 +1067,7 @@ function TableListView({ floors, tables, orders, bookings, onSelectTable }) {
 }
 // ─── Main TablesView ──────────────────────────────────────────────────────────
 export default function TablesView() {
+  const [tableCovers, setTableCovers] = useState({})
   const { tables, floors, orders, bookings, addTableToFloor } = usePOS()
   const { isMobile, isTablet } = useBreakpoint()
   const canvasScale = isMobile ? 0.32 : isTablet ? 0.55 : 0.88
@@ -1060,6 +1079,7 @@ export default function TablesView() {
   const [editingOrder,    setEditingOrder]    = useState(null)
   const [showFloorEditor, setShowFloorEditor] = useState(false)
   const [viewMode,        setViewMode]        = useState(isMobile ? 'list' : 'canvas')
+  const [tableCovers, setTableCovers] = useState({})
   
 
 
@@ -1094,14 +1114,14 @@ export default function TablesView() {
     <div style={{ minHeight: '100vh', background: '#0A0A0F', fontFamily: "'Courier New', monospace", color: '#E2E8F0', padding: isMobile ? '1rem' : '1.5rem' }}>
 
       {(pickerTable !== null || editingOrder !== null) && (
-        <ItemPicker tableId={pickerTable ?? editingOrder?.table} existingOrder={editingOrder} onClose={() => { setPickerTable(null); setEditingOrder(null) }} />
-      )}
+  <ItemPicker tableId={pickerTable ?? editingOrder?.table} existingOrder={editingOrder} covers={tableCovers[pickerTable]} onClose={() => { setPickerTable(null); setEditingOrder(null) }} />
+)}
 
       {selectedTable && selectedTableObj && !editMode && (
         <TablePopup
           table={selectedTableObj} status={selectedStatus} order={selectedOrder} booking={selectedBooking}
           onClose={() => setSelectedTable(null)}
-          onOpenPicker={() => setPickerTable(selectedTable)}
+          onOpenPicker={(covers) => { setPickerTable(selectedTable); setTableCovers(prev => ({ ...prev, [selectedTable]: covers })) }}
           onOpenEditPicker={(order) => setEditingOrder(order)}
         />
       )}
