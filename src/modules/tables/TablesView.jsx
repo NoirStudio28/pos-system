@@ -1016,7 +1016,7 @@ function FloorCanvas({ floorId, editMode, onSelectTable, scale = 1 }) {
                 <div style={{ fontSize: '1.3rem', fontWeight: 700, color: sc.color, lineHeight: 1 }}>{table.id}</div>
                 <div style={{ fontSize: '0.5rem', color: sc.color, fontWeight: 700, letterSpacing: '0.06em' }}>{sc.label.toUpperCase()}</div>
                 {booking && !order && <div style={{ fontSize: '0.45rem', color: '#3B82F6', marginTop: '0.15rem', textAlign: 'center', lineHeight: 1.2 }}>📅{booking.time}</div>}
-                {table.note && !order && <div style={{ fontSize: '0.42rem', color: '#F59E0B', marginTop: '0.1rem', textAlign: 'center' }}>📝</div>}
+                {table.note && <div style={{ fontSize: '0.7rem', marginTop: '0.1rem', textAlign: 'center' }}>{table.note.startsWith('🎂') ? '🎂' : table.note.startsWith('💍') ? '💍' : table.note.startsWith('🪟') ? '🪟' : table.note.startsWith('👑') ? '👑' : table.note.startsWith('🍼') ? '🍼' : table.note.startsWith('♿') ? '♿' : table.note.startsWith('🎉') ? '🎉' : '📝'}</div>}
                 {order && (
   <>
     <div style={{ fontSize: '0.5rem', color: '#F97316', fontWeight: 700, marginTop: '0.1rem' }}>€{order.total.toFixed(0)}</div>
@@ -1097,6 +1097,12 @@ function TableListView({ floors, tables, orders, bookings, onSelectTable }) {
                     )}
                     {booking && !order && (
                       <div style={{ marginTop: '0.3rem', fontSize: '0.62rem', color: '#3B82F6' }}>📅 {booking.time} · {booking.name.split(' ')[0]}</div>
+                    )}
+                    {table.note && (
+                      <div style={{ marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <span style={{ fontSize: '0.7rem' }}>{table.note.startsWith('🎂') ? '🎂' : table.note.startsWith('💍') ? '💍' : table.note.startsWith('🪟') ? '🪟' : table.note.startsWith('👑') ? '👑' : table.note.startsWith('🍼') ? '🍼' : table.note.startsWith('♿') ? '♿' : table.note.startsWith('🎉') ? '🎉' : '📝'}</span>
+                        <span style={{ fontSize: '0.6rem', color: '#F59E0B' }}>{table.note.replace(/^\S+\s/, '')}</span>
+                      </div>
                     )}
                   </div>
                 )
