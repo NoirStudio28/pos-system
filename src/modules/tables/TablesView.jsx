@@ -131,7 +131,10 @@ function ItemPicker({ tableId, existingOrder, onClose, covers }) {
   const total = currentItems.reduce((s, i) => s + (i.price + (i.modifierTotal || 0)) * i.qty, 0)
 
 
-  const handleAddItem = (item) => { addItemDirect(item, [], 0) }
+  const handleAddItem = (item) => {
+  if (item.modifiers?.length > 0) { setModifierItem(item); return }
+  addItemDirect(item, [], 0)
+}
 
   const [pendingItem, setPendingItem] = useState(null)
 
@@ -200,8 +203,8 @@ function ItemPicker({ tableId, existingOrder, onClose, covers }) {
       `}</style>
 
       {modifierItem && (
-        <ModifierPicker item={modifierItem} onConfirm={(mods, extra, note) => { setPendingItem(modifierItem); setModifierItem(null) }} onCancel={() => setModifierItem(null)} />
-      )}
+  <ModifierPicker item={modifierItem} onConfirm={(mods, extra) => { addItemDirect(modifierItem, mods, extra); setModifierItem(null) }} onCancel={() => setModifierItem(null)} />
+)}
 
       {specialInstructionsItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '1rem' }}>
