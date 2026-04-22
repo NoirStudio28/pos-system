@@ -135,12 +135,12 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
 
   const [pendingItem, setPendingItem] = useState(null)
 
-  const addItemDirect = (item, modifiers, modifierTotal, note = '') => {
+  const addItemDirect = (item, modifiers, modifierTotal, note = '', specialInstructions = []) => {
     setCurrentItems(prev => {
       const key    = item.id + JSON.stringify(modifiers)
       const exists = prev.find(i => i._key === key && !i.isAddition)
       if (exists) return prev.map(i => i._key === key && !i.isAddition ? { ...i, qty: i.qty + 1 } : i)
-      return [...prev, { ...item, qty: 1, modifiers, modifierTotal, note, _key: key + Date.now(), isAddition: !!existing }]
+      return [...prev, { ...item, qty: 1, modifiers, modifierTotal, note, specialInstructions, _key: key + Date.now(), isAddition: !!existing }]
     })
   }
 
@@ -339,7 +339,7 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
                   </div>
                 </div>
                 {i.modifiers?.length > 0 && <div style={{ fontSize: '0.62rem', color: '#8B5CF6', marginTop: '0.1rem' }}>{i.modifiers.map(m => m.optionName).join(', ')}</div>}
-                {i.specialInstructions?.length > 0 && <button onClick={() => setSpecialInstructionsItem(i)} style={{ fontSize: '0.62rem', color: '#F97316', marginTop: '0.1rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: "'Courier New', monospace", textDecoration: 'underline' }}>{i.specialInstructions.join(' ')}</button>}
+                {i.specialInstructions?.length > 0 && <button onClick={() => setSpecialInstructionsItem(i)} style={{ fontSize: '0.62rem', color: '#F97316', marginTop: '0.1rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: "'Courier New', monospace", textDecoration: 'underline' }}>{i.specialInstructions.map(s => `${s}`).join(' ')}</button>}
                 {i.note && <div style={{ fontSize: '0.6rem', color: '#F59E0B', marginTop: '0.1rem' }}>📝 {i.note}</div>}
               </div>
             ))}
