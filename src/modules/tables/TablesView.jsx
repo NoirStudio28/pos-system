@@ -117,6 +117,7 @@ function ModifierPicker({ item, onConfirm, onCancel }) {
 
 // ─── Item Picker ──────────────────────────────────────────────────────────────
 function ItemPicker({ tableId, existingOrder, onClose }) {
+  const [editingItem, setEditingItem] = useState(null)
   const { menu, placeOrder, updateOrder, orders, currentUser, customers } = usePOS()
   const { isMobile: pickerMobile } = useBreakpoint()
 
@@ -284,12 +285,12 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
             {currentItems.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '1.5rem 0', fontSize: '0.75rem', color: '#334155' }}>No items yet</div>
             ) : currentItems.map(i => (
-              <div key={i._key} style={{ marginBottom: '0.6rem' }}>
+              <div key={i._key} style={{ marginBottom: '0.6rem', padding: '0.5rem', background: '#0D0D14', borderRadius: 8, border: '1px solid #1E1E2E', cursor: 'pointer' }} onClick={() => setEditingItem(i)}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>{i.name} ×{i.qty}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <span style={{ fontSize: '0.75rem', color: '#CBD5E1' }}>€{((i.price + (i.modifierTotal || 0)) * i.qty).toFixed(2)}</span>
-                    <button className="qty-btn" style={{ width: 20, height: 20, fontSize: '0.7rem' }} onClick={() => removeItem(i._key)}>−</button>
+                    <button className="qty-btn" style={{ width: 20, height: 20, fontSize: '0.7rem' }} onClick={(e) => { e.stopPropagation(); removeItem(i._key) }}>−</button>
                   </div>
                 </div>
                 {i.modifiers?.length > 0 && <div style={{ fontSize: '0.62rem', color: '#8B5CF6', marginTop: '0.1rem' }}>{i.modifiers.map(m => m.optionName).join(', ')}</div>}
@@ -309,6 +310,69 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
           </div>
         </div>
       </div>
+      {editingItem && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1150, padding: '1rem' }}>
+          <div style={{ background: '#0F0F17', border: '1px solid #1E1E2E', borderRadius: 14, padding: '1.5rem', width: '100%', maxWidth: 350, fontFamily: "'Courier New', monospace", color: '#E2E8F0', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: '0.6rem', letterSpacing: '0.15em', color: '#475569', marginBottom: '0.3rem' }}>EDIT ITEM</div>
+            <div style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1.2rem' }}>{editingItem.name}</div>
+
+            {/* QTY */}
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontSize: '0.65rem', fontWeight: 700, marginBottom: '0.5rem', color: '#F97316' }}>QUANTITY</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <button onClick={() => setCurrentItems(prev => prev.map(i => i._key === editingItem._key ? { ...i, qty: Math.max(1, i.qty - 1) } : i))} className="qty-btn">−</button>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, minWidth: 30, textAlign: 'center' }}>{editingItem.qty}</span>
+                <button onClick={() => setCurrentItems(prev => prev.map(i => i._key === editingItem._key ? { ...i, qty: i.qty + 1 } : i))} className="qty-btn">+</button>
+              </div>
+            </div>
+
+            {/* NOTE/COMMENT */}
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontSize: '0.65rem', fontWeight: 700, marginBottom: '0.5rem', color: '#F97316' }}>COMMENT</div>
+              <input 
+                value={editingItem.note || ''}
+                onChange={e => setCurrentItems(prev => prev.map(i => i._key === editingItem._key ? { ...i, note: e.target.value } : i))}
+                placeholder="Special request..."
+                style={{ width: '100%', background: '#0D0D14', border: '1px solid #2D2D3F', borderRadius: 8, padding: '0.6rem', color: '#E2E8F0', fontFamily: "'Courier New', monospace", fontSize: '0.75rem', outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            {/* MODIFIERS */}
+            {editingItem.modifiers?.length > 0 && (
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{ fontSize: '0.65rem', fontWeight: 700, marginBottom: '0.5rem', color: '#F97316' }}>OPTIONS</div>
+                <div style={{ background: '#0D0D14', border: '1px solid #1E1E2E', borderRadius: 8, padding: '0.7rem' }}>
+                  {editingItem.modifiers.map((m, idx) => (
+                    <div key={idx} style={{ fontSize: '0.7rem', color: '#CBD5E1', marginBottom: '0.3rem', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>{m.optionName}</span>
+                      {m.price > 0 && <span style={{ color: '#10B981' }}>+€{m.price.toFixed(2)}</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ALLERGENS */}
+            {editingItem.allergens && editingItem.allergens !== 'None' && (
+              <div style={{ marginBottom: '1rem', background: '#F59E0B22', border: '1px solid #F59E0B44', borderRadius: 8, padding: '0.7rem' }}>
+                <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#F59E0B', marginBottom: '0.3rem' }}>⚠ ALLERGENS</div>
+                <div style={{ fontSize: '0.7rem', color: '#F59E0B' }}>{editingItem.allergens}</div>
+              </div>
+            )}
+
+            {/* DELETE */}
+            <button onClick={() => { removeItem(editingItem._key); setEditingItem(null) }}
+              style={{ width: '100%', border: '1px solid #EF444433', background: '#EF444411', color: '#EF4444', borderRadius: 8, padding: '0.6rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+              🗑 Delete Item
+            </button>
+
+            <button onClick={() => setEditingItem(null)}
+              style={{ width: '100%', border: 'none', background: '#F97316', color: '#000', borderRadius: 8, padding: '0.6rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.75rem', fontWeight: 700 }}>
+              ✓ Done
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
