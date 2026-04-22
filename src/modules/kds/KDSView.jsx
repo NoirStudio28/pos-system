@@ -389,8 +389,18 @@ export default function KDSView() {
                                   {item.name}
                                 </span>
                                 {item.specialInstructions?.length > 0 && (
-                              <div style={{ fontSize: '0.65rem', color: '#F97316', marginTop: '0.15rem', fontWeight: 700 }}>
-                                {item.specialInstructions.join(' ')}
+                              <div style={{ marginTop: '0.2rem' }}>
+                                {(() => {
+                                  const menuItem = menu[Object.keys(menu).find(cat => menu[cat].find(m => m.id === item.id))]?.find(m => m.id === item.id)
+                                  return menuItem?.modifiers?.map(group => {
+                                    const selected = item.specialInstructions.filter(s => group.options.find(o => o.name === s))
+                                    return selected.length > 0 && (
+                                      <div key={group.id} style={{ fontSize: '0.65rem', color: '#F97316', fontWeight: 700 }}>
+                                        {group.name}: {selected.join(', ')}
+                                      </div>
+                                    )
+                                  })
+                                })()}
                               </div>
                             )}
                                 <button
