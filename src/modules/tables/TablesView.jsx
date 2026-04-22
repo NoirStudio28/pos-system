@@ -344,10 +344,10 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
                     {(() => {
                       const menuItem = Object.values(menu).flat().find(m => m.id === i.id)
                       return menuItem?.modifiers?.map(group => {
-                        const selected = i.specialInstructions.filter(s => group.options.find(o => o.name === s))
+                        const selected = i.specialInstructions.filter(s => s.startsWith(group.id + ':'))
                         return selected.length > 0 && (
                           <div key={group.id}>
-                            {group.name}: {selected.join(', ')}
+                            {group.name}: {selected.map(s => menuItem.modifiers.find(g => g.id === s.split(':')[0])?.options.find(o => o.id === s.split(':')[1])?.name).join(', ')}
                           </div>
                         )
                       })
@@ -425,12 +425,13 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
                         <div style={{ fontSize: '0.62rem', color: '#CBD5E1', marginBottom: '0.3rem', fontWeight: 600 }}>{group.name}</div>
                         <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
                           {group.options.map(opt => {
-                            const hasTag = editingItem.specialInstructions?.includes(opt.name)
+                            const tagId = `${group.id}:${opt.id}`
+                            const hasTag = editingItem.specialInstructions?.includes(tagId)
                             return (
                               <button key={opt.id} onClick={() => {
                                 const updated = hasTag 
-                                  ? (editingItem.specialInstructions || []).filter(t => t !== opt.name)
-                                  : [...(editingItem.specialInstructions || []), opt.name]
+                                  ? (editingItem.specialInstructions || []).filter(t => t !== tagId)
+                                  : [...(editingItem.specialInstructions || []), tagId]
                                 setEditingItem({...editingItem, specialInstructions: updated})
                                 setCurrentItems(prev => prev.map(i => i._key === editingItem._key ? { ...i, specialInstructions: updated } : i))
                               }}
