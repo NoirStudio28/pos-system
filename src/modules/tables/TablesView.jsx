@@ -1102,10 +1102,29 @@ function FloorCanvas({ floorId, editMode, onSelectTable, scale = 1 }) {
   )
 }
 function TableListView({ floors, tables, orders, bookings, onSelectTable }) {
+  const [filter, setFilter] = useState('all')
+  const STATUS_CONFIG_LOCAL = {
+    all:      { label: 'All',      color: '#94A3B8' },
+    free:     { label: 'Free',     color: '#10B981' },
+    occupied: { label: 'Occupied', color: '#F97316' },
+    reserved: { label: 'Reserved', color: '#3B82F6' },
+  }
   return (
     <div>
+      <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        {Object.entries(STATUS_CONFIG_LOCAL).map(([key, val]) => (
+          <button key={key} onClick={() => setFilter(key)}
+            style={{ border: '1px solid', borderColor: filter === key ? val.color : '#1E1E2E', background: filter === key ? val.color + '22' : '#13131A', color: filter === key ? val.color : '#64748B', borderRadius: 8, padding: '0.35rem 0.8rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.7rem', fontWeight: 700 }}>
+            {val.label}
+          </button>
+        ))}
+      </div>
       {floors.map(floor => {
-        const floorTables = tables.filter(t => t.floorId === floor.id)
+        const floorTables = tables.filter(t => {
+          if (t.floorId !== floor.id) return false
+          if (filter === 'all') return true
+          return getAutoTableStatus(t.id, orders, bookings) === filter
+        })
         if (floorTables.length === 0) return null
         return (
           <div key={floor.id} style={{ marginBottom: '1.5rem' }}>
