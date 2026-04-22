@@ -419,10 +419,15 @@ export default function KDSView() {
                               <div style={{ fontSize: '0.62rem', color: '#F59E0B', marginTop: '0.1rem' }}>⚠ {item.allergens}</div>
                             )}
                             {item.note && (
-                              <div style={{ fontSize: '0.62rem', color: '#FCD34D', background: '#FCD34D11', border: '1px solid #FCD34D33', borderRadius: 4, padding: '1px 6px', marginTop: '0.15rem', display: 'inline-block' }}>
-                                📝 {item.note}
-                              </div>
-                            )}
+  <div style={{ fontSize: '0.65rem', color: '#FCD34D', marginTop: '0.15rem' }}>
+    📝 {item.note}
+  </div>
+)}
+{item.modifiers?.length > 0 && item.modifiers.map((m, i) => (
+  <div key={i} style={{ fontSize: '0.65rem', color: '#8B5CF6', marginTop: '0.1rem' }}>
+    › {m.optionName}
+  </div>
+))}
                           </div>
                         ))}
                       </div>
