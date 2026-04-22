@@ -294,6 +294,7 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
                   </div>
                 </div>
                 {i.modifiers?.length > 0 && <div style={{ fontSize: '0.62rem', color: '#8B5CF6', marginTop: '0.1rem' }}>{i.modifiers.map(m => m.optionName).join(', ')}</div>}
+                {i.specialInstructions?.length > 0 && <div style={{ fontSize: '0.62rem', color: '#F97316', marginTop: '0.1rem' }}>{i.specialInstructions.join(' ')}</div>}
                 {i.note && <div style={{ fontSize: '0.6rem', color: '#F59E0B', marginTop: '0.1rem' }}>📝 {i.note}</div>}
               </div>
             ))}
@@ -351,6 +352,40 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
                 </div>
               </div>
             )}
+
+            {/* SPECIAL INSTRUCTIONS */}
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontSize: '0.65rem', fontWeight: 700, marginBottom: '0.5rem', color: '#F97316' }}>SPECIAL INSTRUCTIONS</div>
+              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                {['🔥 Extra', '❌ No', '➖ Less', '⚠️ Allergy'].map(tag => {
+                  const hasTag = editingItem.specialInstructions?.includes(tag)
+                  return (
+                    <button key={tag} onClick={() => {
+                      const updated = hasTag 
+                        ? (editingItem.specialInstructions || []).filter(t => t !== tag)
+                        : [...(editingItem.specialInstructions || []), tag]
+                      setEditingItem({...editingItem, specialInstructions: updated})
+                      setCurrentItems(prev => prev.map(i => i._key === editingItem._key ? { ...i, specialInstructions: updated } : i))
+                    }}
+                    style={{
+                      padding: '0.4rem 0.8rem',
+                      borderRadius: 8,
+                      border: '1px solid',
+                      borderColor: hasTag ? '#F97316' : '#1E1E2E',
+                      background: hasTag ? '#F9731622' : '#0D0D14',
+                      color: hasTag ? '#F97316' : '#64748B',
+                      cursor: 'pointer',
+                      fontFamily: "'Courier New', monospace",
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      transition: 'all 0.15s'
+                    }}>
+                      {tag}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
 
             {/* ALLERGENS */}
             {editingItem.allergens && editingItem.allergens !== 'None' && (
