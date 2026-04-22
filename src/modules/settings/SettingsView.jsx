@@ -27,11 +27,12 @@ export default function SettingsView() {
   const hasChanges = JSON.stringify(form) !== JSON.stringify(settings)
 
   const TABS = [
-    { id: 'restaurant', label: '🏠 Restaurant' },
-    { id: 'operations', label: '⚙️ Operations' },
-    { id: 'loyalty',    label: '🏆 Loyalty' },
-    { id: 'receipt',    label: '🧾 Receipt' },
-  ]
+  { id: 'restaurant', label: '🏠 Restaurant' },
+  { id: 'operations', label: '⚙️ Operations' },
+  { id: 'modules',    label: '🧩 Modules' },
+  { id: 'loyalty',    label: '🏆 Loyalty' },
+  { id: 'receipt',    label: '🧾 Receipt' },
+]
 
   return (
     <div style={{ minHeight: '100vh', background: '#0A0A0F', fontFamily: "'Courier New', monospace", color: '#E2E8F0', padding: '2rem' }}>
@@ -245,6 +246,53 @@ export default function SettingsView() {
             </div>
           </Section>
         )}
+
+        {section === 'modules' && (
+  <Section title="MODULES">
+    {[
+      { id: 'dashboard',        label: '🏠 Dashboard',     desc: 'Overview of daily sales, tables and activity',  plans: ['starter','pro','enterprise'] },
+      { id: 'tables',           label: '🍽️ Tables',         desc: 'Floor plan, table status and order management', plans: ['starter','pro','enterprise'] },
+      { id: 'orders',           label: '📋 Orders',         desc: 'Order taking and item management',              plans: ['starter','pro','enterprise'] },
+      { id: 'kds',              label: '👨‍🍳 Kitchen Display', desc: 'Kitchen ticket system with course firing',      plans: ['pro','enterprise'] },
+      { id: 'bar',              label: '🍺 Bar',            desc: 'Bar display for drinks orders',                 plans: ['pro','enterprise'] },
+      { id: 'menu',             label: '📖 Menu',           desc: 'Menu management, modifiers and availability',   plans: ['starter','pro','enterprise'] },
+      { id: 'bookings',         label: '📅 Bookings',       desc: 'Reservation management and table assignment',   plans: ['pro','enterprise'] },
+      { id: 'reports',          label: '📊 Reports',        desc: 'Sales reports and business analytics',          plans: ['pro','enterprise'] },
+      { id: 'stock',            label: '📦 Stock',          desc: 'Inventory tracking and low stock alerts',       plans: ['pro','enterprise'] },
+      { id: 'staff',            label: '👥 Staff',          desc: 'Staff management and clock in/out',             plans: ['starter','pro','enterprise'] },
+      { id: 'staff-analytics',  label: '📈 Performance',   desc: 'Staff revenue and performance analytics',       plans: ['enterprise'] },
+      { id: 'customers',        label: '💳 Customers',      desc: 'Customer profiles and loyalty programme',       plans: ['pro','enterprise'] },
+      { id: 'eod',              label: '📋 EOD Report',     desc: 'End of day cash reconciliation and summary',    plans: ['pro','enterprise'] },
+      { id: 'history',          label: '🗂️ History',        desc: 'Full searchable order history log',             plans: ['starter','pro','enterprise'] },
+    ].map(mod => {
+      const hasPlan  = mod.plans.includes(form.plan || 'pro')
+      const isActive = (form.activeModules || []).includes(mod.id)
+      const toggle   = () => {
+        if (!hasPlan) return
+        const updated = isActive
+          ? (form.activeModules || []).filter(m => m !== mod.id)
+          : [...(form.activeModules || []), mod.id]
+        f('activeModules', updated)
+      }
+      return (
+        <div key={mod.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.8rem 0', borderBottom: '1px solid #1E1E2E' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.15rem' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: hasPlan ? '#CBD5E1' : '#334155' }}>{mod.label}</span>
+              {!hasPlan && <span style={{ fontSize: '0.58rem', color: '#475569', background: '#1E1E2E', borderRadius: 4, padding: '1px 6px' }}>🔒 Upgrade</span>}
+            </div>
+            <div style={{ fontSize: '0.65rem', color: '#334155' }}>{mod.desc}</div>
+          </div>
+          <button
+            onClick={toggle}
+            style={{ width: 40, height: 22, borderRadius: 11, border: 'none', cursor: hasPlan ? 'pointer' : 'not-allowed', background: isActive && hasPlan ? '#F97316' : '#1E293B', position: 'relative', flexShrink: 0, transition: 'background 0.2s' }}>
+            <div style={{ position: 'absolute', width: 16, height: 16, borderRadius: '50%', background: '#fff', top: 3, left: isActive && hasPlan ? 21 : 3, transition: 'left 0.2s' }} />
+          </button>
+        </div>
+      )
+    })}
+  </Section>
+)}
 
       </div>
     </div>

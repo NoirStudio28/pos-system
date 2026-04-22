@@ -18,6 +18,7 @@ import SettingsView from './modules/settings/SettingsView'
 import useBreakpoint from './hooks/useBreakpoint'
 import EODView from './modules/eod/EODView'
 import OrderHistoryView from './modules/history/OrderHistoryView'
+const MODULE_ROUTES = { 'dashboard':'/dashboard','tables':'/tables','orders':'/orders','kds':'/kds','bar':'/bar','menu':'/menu','bookings':'/bookings','reports':'/reports','stock':'/stock','staff':'/staff','staff-analytics':'/staff-analytics','customers':'/customers','eod':'/eod','history':'/history','settings':'/settings' }
 
 const ALL_LINKS = [
   { to: '/dashboard',       label: '🏠 Dashboard'   },
@@ -42,7 +43,9 @@ function Nav() {
   const { currentUser, logout, canAccess } = usePOS()
   const role = ROLE_CONFIG[currentUser?.role]
   const { isMobile, isTablet } = useBreakpoint()
-  const visibleLinks = ALL_LINKS.filter(l => canAccess(l.to))
+  const { settings } = usePOS()
+const activeModules = settings?.activeModules || []
+const visibleLinks = ALL_LINKS.filter(l => canAccess(l.to) && (l.to === '/settings' || activeModules.some(m => MODULE_ROUTES[m] === l.to)))
 
   const ICONS = {
     '/dashboard': '🏠', '/tables': '🍽️', '/orders': '📋', '/kds': '👨‍🍳', '/bar': '🍺',

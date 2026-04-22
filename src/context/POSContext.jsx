@@ -105,6 +105,8 @@ const SAMPLE_CUSTOMERS = [
 ]
 
 const DEFAULT_SETTINGS = {
+  plan: 'pro',
+  activeModules: ['dashboard','tables','orders','kds','bar','menu','bookings','reports','stock','staff','staff-analytics','customers','eod','history'],
   restaurantName:       'My Restaurant',
   address:              '123 Main Street',
   phone:                '01 234 5678',
