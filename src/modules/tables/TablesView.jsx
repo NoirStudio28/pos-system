@@ -166,7 +166,7 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
     if (currentItems.length === 0) return
     const itemsWithAllergens = currentItems.map(i => {
       const menuItem = Object.values(menu).flat().find(m => m.id === i.id)
-      return { ...i, allergens: menuItem?.allergens || 'None' }
+      return { ...i, allergens: menuItem?.allergens || 'None', specialInstructions: i.specialInstructions || [] }
     })
     if (existing) {
       updateOrder({ ...existing, items: itemsWithAllergens, total, customerId: linkedCustomerId })

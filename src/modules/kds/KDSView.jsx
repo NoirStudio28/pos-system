@@ -388,6 +388,11 @@ export default function KDSView() {
                                 <span style={{ fontSize: '0.78rem', color: item.isNew && isFired ? '#F59E0B' : '#CBD5E1', fontWeight: item.isNew ? 700 : 600 }}>
                                   {item.name}
                                 </span>
+                                {item.specialInstructions?.length > 0 && (
+                              <div style={{ fontSize: '0.65rem', color: '#F97316', marginTop: '0.15rem', fontWeight: 700 }}>
+                                {item.specialInstructions.join(' ')}
+                              </div>
+                            )}
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handle86(item.id) }}
                                   title="Mark as 86'd — out of stock"
