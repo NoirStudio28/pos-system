@@ -388,21 +388,15 @@ export default function KDSView() {
                                 <span style={{ fontSize: '0.78rem', color: item.isNew && isFired ? '#F59E0B' : '#CBD5E1', fontWeight: item.isNew ? 700 : 600 }}>
                                   {item.name}
                                 </span>
-                                {item.specialInstructions?.length > 0 && (
-                              <div style={{ marginTop: '0.2rem' }}>
-                                {(() => {
-                                  const menuItem = menu[Object.keys(menu).find(cat => menu[cat].find(m => m.id === item.id))]?.find(m => m.id === item.id)
-                                  return menuItem?.modifiers?.map(group => {
-                                    const selected = item.specialInstructions.filter(s => group.options.find(o => o.name === s))
-                                    return selected.length > 0 && (
-                                      <div key={group.id} style={{ fontSize: '0.65rem', color: '#F97316', fontWeight: 700 }}>
-                                        {group.name}: {selected.join(', ')}
-                                      </div>
-                                    )
-                                  })
-                                })()}
-                              </div>
-                            )}
+                                {item.modifiers?.length > 0 && (
+  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.2rem', marginTop: '0.2rem' }}>
+    {item.modifiers.map((m, i) => (
+      <span key={i} style={{ fontSize: '0.62rem', color: '#8B5CF6', background: '#8B5CF611', border: '1px solid #8B5CF633', borderRadius: 4, padding: '1px 6px' }}>
+        {m.optionName}{m.price > 0 ? ` +€${m.price.toFixed(2)}` : ''}
+      </span>
+    ))}
+  </div>
+)}
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handle86(item.id) }}
                                   title="Mark as 86'd — out of stock"
