@@ -131,7 +131,7 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
   const total = currentItems.reduce((s, i) => s + (i.price + (i.modifierTotal || 0)) * i.qty, 0)
 
 
-  const handleAddItem = (item) => { if (item.modifiers?.length > 0) { setSpecialInstructionsItem(item); return } addItemDirect(item, [], 0) }
+  const handleAddItem = (item) => { addItemDirect(item, [], 0) }
 
   const [pendingItem, setPendingItem] = useState(null)
 
@@ -339,7 +339,7 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
                   </div>
                 </div>
                 {i.modifiers?.length > 0 && <div style={{ fontSize: '0.62rem', color: '#8B5CF6', marginTop: '0.1rem' }}>{i.modifiers.map(m => m.optionName).join(', ')}</div>}
-                {i.specialInstructions?.length > 0 && <div style={{ fontSize: '0.62rem', color: '#F97316', marginTop: '0.1rem' }}>{i.specialInstructions.join(' ')}</div>}
+                {i.specialInstructions?.length > 0 && <button onClick={() => setSpecialInstructionsItem(i)} style={{ fontSize: '0.62rem', color: '#F97316', marginTop: '0.1rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: "'Courier New', monospace", textDecoration: 'underline' }}>{i.specialInstructions.join(' ')}</button>}
                 {i.note && <div style={{ fontSize: '0.6rem', color: '#F59E0B', marginTop: '0.1rem' }}>📝 {i.note}</div>}
               </div>
             ))}
