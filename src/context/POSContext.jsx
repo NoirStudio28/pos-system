@@ -327,7 +327,10 @@ export function POSProvider({ children }) {
   setOrderHistory(prev => [...prev, { ...order, items: enrichedItems, closedAt: new Date().toISOString(), payment: paymentData, placedBy: order.placedBy || currentUser?.name || 'Unknown', status: 'closed' }])    
        setOrders(prev => prev.filter(o => o.id !== id))
     const still = orders.filter(o => o.id !== id && o.table === order.table).length > 0
-    if (!still) updateTableStatus(order.table, 'free')
+if (!still) updateTableStatus(order.table, 'free')
+if (order.mergedTables?.length > 0) {
+  order.mergedTables.forEach(tableId => updateTableStatus(tableId, 'free'))
+}
     const customerId = order.customerId || paymentData?.customerId
     if (customerId) awardPoints(customerId, order.total, id)
     if (paymentData?.redeemedPoints && customerId) redeemPoints(customerId, paymentData.redeemedPoints)
