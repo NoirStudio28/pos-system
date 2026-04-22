@@ -126,10 +126,13 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
   const [currentItems,     setCurrentItems]     = useState(existing?.items?.map(i => ({ ...i, _key: i.id + JSON.stringify(i.modifiers || []) })) || [])
   const [modifierItem,     setModifierItem]     = useState(null)
   const [linkedCustomerId, setLinkedCustomerId] = useState(existing?.customerId || null)
+  const [specialInstructionsItem, setSpecialInstructionsItem] = useState(null)
 
   const total = currentItems.reduce((s, i) => s + (i.price + (i.modifierTotal || 0)) * i.qty, 0)
 
-  const handleAddItem = (item) => { if (item.modifiers?.length > 0) { setModifierItem(item); return } addItemDirect(item, [], 0) }
+  const [specialInstructionsItem, setSpecialInstructionsItem] = useState(null)
+
+  const handleAddItem = (item) => { if (item.modifiers?.length > 0) { setSpecialInstructionsItem(item); return } addItemDirect(item, [], 0) }
 
   const [pendingItem, setPendingItem] = useState(null)
 
@@ -199,6 +202,49 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
 
       {modifierItem && (
         <ModifierPicker item={modifierItem} onConfirm={(mods, extra, note) => { setPendingItem(modifierItem); setModifierItem(null) }} onCancel={() => setModifierItem(null)} />
+      )}
+
+      {specialInstructionsItem && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '1rem' }}>
+          <div style={{ background: '#0F0F17', border: '1px solid #1E1E2E', borderRadius: 14, padding: '1.5rem', width: '100%', maxWidth: 350, fontFamily: "'Courier New', monospace", color: '#E2E8F0' }}>
+            <div style={{ fontSize: '0.65rem', color: '#8B5CF6', letterSpacing: '0.1em', marginBottom: '0.5rem', fontWeight: 700 }}>SPECIAL INSTRUCTIONS</div>
+            <div style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem' }}>{specialInstructionsItem.name}</div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              {(specialInstructionsItem.modifiers || []).map(group => (
+                <div key={group.id} style={{ marginBottom: '0.7rem' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '0.4rem' }}>{group.name}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                    {group.options.map(opt => (
+                      <button key={opt.id} onClick={() => { addItemDirect(specialInstructionsItem, [], 0, opt.name); setSpecialInstructionsItem(null) }}
+                        style={{ padding: '0.5rem 0.8rem', borderRadius: 8, border: '1px solid #1E1E2E', background: '#13131A', color: '#94A3B8', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.75rem', textAlign: 'left', transition: 'all 0.15s' }}
+                        onMouseEnter={e => e.target.style.borderColor = '#F97316'}
+                        onMouseLeave={e => e.target.style.borderColor = '#1E1E2E'}>
+                        {opt.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '0.4rem' }}>CUSTOM NOTE</div>
+              <input placeholder="Type custom instruction..." style={{ width: '100%', background: '#0D0D14', border: '1px solid #2D2D3F', borderRadius: 8, padding: '0.6rem', color: '#E2E8F0', fontFamily: "'Courier New', monospace", fontSize: '0.75rem', outline: 'none', boxSizing: 'border-box' }} id="customInstruction" />
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button onClick={() => { const custom = document.getElementById('customInstruction').value; addItemDirect(specialInstructionsItem, [], 0, custom || ''); setSpecialInstructionsItem(null) }}
+                style={{ flex: 1, border: 'none', background: '#F97316', color: '#000', borderRadius: 8, padding: '0.6rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontWeight: 700, fontSize: '0.75rem' }}>
+                ✓ Add Item
+              </button>
+              <button onClick={() => setSpecialInstructionsItem(null)}
+                style={{ border: '1px solid #1E1E2E', background: '#13131A', color: '#94A3B8', borderRadius: 8, padding: '0.6rem 1rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontWeight: 700, fontSize: '0.75rem' }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       

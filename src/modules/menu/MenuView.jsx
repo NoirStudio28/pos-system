@@ -187,7 +187,7 @@ export default function MenuView() {
                   <button className={`toggle ${item.available ? 'on' : 'off'}`} onClick={() => toggleItemAvailability(activeCategory, item.id)} />
                   <span style={{ fontSize: '0.6rem', color: '#475569' }}>{item.available ? 'Available' : 'Off'}</span>
                   <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.4rem' }}>
-                    <button className="btn btn-purple btn-sm" onClick={() => setModifierView(modifierView === item.id ? null : item.id)}>⚙ Mods</button>
+                    <button className="btn btn-purple btn-sm" onClick={() => setModifierView(modifierView === item.id ? null : item.id)}>⚙ Special</button>
                     <button className="btn btn-ghost btn-sm" onClick={() => openEdit(item)}>Edit</button>
                     <button className="btn btn-danger btn-sm" onClick={() => deleteMenuItem(activeCategory, item.id)}>✕</button>
                   </div>
@@ -198,7 +198,7 @@ export default function MenuView() {
             {/* Modifier editor */}
             {modifierView === item.id && (
               <div style={{ background: '#0A0A0F', border: '1px solid #8B5CF644', borderRadius: 10, padding: '1rem', marginBottom: '0.5rem', marginTop: '-0.3rem' }}>
-                <div style={{ fontSize: '0.65rem', color: '#8B5CF6', letterSpacing: '0.1em', marginBottom: '0.8rem', fontWeight: 700 }}>⚙ MODIFIERS — {item.name}</div>
+                <div style={{ fontSize: '0.65rem', color: '#8B5CF6', letterSpacing: '0.1em', marginBottom: '0.8rem', fontWeight: 700 }}>⚙ SPECIAL INSTRUCTIONS — {item.name}</div>
 
                 {(item.modifiers || []).map(group => (
                   <div className="mod-group" key={group.id}>
@@ -234,7 +234,7 @@ export default function MenuView() {
                 ))}
 
                 <div style={{ borderTop: '1px solid #1E1E2E', paddingTop: '0.8rem', marginTop: '0.5rem' }}>
-                  <div style={{ fontSize: '0.6rem', color: '#475569', marginBottom: '0.5rem', letterSpacing: '0.1em' }}>NEW MODIFIER GROUP</div>
+                  <div style={{ fontSize: '0.6rem', color: '#475569', marginBottom: '0.5rem', letterSpacing: '0.1em' }}>NEW INSTRUCTION GROUP</div>
                   <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
                     <input className="input" style={{ flex: '1 1 140px', minWidth: 0 }} placeholder="Group name (e.g. Protein)" value={newGroupName} onChange={e => setNewGroupName(e.target.value)} />
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.68rem', color: '#475569', whiteSpace: 'nowrap', cursor: 'pointer', flexShrink: 0 }}>
