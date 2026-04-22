@@ -130,7 +130,6 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
 
   const total = currentItems.reduce((s, i) => s + (i.price + (i.modifierTotal || 0)) * i.qty, 0)
 
-  const [specialInstructionsItem, setSpecialInstructionsItem] = useState(null)
 
   const handleAddItem = (item) => { if (item.modifiers?.length > 0) { setSpecialInstructionsItem(item); return } addItemDirect(item, [], 0) }
 
