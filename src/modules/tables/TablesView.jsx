@@ -339,7 +339,21 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
                   </div>
                 </div>
                 {i.modifiers?.length > 0 && <div style={{ fontSize: '0.62rem', color: '#8B5CF6', marginTop: '0.1rem' }}>{i.modifiers.map(m => m.optionName).join(', ')}</div>}
-                {i.specialInstructions?.length > 0 && <button onClick={() => setSpecialInstructionsItem(i)} style={{ fontSize: '0.62rem', color: '#F97316', marginTop: '0.1rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: "'Courier New', monospace", textDecoration: 'underline' }}>{i.specialInstructions.map(s => `${s}`).join(' ')}</button>}
+                {i.specialInstructions?.length > 0 && (
+                  <div style={{ fontSize: '0.62rem', color: '#F97316', marginTop: '0.1rem' }}>
+                    {(() => {
+                      const menuItem = Object.values(menu).flat().find(m => m.id === i.id)
+                      return menuItem?.modifiers?.map(group => {
+                        const selected = i.specialInstructions.filter(s => group.options.find(o => o.name === s))
+                        return selected.length > 0 && (
+                          <div key={group.id}>
+                            {group.name}: {selected.join(', ')}
+                          </div>
+                        )
+                      })
+                    })()}
+                  </div>
+                )}
                 {i.note && <div style={{ fontSize: '0.6rem', color: '#F59E0B', marginTop: '0.1rem' }}>📝 {i.note}</div>}
               </div>
             ))}
