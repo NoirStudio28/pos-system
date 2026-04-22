@@ -355,7 +355,9 @@ export function POSProvider({ children }) {
         const oldItem = o.items.find(i => i._key === newItem._key || (i.id === newItem.id && JSON.stringify(i.modifiers) === JSON.stringify(newItem.modifiers)))
         if (!oldItem)                  return { ...newItem, isNew: true }
         if (newItem.qty > oldItem.qty) return { ...newItem, isNew: true, _addedQty: newItem.qty - oldItem.qty }
-        return { ...newItem, isNew: false }
+        const noteChanged = newItem.note !== oldItem.note
+const modsChanged = JSON.stringify(newItem.modifiers) !== JSON.stringify(oldItem.modifiers)
+return { ...newItem, isNew: noteChanged || modsChanged }
       })
       const newCourses    = buildCourses(markedItems, menu)
       const mergedCourses = { ...newCourses }
