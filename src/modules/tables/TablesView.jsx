@@ -398,39 +398,49 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
               </div>
             )}
 
+
             {/* SPECIAL INSTRUCTIONS */}
-            <div style={{ marginBottom: '1rem' }}>
-              <div style={{ fontSize: '0.65rem', fontWeight: 700, marginBottom: '0.5rem', color: '#F97316' }}>SPECIAL INSTRUCTIONS</div>
-              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                {['🔥 Extra', '❌ No', '➖ Less', '⚠️ Allergy'].map(tag => {
-                  const hasTag = editingItem.specialInstructions?.includes(tag)
-                  return (
-                    <button key={tag} onClick={() => {
-                      const updated = hasTag 
-                        ? (editingItem.specialInstructions || []).filter(t => t !== tag)
-                        : [...(editingItem.specialInstructions || []), tag]
-                      setEditingItem({...editingItem, specialInstructions: updated})
-                      setCurrentItems(prev => prev.map(i => i._key === editingItem._key ? { ...i, specialInstructions: updated } : i))
-                    }}
-                    style={{
-                      padding: '0.4rem 0.8rem',
-                      borderRadius: 8,
-                      border: '1px solid',
-                      borderColor: hasTag ? '#F97316' : '#1E1E2E',
-                      background: hasTag ? '#F9731622' : '#0D0D14',
-                      color: hasTag ? '#F97316' : '#64748B',
-                      cursor: 'pointer',
-                      fontFamily: "'Courier New', monospace",
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                      transition: 'all 0.15s'
-                    }}>
-                      {tag}
-                    </button>
-                  )
-                })}
+            {editingItem.modifiers?.length > 0 && (
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{ fontSize: '0.65rem', fontWeight: 700, marginBottom: '0.5rem', color: '#F97316' }}>SPECIAL INSTRUCTIONS</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                  {editingItem.modifiers.map(group => (
+                    <div key={group.id} style={{ marginBottom: '0.4rem' }}>
+                      <div style={{ fontSize: '0.62rem', color: '#CBD5E1', marginBottom: '0.3rem', fontWeight: 600 }}>{group.name}</div>
+                      <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                        {group.options.map(opt => {
+                          const hasTag = editingItem.specialInstructions?.includes(opt.name)
+                          return (
+                            <button key={opt.id} onClick={() => {
+                              const updated = hasTag 
+                                ? (editingItem.specialInstructions || []).filter(t => t !== opt.name)
+                                : [...(editingItem.specialInstructions || []), opt.name]
+                              setEditingItem({...editingItem, specialInstructions: updated})
+                              setCurrentItems(prev => prev.map(i => i._key === editingItem._key ? { ...i, specialInstructions: updated } : i))
+                            }}
+                            style={{
+                              padding: '0.3rem 0.7rem',
+                              borderRadius: 6,
+                              border: '1px solid',
+                              borderColor: hasTag ? '#F97316' : '#1E1E2E',
+                              background: hasTag ? '#F9731622' : '#0D0D14',
+                              color: hasTag ? '#F97316' : '#64748B',
+                              cursor: 'pointer',
+                              fontFamily: "'Courier New', monospace",
+                              fontSize: '0.65rem',
+                              fontWeight: 700,
+                              transition: 'all 0.15s'
+                            }}>
+                              {opt.name}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* ALLERGENS */}
             {editingItem.allergens && editingItem.allergens !== 'None' && (
