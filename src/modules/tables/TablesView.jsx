@@ -543,6 +543,32 @@ function NoteEditor({ table }) {
   )
 }
 
+function MergePicker({ order, onClose, onDone }) {
+  const { tables, orders, mergeTables } = usePOS()
+  const occupiedTables = tables.filter(t => t.id !== order.table && orders.find(o => o.table === t.id) && !(order.mergedTables || []).includes(t.id))
+  return (
+    <div style={{ background: '#0D0D14', border: '1px solid #8B5CF644', borderRadius: 10, padding: '0.8rem', marginBottom: '0.8rem' }}>
+      <div style={{ fontSize: '0.6rem', color: '#8B5CF6', letterSpacing: '0.1em', marginBottom: '0.6rem', fontWeight: 700 }}>MERGE WITH TABLE</div>
+      {occupiedTables.length === 0 ? (
+        <div style={{ fontSize: '0.72rem', color: '#475569' }}>No occupied tables to merge with</div>
+      ) : (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.6rem' }}>
+          {occupiedTables.map(t => (
+            <button key={t.id} onClick={() => { mergeTables(order.id, t.id); onDone() }}
+              style={{ width: 40, height: 40, borderRadius: 8, border: '1px solid #8B5CF644', background: '#8B5CF622', color: '#8B5CF6', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.78rem', fontWeight: 700 }}>
+              {t.id}
+            </button>
+          ))}
+        </div>
+      )}
+      <button onClick={onClose}
+        style={{ border: '1px solid #1E1E2E', background: '#13131A', color: '#94A3B8', borderRadius: 8, padding: '0.3rem 0.8rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.68rem', fontWeight: 700 }}>
+        Cancel
+      </button>
+    </div>
+  )
+}
+
 function TransferPicker({ order, onClose, onDone }) {
   const { tables, orders, updateOrder } = usePOS()
   const freeTables = tables.filter(t => t.id !== order.table && !orders.find(o => o.table === t.id))
@@ -574,6 +600,7 @@ function TablePopup({ table, status, order, booking, onClose, onOpenPicker, onOp
   const { closeOrder, openPayment, updateBookingStatus, fireCourse, serveCourse, orderHistory, staff, currentUser } = usePOS()
   const [covers, setCovers] = useState(2)
 const [transferring, setTransferring] = useState(false)
+const [merging, setMerging] = useState(false)
 
   const shiftStart = (() => {
     const member = staff.find(s => s.id === currentUser?.id)
@@ -764,6 +791,11 @@ const [transferring, setTransferring] = useState(false)
 
             {/* ── ORDER ITEMS ── */}
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.8rem' }}>
+              {order.mergedTables?.length > 0 && (
+  <div style={{ background: '#8B5CF611', border: '1px solid #8B5CF633', borderRadius: 8, padding: '0.5rem 0.8rem', marginBottom: '0.8rem', fontSize: '0.68rem', color: '#8B5CF6', fontWeight: 700 }}>
+    🔗 Merged with Table{order.mergedTables.length > 1 ? 's' : ''} {order.mergedTables.join(', ')}
+  </div>
+)}
   {order.covers > 0 && (
     <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#0D0D14', border: '1px solid #1E1E2E', borderRadius: 10, padding: '0.6rem 0.8rem' }}>
       <span style={{ fontSize: '0.75rem' }}>👥</span>
@@ -796,11 +828,15 @@ const [transferring, setTransferring] = useState(false)
             {transferring && (
   <TransferPicker order={order} onClose={() => setTransferring(false)} onDone={() => { setTransferring(false); onClose() }} />
 )}
+{merging && (
+  <MergePicker order={order} onClose={() => setMerging(false)} onDone={() => { setMerging(false); onClose() }} />
+)}
 
             {/* ── ACTIONS ── */}
             <NoteEditor table={table} />
             <button className="tp-btn" style={{ background: '#F9731622', color: '#F97316', border: '1px solid #F9731644' }} onClick={() => { onClose(); onOpenEditPicker(order) }}>✏️ Edit Order</button>
             <button className="tp-btn" style={{ background: '#3B82F622', color: '#3B82F6', border: '1px solid #3B82F644' }} onClick={() => setTransferring(true)}>🔀 Transfer Table</button>
+            <button className="tp-btn" style={{ background: '#8B5CF622', color: '#8B5CF6', border: '1px solid #8B5CF644' }} onClick={() => setMerging(true)}>🔗 Merge Tables</button>
             <button className="tp-btn" style={{ background: '#10B98122', color: '#10B981', border: '1px solid #10B98144' }} onClick={() => { onClose(); openPayment(order.id) }}>💳 Pay — €{order.total.toFixed(2)}</button>
             <button className="tp-btn" style={{ background: '#EF444422', color: '#EF4444', border: '1px solid #EF444433' }} onClick={() => { closeOrder(order.id); onClose() }}>🗑 Cancel Order</button>
 
@@ -1053,6 +1089,7 @@ function FloorCanvas({ floorId, editMode, onSelectTable, scale = 1 }) {
             const br       = table.shape === 'round' ? '50%' : table.shape === 'rect' ? 8 : 12
             const hasFirableCourse = order?.courses && (order.courses.mains === 'waiting' || order.courses.desserts === 'waiting')
             const isReadyToCollect = order?.status === 'ready'
+            const isMergedInto = orders.some(o => (o.mergedTables || []).includes(table.id))
 
             return (
               <div key={table.id}
@@ -1084,6 +1121,11 @@ function FloorCanvas({ floorId, editMode, onSelectTable, scale = 1 }) {
     {order.covers && <div style={{ fontSize: '0.45rem', color: '#94A3B8' }}>{order.covers} cvr</div>}
     <TableTimer placedAt={order.placedAt} />
   </>
+)}
+{isMergedInto && !editMode && (
+  <div style={{ position: 'absolute', inset: 0, borderRadius: br, background: 'rgba(139,92,246,0.15)', border: '2px dashed #8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>
+    🔗
+  </div>
 )}
                 {editMode && <div style={{ position: 'absolute', top: 3, right: 4, fontSize: '0.5rem', color: '#334155' }}>{table.seats}p</div>}
               </div>

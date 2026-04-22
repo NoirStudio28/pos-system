@@ -379,6 +379,27 @@ return { ...newItem, isNew: noteChanged || modsChanged }
     updateTableStatus(updatedOrder.table, 'occupied')
   }
 
+  const mergeTables = (primaryOrderId, secondaryTableId) => {
+  setOrders(prev => {
+    const primary   = prev.find(o => o.id === primaryOrderId)
+    const secondary = prev.find(o => o.table === secondaryTableId)
+    if (!primary || !secondary) return prev
+    const mergedItems = [
+      ...primary.items,
+      ...secondary.items.map(i => ({ ...i, _key: i._key + '_merged', fromTable: secondaryTableId }))
+    ]
+    const newTotal = mergedItems.reduce((s, i) => s + (i.price + (i.modifierTotal || 0)) * i.qty, 0)
+    return prev
+      .filter(o => o.table !== secondaryTableId)
+      .map(o => o.id !== primaryOrderId ? o : {
+        ...o,
+        items: mergedItems,
+        total: newTotal,
+        mergedTables: [...(o.mergedTables || []), secondaryTableId],
+      })
+  })
+}
+
   // ── Fire course ──
   const fireCourse = (orderId, course) => {
     setOrders(prev => prev.map(o => o.id !== orderId ? o : {
