@@ -361,8 +361,7 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
             )}
 
             {/* DELETE */}
-          
-              style={{ width: '100%', border: '1px solid #EF444433', background: '#EF444411', color: '#EF4444', borderRadius: 8, padding: '0.6rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+            <button onClick={() => { removeItem(editingItem._key); setEditingItem(null) }} style={{ width: '100%', border: '1px solid #EF444433', background: '#EF444411', color: '#EF4444', borderRadius: 8, padding: '0.6rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>
               🗑 Delete Item
             </button>
 
