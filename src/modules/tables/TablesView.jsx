@@ -499,9 +499,17 @@ function NoteEditor({ table }) {
   )
   return (
     <div style={{ marginBottom: '0.4rem' }}>
-      <input autoFocus value={note} onChange={e => setNote(e.target.value)}
-        placeholder="e.g. Window seat, Birthday, VIP..."
-        style={{ width: '100%', background: '#0D0D14', border: '1px solid #F97316', borderRadius: 8, padding: '0.6rem', color: '#E2E8F0', fontFamily: "'Courier New', monospace", fontSize: '0.75rem', outline: 'none', boxSizing: 'border-box', marginBottom: '0.4rem' }} />
+      <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
+  {['🎂 Birthday', '💍 Anniversary', '🪟 Window', '👑 VIP', '🍼 Baby', '♿ Accessible', '🎉 Celebration'].map(tag => (
+    <button key={tag} onClick={() => setNote(tag)}
+      style={{ border: '1px solid #1E1E2E', background: note === tag ? '#F9731622' : '#13131A', color: note === tag ? '#F97316' : '#64748B', borderColor: note === tag ? '#F97316' : '#1E1E2E', borderRadius: 6, padding: '0.25rem 0.6rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.65rem', fontWeight: 700 }}>
+      {tag}
+    </button>
+  ))}
+</div>
+<input autoFocus value={note} onChange={e => setNote(e.target.value)}
+  placeholder="Or type a custom note..."
+  style={{ width: '100%', background: '#0D0D14', border: '1px solid #F97316', borderRadius: 8, padding: '0.6rem', color: '#E2E8F0', fontFamily: "'Courier New', monospace", fontSize: '0.75rem', outline: 'none', boxSizing: 'border-box', marginBottom: '0.4rem' }} />
       <div style={{ display: 'flex', gap: '0.4rem' }}>
         <button className="tp-btn" style={{ background: '#F97316', color: '#000', border: 'none', marginBottom: 0 }}
           onClick={() => { updateTableData({ ...table, note }); setEditing(false) }}>✓ Save</button>
