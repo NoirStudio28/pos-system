@@ -320,9 +320,9 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ fontSize: '0.65rem', fontWeight: 700, marginBottom: '0.5rem', color: '#F97316' }}>QUANTITY</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <button onClick={() => setCurrentItems(prev => prev.map(i => i._key === editingItem._key ? { ...i, qty: Math.max(1, i.qty - 1) } : i))} className="qty-btn">−</button>
+                <button onClick={() => { const newQty = Math.max(1, editingItem.qty - 1); setEditingItem({...editingItem, qty: newQty}); setCurrentItems(prev => prev.map(i => i._key === editingItem._key ? { ...i, qty: newQty } : i)) }} className="qty-btn">−</button>
                 <span style={{ fontSize: '0.85rem', fontWeight: 700, minWidth: 30, textAlign: 'center' }}>{editingItem.qty}</span>
-                <button onClick={() => setCurrentItems(prev => prev.map(i => i._key === editingItem._key ? { ...i, qty: i.qty + 1 } : i))} className="qty-btn">+</button>
+                <button onClick={() => { const newQty = editingItem.qty + 1; setEditingItem({...editingItem, qty: newQty}); setCurrentItems(prev => prev.map(i => i._key === editingItem._key ? { ...i, qty: newQty } : i)) }} className="qty-btn">+</button>
               </div>
             </div>
 
@@ -331,7 +331,7 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
               <div style={{ fontSize: '0.65rem', fontWeight: 700, marginBottom: '0.5rem', color: '#F97316' }}>COMMENT</div>
               <input 
                 value={editingItem.note || ''}
-                onChange={e => setCurrentItems(prev => prev.map(i => i._key === editingItem._key ? { ...i, note: e.target.value } : i))}
+                onChange={e => { setEditingItem({...editingItem, note: e.target.value}); setCurrentItems(prev => prev.map(i => i._key === editingItem._key ? { ...i, note: e.target.value } : i)) }}
                 placeholder="Special request..."
                 style={{ width: '100%', background: '#0D0D14', border: '1px solid #2D2D3F', borderRadius: 8, padding: '0.6rem', color: '#E2E8F0', fontFamily: "'Courier New', monospace", fontSize: '0.75rem', outline: 'none', boxSizing: 'border-box' }}
               />
@@ -361,7 +361,7 @@ function ItemPicker({ tableId, existingOrder, onClose }) {
             )}
 
             {/* DELETE */}
-            <button onClick={() => { removeItem(editingItem._key); setEditingItem(null) }}
+          
               style={{ width: '100%', border: '1px solid #EF444433', background: '#EF444411', color: '#EF4444', borderRadius: 8, padding: '0.6rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>
               🗑 Delete Item
             </button>
