@@ -377,62 +377,42 @@ export default function KDSView() {
                           )}
                         </div>
                         {courseItems.map((item, idx) => (
-                          <div key={idx} style={{ marginBottom: '0.35rem', opacity: isFired ? 1 : 0.45 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                {item.isNew && isFired && (
-                                  <span style={{ fontSize: '0.55rem', fontWeight: 700, background: '#F59E0B', color: '#000', borderRadius: 3, padding: '1px 5px' }}>
-                                    {item._addedQty ? `+${item._addedQty}` : 'NEW'}
-                                  </span>
-                                )}
-                                <span style={{ fontSize: '0.78rem', color: item.isNew && isFired ? '#F59E0B' : '#CBD5E1', fontWeight: item.isNew ? 700 : 600 }}>
-                                  {item.name}
-                                </span>
-                                {item.modifiers?.length > 0 && (
-  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.2rem', marginTop: '0.2rem' }}>
-    {item.modifiers.map((m, i) => (
-      <span key={i} style={{ fontSize: '0.62rem', color: '#8B5CF6', background: '#8B5CF611', border: '1px solid #8B5CF633', borderRadius: 4, padding: '1px 6px' }}>
-        {m.optionName}{m.price > 0 ? ` +€${m.price.toFixed(2)}` : ''}
-      </span>
+  <div key={idx} style={{ marginBottom: '0.5rem', opacity: isFired ? 1 : 0.45 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+        {item.isNew && isFired && (
+          <span style={{ fontSize: '0.55rem', fontWeight: 700, background: '#F59E0B', color: '#000', borderRadius: 3, padding: '1px 5px' }}>
+            {item._addedQty ? `+${item._addedQty}` : 'NEW'}
+          </span>
+        )}
+        <span style={{ fontSize: '0.78rem', color: item.isNew && isFired ? '#F59E0B' : '#CBD5E1', fontWeight: item.isNew ? 700 : 600 }}>
+          {item.name}
+        </span>
+        <button onClick={(e) => { e.stopPropagation(); handle86(item.id) }}
+          style={{ fontSize: '0.55rem', fontWeight: 700, background: '#EF444411', color: '#EF4444', border: '1px solid #EF444433', borderRadius: 3, padding: '1px 5px', cursor: 'pointer', fontFamily: "'Courier New', monospace", flexShrink: 0 }}>
+          86
+        </button>
+      </div>
+      <span style={{ fontSize: '0.78rem', color: '#475569', fontWeight: 700 }}>×{item.qty}</span>
+    </div>
+    {item.modifiers?.length > 0 && item.modifiers.map((m, i) => (
+      <div key={i} style={{ fontSize: '0.65rem', color: '#8B5CF6', marginTop: '0.1rem' }}>
+        › {m.optionName}
+      </div>
     ))}
-  </div>
-)}
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); handle86(item.id) }}
-                                  title="Mark as 86'd — out of stock"
-                                  style={{ fontSize: '0.55rem', fontWeight: 700, background: '#EF444411', color: '#EF4444', border: '1px solid #EF444433', borderRadius: 3, padding: '1px 5px', cursor: 'pointer', fontFamily: "'Courier New', monospace", flexShrink: 0 }}>
-                                  86
-                                </button>
-                              </div>
-                              <span style={{ fontSize: '0.78rem', color: '#475569', fontWeight: 700 }}>×{item.qty}</span>
-                            </div>
-                            {item.modifiers?.length > 0 && (
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.2rem', marginTop: '0.2rem' }}>
-                                {item.modifiers.map((m, i) => (
-                                  <span key={i} style={{ fontSize: '0.62rem', color: '#8B5CF6', background: '#8B5CF611', border: '1px solid #8B5CF633', borderRadius: 4, padding: '1px 6px' }}>
-                                    {m.optionName}{m.price > 0 ? ` +€${m.price.toFixed(2)}` : ''}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                            {item.allergens && item.allergens !== 'None' && (
-                              <div style={{ fontSize: '0.62rem', color: '#F59E0B', marginTop: '0.1rem' }}>⚠ {item.allergens}</div>
-                            )}
-                            {item.note && (
-  <div style={{ fontSize: '0.65rem', color: '#FCD34D', marginTop: '0.15rem' }}>
-    📝 {item.note}
-  </div>
-)}
-{item.modifiers?.length > 0 && item.modifiers.map((m, i) => (
-  <div key={i} style={{ fontSize: '0.65rem', color: '#8B5CF6', marginTop: '0.1rem' }}>
-    › {m.optionName}
+    {item.note && (
+      <div style={{ fontSize: '0.65rem', color: '#FCD34D', marginTop: '0.1rem' }}>
+        📝 {item.note}
+      </div>
+    )}
+    {item.allergens && item.allergens !== 'None' && (
+      <div style={{ fontSize: '0.62rem', color: '#F59E0B', marginTop: '0.1rem' }}>⚠ {item.allergens}</div>
+    )}
   </div>
 ))}
-                          </div>
-                        ))}
-                      </div>
-                    )
-                  })}
+</div>
+  )
+})}
 
                   {order.placedBy && <div style={{ fontSize: '0.6rem', color: '#334155' }}>by {order.placedBy}</div>}
 
