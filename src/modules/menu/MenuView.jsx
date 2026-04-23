@@ -236,7 +236,15 @@ export default function MenuView() {
                 <div style={{ borderTop: '1px solid #1E1E2E', paddingTop: '0.8rem', marginTop: '0.5rem' }}>
                   <div style={{ fontSize: '0.6rem', color: '#475569', marginBottom: '0.5rem', letterSpacing: '0.1em' }}>NEW INSTRUCTION GROUP</div>
                   <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <input className="input" style={{ flex: '1 1 140px', minWidth: 0 }} placeholder="Group name (e.g. Protein)" value={newGroupName} onChange={e => setNewGroupName(e.target.value)} />
+                    <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
+  {['Extra', 'No', 'Add', 'Swap', 'On the side', 'Sauce'].map(tag => (
+    <button key={tag} onClick={() => setNewGroupName(tag)}
+      style={{ border: '1px solid', borderColor: newGroupName === tag ? '#8B5CF6' : '#1E1E2E', background: newGroupName === tag ? '#8B5CF622' : '#13131A', color: newGroupName === tag ? '#8B5CF6' : '#64748B', borderRadius: 6, padding: '0.2rem 0.55rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.65rem', fontWeight: 700 }}>
+      {tag}
+    </button>
+  ))}
+</div>
+<input className="input" style={{ flex: '1 1 140px', minWidth: 0 }} placeholder="Or type custom group name..." value={newGroupName} onChange={e => setNewGroupName(e.target.value)} />
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.68rem', color: '#475569', whiteSpace: 'nowrap', cursor: 'pointer', flexShrink: 0 }}>
                       <input type="checkbox" checked={newGroupRequired} onChange={e => setNewGroupRequired(e.target.checked)} style={{ accentColor: '#F97316' }} />
                       Required
