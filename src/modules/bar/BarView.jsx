@@ -18,7 +18,10 @@ function Ticker({ placedAt }) {
 }
 
 export default function BarView() {
-  const { orders, menu, tables, updateBarStatus, acknowledgeOrder } = usePOS()
+  const { orders, menu, tables, updateBarStatus, acknowledgeOrder, tabs, openTab, closeTab, updateTab, openPayment } = usePOS()
+const [showNewTab, setShowNewTab] = useState(false)
+const [tabName, setTabName]       = useState('')
+const [activeTab, setActiveTab]   = useState(null)
 
   const barOrders = orders.filter(o =>
     o.items.some(i => getItemDestination(i.id, menu) === 'bar') &&
@@ -53,9 +56,9 @@ export default function BarView() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.8rem' }}>
           <div>
-            <div style={{ fontSize: '0.6rem', letterSpacing: '0.2em', color: '#475569', marginBottom: '0.3rem' }}>BAR</div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Bar Display 🍺</h1>
-          </div>
+  <div style={{ fontSize: '0.6rem', letterSpacing: '0.2em', color: '#475569', marginBottom: '0.3rem' }}>BAR</div>
+  <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Bar Display 🍺</h1>
+</div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
   {[
     { label: 'PENDING', color: '#F59E0B', count: pending.length },
@@ -69,6 +72,60 @@ export default function BarView() {
   ))}
 </div>
         </div>
+
+        {/* Tabs */}
+{tabs.length > 0 && (
+  <div style={{ marginBottom: '1.5rem' }}>
+    <div style={{ fontSize: '0.6rem', color: '#F97316', letterSpacing: '0.15em', marginBottom: '0.6rem', fontWeight: 700 }}>🗂 OPEN TABS</div>
+    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+      {tabs.map(tab => (
+        <div key={tab.id} style={{ background: '#13131A', border: '1px solid #F9731644', borderRadius: 10, padding: '0.7rem 1rem', minWidth: 140 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F97316' }}>{tab.name}</span>
+            <span style={{ fontSize: '0.65rem', color: '#475569' }}>€{tab.total.toFixed(2)}</span>
+          </div>
+          <div style={{ fontSize: '0.62rem', color: '#475569', marginBottom: '0.5rem' }}>{tab.items.reduce((s, i) => s + i.qty, 0)} drinks · Round {tab.round}</div>
+          <div style={{ display: 'flex', gap: '0.3rem' }}>
+            <button className="bar-btn" style={{ flex: 1, background: '#3B82F622', color: '#3B82F6', border: '1px solid #3B82F644', padding: '0.3rem' }}
+              onClick={() => setActiveTab(tab)}>
+              + Add
+            </button>
+            <button className="bar-btn" style={{ flex: 1, background: '#10B98122', color: '#10B981', border: '1px solid #10B98144', padding: '0.3rem' }}
+              onClick={() => closeTab(tab.id)}>
+              Pay
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
+{/* New tab button */}
+<div style={{ marginBottom: '1.2rem' }}>
+  {showNewTab ? (
+    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+      <input value={tabName} onChange={e => setTabName(e.target.value)}
+        placeholder="Customer name or tab number..."
+        onKeyDown={e => { if (e.key === 'Enter' && tabName.trim()) { openTab(tabName.trim()); setTabName(''); setShowNewTab(false) }}}
+        autoFocus
+        style={{ flex: 1, background: '#0D0D14', border: '1px solid #F97316', borderRadius: 8, padding: '0.5rem 0.8rem', color: '#E2E8F0', fontFamily: "'Courier New', monospace", fontSize: '0.75rem', outline: 'none' }} />
+      <button className="bar-btn" style={{ background: '#F97316', color: '#000' }}
+        onClick={() => { if (tabName.trim()) { openTab(tabName.trim()); setTabName(''); setShowNewTab(false) }}}>
+        Open Tab
+      </button>
+      <button className="bar-btn" style={{ background: '#13131A', color: '#94A3B8', border: '1px solid #1E1E2E' }}
+        onClick={() => { setShowNewTab(false); setTabName('') }}>
+        Cancel
+      </button>
+    </div>
+  ) : (
+    <button className="bar-btn" style={{ background: '#F9731622', color: '#F97316', border: '1px solid #F9731644' }}
+      onClick={() => setShowNewTab(true)}>
+      + Open Tab
+    </button>
+  )}
+</div>
 
         {/* Additions panel */}
         {hasAdditions && (

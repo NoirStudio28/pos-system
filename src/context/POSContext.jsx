@@ -225,6 +225,7 @@ export function POSProvider({ children }) {
 ])
 
   const [orders,               setOrders]               = useState([])
+  const [tabs, setTabs] = usePersist('tabs', [])
   const [activePaymentOrderId, setActivePaymentOrderId] = useState(null)
   const [currentUser,          setCurrentUser]          = useState(null)
   const [kitchenAlerts, setKitchenAlerts] = useState([])
@@ -360,6 +361,19 @@ if (order.mergedTables?.length > 0) {
       const round = barStatus === 'pending' ? (o.round || 1) + 1 : o.round || 1
       return { ...o, barStatus, round: barStatus === 'done' ? round : o.round || 1 }
     }))
+
+
+  const openTab = (name) => {
+  const tab = { id: Date.now(), name, items: [], total: 0, barStatus: 'pending', isTab: true, round: 1, placedAt: new Date().toISOString(), placedBy: currentUser?.name || 'Unknown' }
+  setTabs(prev => [...prev, tab])
+}
+const updateTab = (updatedTab) => setTabs(prev => prev.map(t => t.id === updatedTab.id ? updatedTab : t))
+const closeTab  = (id, paymentData = null) => {
+  const tab = tabs.find(t => t.id === id)
+  if (!tab) return
+  setOrderHistory(prev => [...prev, { ...tab, closedAt: new Date().toISOString(), payment: paymentData, status: 'closed' }])
+  setTabs(prev => prev.filter(t => t.id !== id))
+}
 
   // ── Update order — detect new items ──
   const updateOrder = (updatedOrder) => {
@@ -516,7 +530,7 @@ return { ...newItem, isNew: noteChanged || modsChanged }
       addFloor, updateFloor, deleteFloor,
       updateTableStatus, updateTablePosition, updateTableData, addTableToFloor, removeTable,
       placeOrder, closeOrder, toggleOrderStatus, advanceOrderStatus, toggleUrgent,
-      updateOrder, mergeTables, fireCourse, serveCourse, acknowledgeOrder, updateBarStatus,
+      updateOrder, mergeTables, fireCourse, serveCourse, acknowledgeOrder, updateBarStatus,tabs, openTab, updateTab, closeTab,
       openPayment, closePayment, processPayment, checkGiftCard,
       addBooking, updateBooking, deleteBooking, updateBookingStatus,
       addCategory, deleteCategory, addMenuItem, updateMenuItem, deleteMenuItem, toggleItemAvailability,
