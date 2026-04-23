@@ -308,7 +308,10 @@ const displayOrders = filter === 'previous'
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>T{order.table}</span>
+                      {order.mergedTables?.length > 0 && <span style={{ fontSize: '0.65rem', color: '#8B5CF6', fontWeight: 700 }}>+T{order.mergedTables.join('+T')}</span>}
                       {order.urgent && <span style={{ fontSize: '0.65rem', color: '#EF4444', fontWeight: 700 }}>🔴</span>}
+                      {order.covers > 0 && <span style={{ fontSize: '0.65rem', color: '#94A3B8', background: '#1E1E2E', borderRadius: 4, padding: '1px 6px' }}>👥 {order.covers}</span>}
+                      {order.table && (() => { const tbl = tables?.find(t => t.id === order.table); return tbl?.note ? <span style={{ fontSize: '0.8rem' }}>{tbl.note.startsWith('🎂') ? '🎂' : tbl.note.startsWith('💍') ? '💍' : tbl.note.startsWith('🪟') ? '🪟' : tbl.note.startsWith('👑') ? '👑' : tbl.note.startsWith('🍼') ? '🍼' : tbl.note.startsWith('♿') ? '♿' : tbl.note.startsWith('🎉') ? '🎉' : '📝'}</span> : null })()}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       {order.placedAt && <Ticker placedAt={order.placedAt} />}

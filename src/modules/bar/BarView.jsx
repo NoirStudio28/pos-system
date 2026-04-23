@@ -18,7 +18,7 @@ function Ticker({ placedAt }) {
 }
 
 export default function BarView() {
-  const { orders, menu } = usePOS()
+  const { orders, menu, tables } = usePOS()
 
   const barOrders = orders.filter(o =>
     o.items.some(i => getItemDestination(i.id, menu) === 'bar') &&
@@ -126,6 +126,8 @@ export default function BarView() {
                       <div>
                         <div style={{ fontSize: '0.72rem', color: '#64748B' }}>{order.placedBy}</div>
                         <div style={{ fontSize: '0.62rem', color: '#334155' }}>{drinkItems.reduce((s, i) => s + i.qty, 0)} drink{drinkItems.reduce((s, i) => s + i.qty, 0) !== 1 ? 's' : ''}</div>
+                        {order.covers > 0 && <div style={{ fontSize: '0.62rem', color: '#94A3B8' }}>👥 {order.covers} covers</div>}
+                        {(() => { const tbl = tables?.find(t => t.id === order.table); return tbl?.note ? <div style={{ fontSize: '0.7rem' }}>{tbl.note.startsWith('🎂') ? '🎂' : tbl.note.startsWith('💍') ? '💍' : tbl.note.startsWith('🪟') ? '🪟' : tbl.note.startsWith('👑') ? '👑' : tbl.note.startsWith('🍼') ? '🍼' : tbl.note.startsWith('♿') ? '♿' : tbl.note.startsWith('🎉') ? '🎉' : '📝'} {tbl.note.replace(/^\S+\s/, '')}</div> : null })()}
                       </div>
                     </div>
                     {order.placedAt && <Ticker placedAt={order.placedAt} />}
