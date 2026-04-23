@@ -294,11 +294,15 @@ const [activeTab, setActiveTab]   = useState(null)
                             ×{item.qty}
                           </span>
                         </div>
-                        {item.modifiers?.length > 0 && (
-                          <div style={{ fontSize: '0.62rem', color: '#8B5CF6', marginTop: '0.15rem' }}>
-                            {item.modifiers.map(m => m.optionName).join(', ')}
-                          </div>
-                        )}
+                        {item.modifiers?.length > 0 && item.modifiers.map((m, i) => (
+  <div key={i} style={{ fontSize: '0.65rem', marginTop: '0.1rem' }}>
+    <span style={{ color: '#8B5CF6' }}>{m.groupName}: </span>
+    <span style={{ color: '#CBD5E1' }}>{m.optionName}</span>
+  </div>
+))}
+{item.note && (
+  <div style={{ fontSize: '0.65rem', color: '#FCD34D', marginTop: '0.1rem' }}>📝 {item.note}</div>
+)}
                       </div>
                     ))}
                   </div>
