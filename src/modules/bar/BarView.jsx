@@ -127,6 +127,78 @@ const [activeTab, setActiveTab]   = useState(null)
   )}
 </div>
 
+{/* Tab drink picker */}
+{activeTab && (
+  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+    <div style={{ background: '#0F0F17', border: '1px solid #F9731644', borderRadius: 14, padding: '1.5rem', width: '100%', maxWidth: 400, fontFamily: "'Courier New', monospace", color: '#E2E8F0', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div>
+          <div style={{ fontSize: '0.6rem', color: '#475569', letterSpacing: '0.1em' }}>ADD TO TAB</div>
+          <div style={{ fontSize: '1rem', fontWeight: 700, color: '#F97316' }}>{activeTab.name}</div>
+        </div>
+        <button onClick={() => setActiveTab(null)}
+          style={{ border: '1px solid #1E1E2E', background: 'transparent', color: '#64748B', borderRadius: 8, padding: '0.3rem 0.6rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem' }}>✕</button>
+      </div>
+
+      {Object.entries(menu).filter(([cat]) => {
+        const c = cat.toLowerCase()
+        return c.includes('drink') || c.includes('bar') || c.includes('beverage') || c.includes('wine') || c.includes('beer') || c.includes('cocktail') || c.includes('soft')
+      }).map(([cat, items]) => (
+        <div key={cat} style={{ marginBottom: '1rem' }}>
+          <div style={{ fontSize: '0.6rem', color: '#475569', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>{cat.toUpperCase()}</div>
+          {items.filter(i => i.available).map(item => {
+            const inTab = activeTab.items.find(i => i.id === item.id)
+            return (
+              <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.7rem', background: '#0D0D14', border: '1px solid #1E1E2E', borderRadius: 8, marginBottom: '0.3rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.78rem', color: '#CBD5E1', fontWeight: 600 }}>{item.name}</div>
+                  <div style={{ fontSize: '0.65rem', color: '#F97316' }}>€{item.price.toFixed(2)}</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  {inTab && (
+                    <>
+                      <button onClick={() => {
+                        const updatedItems = inTab.qty === 1
+                          ? activeTab.items.filter(i => i.id !== item.id)
+                          : activeTab.items.map(i => i.id === item.id ? { ...i, qty: i.qty - 1 } : i)
+                        const updated = { ...activeTab, items: updatedItems, total: updatedItems.reduce((s, i) => s + i.price * i.qty, 0) }
+                        setActiveTab(updated)
+                        updateTab(updated)
+                      }} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #3B3B52', background: '#13131A', color: '#E2E8F0', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, minWidth: 16, textAlign: 'center' }}>{inTab.qty}</span>
+                    </>
+                  )}
+                  <button onClick={() => {
+                    const updatedItems = inTab
+                      ? activeTab.items.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i)
+                      : [...activeTab.items, { ...item, qty: 1 }]
+                    const updated = { ...activeTab, items: updatedItems, total: updatedItems.reduce((s, i) => s + i.price * i.qty, 0) }
+                    setActiveTab(updated)
+                    updateTab(updated)
+                  }} style={{ width: 26, height: 26, borderRadius: '50%', border: '1px solid #3B3B52', background: '#13131A', color: '#E2E8F0', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ))}
+
+      {activeTab.items.length > 0 && (
+        <div style={{ borderTop: '1px solid #1E1E2E', paddingTop: '0.8rem', marginTop: '0.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>Tab Total</span>
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F97316' }}>€{activeTab.total.toFixed(2)}</span>
+          </div>
+          <button onClick={() => setActiveTab(null)}
+            style={{ width: '100%', border: 'none', background: '#F97316', color: '#000', borderRadius: 8, padding: '0.65rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontWeight: 700, fontSize: '0.8rem' }}>
+            ✓ Done
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
         {/* Additions panel */}
         {hasAdditions && (
           <div style={{ marginBottom: '1.5rem' }}>
