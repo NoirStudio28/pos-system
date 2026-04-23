@@ -5,8 +5,115 @@ import useBreakpoint from '../../hooks/useBreakpoint'
 const ALLERGEN_OPTIONS = ['Gluten', 'Dairy', 'Eggs', 'Fish', 'Shellfish', 'Nuts', 'Soy', 'Sulphites', 'None']
 const EMPTY_ITEM = { name: '', price: '', description: '', allergens: '' }
 
+function ModifierLibrary() {
+  const { modifierLibrary, setModifierLibrary } = usePOS()
+  const [editingGroup, setEditingGroup] = useState(null)
+  const [newGroupName, setNewGroupName] = useState('')
+  const [newGroupRequired, setNewGroupRequired] = useState(false)
+  const [newOptionName, setNewOptionName] = useState('')
+  const [newOptionPrice, setNewOptionPrice] = useState('')
+
+  const PRESETS = ['Extra', 'No', 'Add', 'Swap', 'Sauce', 'On the side', 'Temperature', 'Cooking']
+
+  const addGroup = () => {
+    if (!newGroupName.trim()) return
+    const group = { id: 'lib-' + Date.now(), name: newGroupName.trim(), required: newGroupRequired, options: [] }
+    setModifierLibrary(prev => [...prev, group])
+    setNewGroupName('')
+    setNewGroupRequired(false)
+    setEditingGroup(group.id)
+  }
+
+  const deleteGroup = (id) => setModifierLibrary(prev => prev.filter(g => g.id !== id))
+
+  const addOption = (groupId) => {
+    if (!newOptionName.trim()) return
+    const option = { id: 'lopt-' + Date.now(), name: newOptionName.trim(), price: parseFloat(newOptionPrice) || 0 }
+    setModifierLibrary(prev => prev.map(g => g.id === groupId ? { ...g, options: [...g.options, option] } : g))
+    setNewOptionName('')
+    setNewOptionPrice('')
+  }
+
+  const deleteOption = (groupId, optionId) => {
+    setModifierLibrary(prev => prev.map(g => g.id === groupId ? { ...g, options: g.options.filter(o => o.id !== optionId) } : g))
+  }
+
+  const toggleRequired = (groupId) => {
+    setModifierLibrary(prev => prev.map(g => g.id === groupId ? { ...g, required: !g.required } : g))
+  }
+
+  return (
+    <div style={{ background: '#0A0A0F', border: '1px solid #8B5CF644', borderRadius: 12, padding: '1.2rem', marginBottom: '1.5rem' }}>
+      <div style={{ fontSize: '0.65rem', color: '#8B5CF6', letterSpacing: '0.1em', marginBottom: '1rem', fontWeight: 700 }}>⚙ MODIFIER LIBRARY</div>
+
+      {modifierLibrary.map(group => (
+        <div key={group.id} style={{ background: '#13131A', border: '1px solid #1E1E2E', borderRadius: 10, padding: '0.8rem', marginBottom: '0.6rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#CBD5E1' }}>{group.name}</span>
+              <button onClick={() => toggleRequired(group.id)}
+                style={{ fontSize: '0.6rem', fontWeight: 700, padding: '1px 7px', borderRadius: 4, border: 'none', cursor: 'pointer', background: group.required ? '#F9731622' : '#1E293B', color: group.required ? '#F97316' : '#475569' }}>
+                {group.required ? 'REQUIRED' : 'OPTIONAL'}
+              </button>
+            </div>
+            <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+              <button onClick={() => setEditingGroup(editingGroup === group.id ? null : group.id)}
+                style={{ border: '1px solid #1E1E2E', background: 'transparent', color: '#64748B', borderRadius: 6, padding: '0.2rem 0.5rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.65rem' }}>
+                {editingGroup === group.id ? 'Done' : 'Edit'}
+              </button>
+              <button onClick={() => deleteGroup(group.id)}
+                style={{ border: '1px solid #EF444433', background: '#EF444411', color: '#EF4444', borderRadius: 6, padding: '0.2rem 0.5rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.65rem' }}>✕</button>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginBottom: editingGroup === group.id ? '0.6rem' : 0 }}>
+            {group.options.map(opt => (
+              <div key={opt.id} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: '#0D0D14', border: '1px solid #1E1E2E', borderRadius: 6, padding: '0.2rem 0.5rem' }}>
+                <span style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{opt.name}</span>
+                {opt.price !== 0 && <span style={{ fontSize: '0.65rem', color: '#10B981' }}>{opt.price > 0 ? `+€${opt.price.toFixed(2)}` : `-€${Math.abs(opt.price).toFixed(2)}`}</span>}
+                {editingGroup === group.id && (
+                  <button onClick={() => deleteOption(group.id, opt.id)}
+                    style={{ border: 'none', background: 'none', color: '#EF4444', cursor: 'pointer', fontSize: '0.65rem', padding: 0 }}>✕</button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {editingGroup === group.id && (
+            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+              <input className="input" style={{ flex: '1 1 120px' }} placeholder="Option name" value={newOptionName} onChange={e => setNewOptionName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addOption(group.id)} />
+              <input className="input" style={{ width: 70 }} type="number" step="0.50" placeholder="+/- €" value={newOptionPrice} onChange={e => setNewOptionPrice(e.target.value)} />
+              <button className="btn btn-primary btn-sm" onClick={() => addOption(group.id)}>Add</button>
+            </div>
+          )}
+        </div>
+      ))}
+
+      <div style={{ borderTop: '1px solid #1E1E2E', paddingTop: '0.8rem', marginTop: '0.4rem' }}>
+        <div style={{ fontSize: '0.6rem', color: '#475569', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>NEW GROUP</div>
+        <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
+          {PRESETS.map(p => (
+            <button key={p} onClick={() => setNewGroupName(p)}
+              style={{ border: '1px solid', borderColor: newGroupName === p ? '#8B5CF6' : '#1E1E2E', background: newGroupName === p ? '#8B5CF622' : '#13131A', color: newGroupName === p ? '#8B5CF6' : '#64748B', borderRadius: 6, padding: '0.25rem 0.6rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.65rem', fontWeight: 700 }}>
+              {p}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <input className="input" style={{ flex: '1 1 140px' }} placeholder="Or type custom name..." value={newGroupName} onChange={e => setNewGroupName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addGroup()} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.68rem', color: '#475569', cursor: 'pointer', flexShrink: 0 }}>
+            <input type="checkbox" checked={newGroupRequired} onChange={e => setNewGroupRequired(e.target.checked)} style={{ accentColor: '#F97316' }} />
+            Required
+          </label>
+          <button className="btn btn-purple btn-sm" onClick={addGroup}>+ Add Group</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function MenuView() {
-  const { menu, addCategory, deleteCategory, addMenuItem, updateMenuItem, deleteMenuItem, toggleItemAvailability } = usePOS()
+  const { menu, addCategory, deleteCategory, addMenuItem, updateMenuItem, deleteMenuItem, toggleItemAvailability, modifierLibrary } = usePOS()
   const { isMobile } = useBreakpoint()
 
   const [activeCategory,    setActiveCategory]    = useState(Object.keys(menu)[0])
@@ -17,6 +124,7 @@ export default function MenuView() {
   const [form,              setForm]              = useState(EMPTY_ITEM)
   const [selectedAllergens, setSelectedAllergens] = useState([])
   const [modifierView,      setModifierView]      = useState(null)
+  const [showLibrary, setShowLibrary] = useState(false)
   const [newGroupName,      setNewGroupName]      = useState('')
   const [newGroupRequired,  setNewGroupRequired]  = useState(false)
   const [newOptionName,     setNewOptionName]     = useState('')
@@ -128,7 +236,10 @@ export default function MenuView() {
             <div style={{ fontSize: '0.6rem', letterSpacing: '0.2em', color: '#475569', marginBottom: '0.3rem' }}>MENU MANAGEMENT</div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Menu</h1>
           </div>
-          <button className="btn btn-primary" onClick={openAdd}>+ Add Item</button>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+  <button className="btn btn-ghost" onClick={() => setShowLibrary(l => !l)} style={{ borderColor: showLibrary ? '#8B5CF6' : '#1E1E2E', color: showLibrary ? '#8B5CF6' : '#94A3B8', background: showLibrary ? '#8B5CF622' : '#13131A' }}>⚙ Modifier Library</button>
+  <button className="btn btn-primary" onClick={openAdd}>+ Add Item</button>
+</div>
         </div>
 
         {/* Category tabs — horizontally scrollable on mobile */}
@@ -199,6 +310,21 @@ export default function MenuView() {
             {modifierView === item.id && (
               <div style={{ background: '#0A0A0F', border: '1px solid #8B5CF644', borderRadius: 10, padding: '1rem', marginBottom: '0.5rem', marginTop: '-0.3rem' }}>
                 <div style={{ fontSize: '0.65rem', color: '#8B5CF6', letterSpacing: '0.1em', marginBottom: '0.8rem', fontWeight: 700 }}>⚙ SPECIAL INSTRUCTIONS — {item.name}</div>
+                <div style={{ marginBottom: '0.8rem' }}>
+  <div style={{ fontSize: '0.6rem', color: '#475569', letterSpacing: '0.1em', marginBottom: '0.4rem' }}>FROM LIBRARY</div>
+  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
+    {modifierLibrary.filter(lg => !(item.modifiers || []).some(g => g.name === lg.name)).map(lg => (
+      <button key={lg.id} onClick={() => {
+        const imported = { id: Date.now().toString(), name: lg.name, required: lg.required, options: lg.options.map(o => ({ ...o, id: Date.now().toString() + o.id })) }
+        updateMenuItem(activeCategory, { ...item, modifiers: [...(item.modifiers || []), imported] })
+      }}
+        style={{ border: '1px solid #8B5CF644', background: '#8B5CF611', color: '#8B5CF6', borderRadius: 6, padding: '0.25rem 0.7rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.68rem', fontWeight: 700 }}>
+        + {lg.name}
+      </button>
+    ))}
+    {modifierLibrary.length === 0 && <span style={{ fontSize: '0.68rem', color: '#334155' }}>No library groups yet</span>}
+  </div>
+</div>
 
                 {(item.modifiers || []).map(group => (
                   <div className="mod-group" key={group.id}>

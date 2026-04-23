@@ -217,6 +217,13 @@ export function POSProvider({ children }) {
   const [settings,     setSettings]     = usePersist('settings',     DEFAULT_SETTINGS)
   const [giftCards,    setGiftCards]    = usePersist('giftCards',    { 'GIFT50': 50.00, 'GIFT25': 25.00 })
 
+  const [modifierLibrary, setModifierLibrary] = usePersist('modifierLibrary', [
+  { id: 'lib-1', name: 'Extra',       required: false, options: [{ id: 'e1', name: 'Cheese', price: 1.00 }, { id: 'e2', name: 'Bacon', price: 1.50 }, { id: 'e3', name: 'Fries', price: 2.00 }] },
+  { id: 'lib-2', name: 'No',          required: false, options: [{ id: 'n1', name: 'Cheese', price: 0 }, { id: 'n2', name: 'Onion', price: 0 }, { id: 'n3', name: 'Sauce', price: 0 }] },
+  { id: 'lib-3', name: 'Sauce',       required: false, options: [{ id: 'sa1', name: 'Mayo', price: 0 }, { id: 'sa2', name: 'Ketchup', price: 0 }, { id: 'sa3', name: 'BBQ', price: 0 }, { id: 'sa4', name: 'Garlic Aioli', price: 0.50 }] },
+  { id: 'lib-4', name: 'Temperature', required: true,  options: [{ id: 't1', name: 'Rare', price: 0 }, { id: 't2', name: 'Medium', price: 0 }, { id: 't3', name: 'Well Done', price: 0 }] },
+])
+
   const [orders,               setOrders]               = useState([])
   const [activePaymentOrderId, setActivePaymentOrderId] = useState(null)
   const [currentUser,          setCurrentUser]          = useState(null)
@@ -511,7 +518,7 @@ return { ...newItem, isNew: noteChanged || modsChanged }
       kitchenAlerts, dismissAlert, dismissAllAlerts,
       addStockItem, updateStockItem, deleteStockItem, adjustStock,
       addCustomer, updateCustomer, deleteCustomer, awardPoints, redeemPoints,
-      updateSettings,
+      updateSettings,modifierLibrary, setModifierLibrary,
     }}>
       {children}
     </POSContext.Provider>
