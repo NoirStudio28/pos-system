@@ -17,8 +17,68 @@ function Ticker({ placedAt }) {
   )
 }
 
+function BarLog() {
+  const { orderHistory, orders, menu, staff, currentUser } = usePOS()
+  const [open, setOpen] = useState(false)
+
+  const member      = staff.find(s => s.id === currentUser?.id)
+  const lastClockIn = member?.clockRecords?.filter(r => r.in)?.slice(-1)[0]?.in
+  const shiftStart  = lastClockIn ? new Date(lastClockIn) : new Date(new Date().setHours(0, 0, 0, 0))
+
+  const servedNotPaid = orders.filter(o => {
+    const hasDrinks = o.items?.some(i => getItemDestination(i.id, menu) === 'bar')
+    return hasDrinks && o.barStatus === 'done' && new Date(o.placedAt || 0) >= shiftStart
+  })
+
+  const paidThisShift = orderHistory.filter(o =>
+    o.closedAt && new Date(o.closedAt) >= shiftStart &&
+    o.items?.some(i => getItemDestination(i.id, menu) === 'bar')
+  )
+
+  const allOrders = [
+    ...servedNotPaid.map(o => ({ ...o, _served: true })),
+    ...paidThisShift,
+  ].sort((a, b) => new Date(b.closedAt || b.placedAt || 0) - new Date(a.closedAt || a.placedAt || 0))
+
+  return (
+    <div style={{ borderTop: '1px solid #1E1E2E', paddingTop: '1rem', marginTop: '1.5rem' }}>
+      <button onClick={() => setOpen(o => !o)}
+        style={{ border: '1px solid #1E1E2E', background: 'transparent', color: '#334155', borderRadius: 8, padding: '0.4rem 0.9rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.68rem', fontWeight: 700, marginBottom: '0.8rem' }}>
+        {open ? '▲' : '▼'} Bar Log ({allOrders.length} orders since {shiftStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
+      </button>
+      {open && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.6rem', opacity: 0.7 }}>
+          {allOrders.length === 0 ? (
+            <div style={{ fontSize: '0.75rem', color: '#334155' }}>No bar orders this shift</div>
+          ) : allOrders.map(order => {
+            const drinkItems = order.items.filter(i => getItemDestination(i.id, menu) === 'bar')
+            return (
+              <div key={order.id} style={{ background: '#13131A', border: '1px solid #1E1E2E', borderRadius: 10, padding: '0.7rem 0.9rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#3B82F6' }}>
+                    {order.isTab ? `📋 ${order.name}` : `T${order.table}`}
+                  </span>
+                  <span style={{ fontSize: '0.62rem', color: order._served ? '#F59E0B' : '#334155' }}>
+                    {order._served ? '⏳ Awaiting payment' : new Date(order.closedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                {drinkItems.map((item, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#334155', marginBottom: '0.15rem' }}>
+                    <span>{item.name}</span>
+                    <span>×{item.qty}</span>
+                  </div>
+                ))}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function BarView() {
-  const { orders, menu, tables, updateBarStatus, acknowledgeOrder, tabs, openTab, closeTab, updateTab, openPayment } = usePOS()
+  const { orders, menu, tables, updateBarStatus, acknowledgeOrder, tabs, openTab, closeTab, updateTab, openPayment, orderHistory, staff, currentUser } = usePOS()
 const [showNewTab, setShowNewTab] = useState(false)
 const [tabName, setTabName]       = useState('')
 const [activeTab, setActiveTab]   = useState(null)
@@ -355,6 +415,7 @@ const [editingNote, setEditingNote] = useState(null)
             })}
           </div>
         )}
+        <BarLog />
       </div>
     </div>
   )
