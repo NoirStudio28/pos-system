@@ -513,10 +513,24 @@ const [activeModifierGroup, setActiveModifierGroup] = useState(null)
               🗑 Delete Item
             </button>
 
-            <button onClick={() => setEditingItem(null)}
-              style={{ width: '100%', border: 'none', background: '#F97316', color: '#000', borderRadius: 8, padding: '0.6rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.75rem', fontWeight: 700 }}>
-              ✓ Done
-            </button>
+            {(() => {
+  const menuItem = Object.values(menu).flat().find(m => m.id === editingItem.id)
+  const requiredGroups = (menuItem?.modifiers || []).filter(g => g.required)
+  const allRequiredMet = requiredGroups.every(g => (editingItem.modifiers || []).some(m => m.groupName === g.name))
+  return (
+    <>
+      {!allRequiredMet && (
+        <div style={{ fontSize: '0.65rem', color: '#EF4444', background: '#EF444411', border: '1px solid #EF444433', borderRadius: 8, padding: '0.5rem 0.7rem', marginBottom: '0.5rem', textAlign: 'center' }}>
+          ⚠ Please select all required options
+        </div>
+      )}
+      <button onClick={() => { if (!allRequiredMet) return; setEditingItem(null) }}
+        style={{ width: '100%', border: 'none', background: allRequiredMet ? '#F97316' : '#1E1E2E', color: allRequiredMet ? '#000' : '#334155', borderRadius: 8, padding: '0.6rem', cursor: allRequiredMet ? 'pointer' : 'not-allowed', fontFamily: "'Courier New', monospace", fontSize: '0.75rem', fontWeight: 700 }}>
+        ✓ Done
+      </button>
+    </>
+  )
+})()}
           </div>
         </div>
       )}
