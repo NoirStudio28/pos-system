@@ -188,6 +188,15 @@ const [activeModifierGroup, setActiveModifierGroup] = useState(null)
 
   const handleSave = () => {
     if (currentItems.length === 0) return
+    const missingRequired = currentItems.some(i => {
+      const menuItem = Object.values(menu).flat().find(m => m.id === i.id)
+      const requiredGroups = (menuItem?.modifiers || []).filter(g => g.required)
+      return requiredGroups.some(g => !(i.modifiers || []).some(m => m.groupName === g.name))
+    })
+    if (missingRequired) {
+      alert('Some items have required options not selected. Please edit those items first.')
+      return
+    }
     const itemsWithAllergens = currentItems.map(i => {
       const menuItem = Object.values(menu).flat().find(m => m.id === i.id)
       return { ...i, allergens: menuItem?.allergens || 'None', note: i.note || '', specialInstructions: i.specialInstructions || [] }
