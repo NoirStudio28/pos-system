@@ -421,19 +421,43 @@ function ItemPicker({ tableId, existingOrder, onClose, covers }) {
             </div>
 
             {/* MODIFIERS */}
-            {editingItem.modifiers?.length > 0 && (
-              <div style={{ marginBottom: '1rem' }}>
-                <div style={{ fontSize: '0.65rem', fontWeight: 700, marginBottom: '0.5rem', color: '#F97316' }}>OPTIONS</div>
-                <div style={{ background: '#0D0D14', border: '1px solid #1E1E2E', borderRadius: 8, padding: '0.7rem' }}>
-                  {editingItem.modifiers.map((m, idx) => (
-                    <div key={idx} style={{ fontSize: '0.7rem', color: '#CBD5E1', marginBottom: '0.3rem', display: 'flex', justifyContent: 'space-between' }}>
-                      <span>{m.optionName}</span>
-                      {m.price > 0 && <span style={{ color: '#10B981' }}>+€{m.price.toFixed(2)}</span>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+{(() => {
+  const menuItem = Object.values(menu).flat().find(m => m.id === editingItem.id)
+  return menuItem?.modifiers?.length > 0 && (
+    <div style={{ marginBottom: '1rem' }}>
+      <div style={{ fontSize: '0.65rem', fontWeight: 700, marginBottom: '0.5rem', color: '#F97316' }}>OPTIONS</div>
+      {menuItem.modifiers.map(group => (
+        <div key={group.id} style={{ marginBottom: '0.8rem' }}>
+          <div style={{ fontSize: '0.62rem', color: group.required ? '#F97316' : '#64748B', fontWeight: 700, marginBottom: '0.4rem', letterSpacing: '0.08em' }}>
+            {group.name.toUpperCase()} {group.required && <span style={{ fontSize: '0.55rem', background: '#F9731622', padding: '1px 5px', borderRadius: 3 }}>REQUIRED</span>}
+          </div>
+          {group.options.map(opt => {
+            const isSelected = (editingItem.modifiers || []).some(m => m.optionName === opt.name)
+            return (
+              <button key={opt.id} onClick={() => {
+                let updatedMods
+                if (group.required) {
+                  updatedMods = [...(editingItem.modifiers || []).filter(m => m.groupName !== group.name), { groupName: group.name, optionName: opt.name, price: opt.price, required: true }]
+                } else {
+                  updatedMods = isSelected
+                    ? (editingItem.modifiers || []).filter(m => m.optionName !== opt.name)
+                    : [...(editingItem.modifiers || []), { groupName: group.name, optionName: opt.name, price: opt.price, required: false }]
+                }
+                const newModTotal = updatedMods.reduce((s, m) => s + (m.price || 0), 0)
+                setEditingItem({ ...editingItem, modifiers: updatedMods, modifierTotal: newModTotal })
+                setCurrentItems(prev => prev.map(i => i._key === editingItem._key ? { ...i, modifiers: updatedMods, modifierTotal: newModTotal } : i))
+              }}
+              style={{ width: '100%', textAlign: 'left', padding: '0.45rem 0.7rem', borderRadius: 8, border: '1px solid', borderColor: isSelected ? '#F97316' : '#1E1E2E', background: isSelected ? '#F9731622' : '#13131A', color: isSelected ? '#F97316' : '#94A3B8', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.73rem', marginBottom: '0.3rem', display: 'flex', justifyContent: 'space-between' }}>
+                <span>{opt.name}</span>
+                {opt.price > 0 && <span style={{ color: isSelected ? '#F97316' : '#10B981' }}>+€{opt.price.toFixed(2)}</span>}
+              </button>
+            )
+          })}
+        </div>
+      ))}
+    </div>
+  )
+})()}
 
 
             {/* SPECIAL INSTRUCTIONS */}
