@@ -153,7 +153,6 @@ function ItemPicker({ tableId, existingOrder, onClose, covers }) {
 
 
   const handleAddItem = (item) => {
-  if (item.modifiers?.length > 0) { setModifierItem(item); return }
   addItemDirect(item, [], 0)
 }
 
