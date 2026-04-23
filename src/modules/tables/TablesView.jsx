@@ -362,7 +362,16 @@ const [activeModifierGroup, setActiveModifierGroup] = useState(null)
                     <button className="qty-btn" style={{ width: 20, height: 20, fontSize: '0.7rem' }} onClick={(e) => { e.stopPropagation(); removeItem(i._key) }}>−</button>
                   </div>
                 </div>
-                {i.modifiers?.length > 0 && <div style={{ fontSize: '0.62rem', color: '#8B5CF6', marginTop: '0.1rem' }}>{i.modifiers.map(m => m.optionName).join(', ')}</div>}
+                {i.modifiers?.length > 0 && (
+  <div style={{ marginTop: '0.25rem', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+    {i.modifiers.map((m, idx) => (
+      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.62rem' }}>
+        <span style={{ color: '#8B5CF6' }}>{m.groupName}: <span style={{ color: '#CBD5E1' }}>{m.optionName}</span></span>
+        {m.price !== 0 && <span style={{ color: m.price > 0 ? '#10B981' : '#EF4444', fontWeight: 700 }}>{m.price > 0 ? `+€${m.price.toFixed(2)}` : `-€${Math.abs(m.price).toFixed(2)}`}</span>}
+      </div>
+    ))}
+  </div>
+)}
                 {i.specialInstructions?.length > 0 && (
                   <div style={{ fontSize: '0.62rem', color: '#F97316', marginTop: '0.1rem' }}>
                     {(() => {

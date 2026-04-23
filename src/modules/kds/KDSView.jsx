@@ -396,10 +396,10 @@ export default function KDSView() {
       <span style={{ fontSize: '0.78rem', color: '#475569', fontWeight: 700 }}>×{item.qty}</span>
     </div>
     {item.modifiers?.length > 0 && item.modifiers.map((m, i) => (
-      <div key={i} style={{ fontSize: '0.65rem', color: '#8B5CF6', marginTop: '0.1rem' }}>
-        › {m.optionName}
-      </div>
-    ))}
+  <div key={i} style={{ fontSize: '0.65rem', marginTop: '0.1rem', display: 'flex', justifyContent: 'space-between' }}>
+    <span style={{ color: '#8B5CF6' }}>{m.groupName}: <span style={{ color: '#CBD5E1' }}>{m.optionName}</span></span>
+  </div>
+))}
     {item.note && (
       <div style={{ fontSize: '0.65rem', color: '#FCD34D', marginTop: '0.1rem' }}>
         📝 {item.note}
