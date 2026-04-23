@@ -140,6 +140,7 @@ export default function BarView() {
                         <div style={{ fontSize: '0.72rem', color: '#64748B' }}>{order.placedBy}</div>
                         <div style={{ fontSize: '0.62rem', color: '#334155' }}>{drinkItems.reduce((s, i) => s + i.qty, 0)} drink{drinkItems.reduce((s, i) => s + i.qty, 0) !== 1 ? 's' : ''}</div>
                         {order.covers > 0 && <div style={{ fontSize: '0.62rem', color: '#94A3B8' }}>👥 {order.covers} covers</div>}
+                        {order.round > 1 && <div style={{ fontSize: '0.62rem', color: '#F97316', fontWeight: 700 }}>🔄 Round {order.round}</div>}
                         {(() => { const tbl = tables?.find(t => t.id === order.table); return tbl?.note ? <div style={{ fontSize: '0.7rem' }}>{tbl.note.startsWith('🎂') ? '🎂' : tbl.note.startsWith('💍') ? '💍' : tbl.note.startsWith('🪟') ? '🪟' : tbl.note.startsWith('👑') ? '👑' : tbl.note.startsWith('🍼') ? '🍼' : tbl.note.startsWith('♿') ? '♿' : tbl.note.startsWith('🎉') ? '🎉' : '📝'} {tbl.note.replace(/^\S+\s/, '')}</div> : null })()}
                       </div>
                     </div>

@@ -355,7 +355,11 @@ if (order.mergedTables?.length > 0) {
 
   // ── Bar status ──
   const updateBarStatus = (orderId, barStatus) =>
-    setOrders(prev => prev.map(o => o.id !== orderId ? o : { ...o, barStatus }))
+    setOrders(prev => prev.map(o => {
+      if (o.id !== orderId) return o
+      const round = barStatus === 'pending' ? (o.round || 1) + 1 : o.round || 1
+      return { ...o, barStatus, round: barStatus === 'done' ? round : o.round || 1 }
+    }))
 
   // ── Update order — detect new items ──
   const updateOrder = (updatedOrder) => {
@@ -381,6 +385,7 @@ return { ...newItem, isNew: noteChanged || modsChanged }
         ...updatedOrder,
         items:      markedItems,
         courses:    mergedCourses,
+        round:      hasNewDrinks ? (o.round || 1) + 1 : o.round || 1,
         barStatus:  hasNewDrinks ? 'pending' : newBarStatus,
         modified:   hasNewItems,
         modifiedAt: hasNewItems ? new Date().toISOString() : o.modifiedAt,
