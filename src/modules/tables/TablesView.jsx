@@ -139,6 +139,7 @@ function ModifierPicker({ item, onConfirm, onCancel }) {
 // ─── Item Picker ──────────────────────────────────────────────────────────────
 function ItemPicker({ tableId, existingOrder, onClose, covers }) {
   const [editingItem, setEditingItem] = useState(null)
+const [activeModifierGroup, setActiveModifierGroup] = useState(null)
   const { menu, placeOrder, updateOrder, orders, currentUser, customers } = usePOS()
   const { isMobile: pickerMobile } = useBreakpoint()
 
@@ -424,7 +425,7 @@ function ItemPicker({ tableId, existingOrder, onClose, covers }) {
 {(() => {
   const menuItem = Object.values(menu).flat().find(m => m.id === editingItem.id)
   if (!menuItem?.modifiers?.length) return null
-  const [activeGroup, setActiveGroup] = useState(menuItem.modifiers[0]?.id)
+  const activeGroup = activeModifierGroup || menuItem.modifiers[0]?.id
   const group = menuItem.modifiers.find(g => g.id === activeGroup)
   return (
     <div style={{ marginBottom: '1rem' }}>
@@ -434,7 +435,7 @@ function ItemPicker({ tableId, existingOrder, onClose, covers }) {
         {menuItem.modifiers.map(g => {
           const hasSelection = (editingItem.modifiers || []).some(m => m.groupName === g.name)
           return (
-            <button key={g.id} onClick={() => setActiveGroup(g.id)}
+            <button key={g.id} onClick={() => setActiveModifierGroup(g.id)}
               style={{ padding: '0.3rem 0.8rem', borderRadius: 6, border: '1px solid', borderColor: activeGroup === g.id ? '#F97316' : hasSelection ? '#10B98166' : '#1E1E2E', background: activeGroup === g.id ? '#F9731622' : hasSelection ? '#10B98111' : '#13131A', color: activeGroup === g.id ? '#F97316' : hasSelection ? '#10B981' : '#64748B', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.68rem', fontWeight: 700 }}>
               {g.name} {hasSelection ? '✓' : ''}
             </button>
