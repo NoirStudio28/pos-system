@@ -368,11 +368,13 @@ if (order.mergedTables?.length > 0) {
   setTabs(prev => [...prev, tab])
 }
 const updateTab = (updatedTab) => setTabs(prev => prev.map(t => t.id === updatedTab.id ? updatedTab : t))
-const closeTab  = (id, paymentData = null) => {
+const closeTab = (id) => {
   const tab = tabs.find(t => t.id === id)
   if (!tab) return
-  setOrderHistory(prev => [...prev, { ...tab, closedAt: new Date().toISOString(), payment: paymentData, status: 'closed' }])
+  const orderId = Date.now()
+  setOrders(prev => [...prev, { ...tab, id: orderId, table: null, isTab: true, status: 'ready', courses: {}, barStatus: 'done' }])
   setTabs(prev => prev.filter(t => t.id !== id))
+  setActivePaymentOrderId(orderId)
 }
 
   // ── Update order — detect new items ──
