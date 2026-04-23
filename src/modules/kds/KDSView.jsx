@@ -129,14 +129,17 @@ export default function KDSView() {
   const shiftStart = lastClockIn ? new Date(lastClockIn) : new Date(new Date().setHours(0, 0, 0, 0))
 
   // Get previous orders when filter is 'previous'
-  const displayOrders = filter === 'previous' 
-    ? (orderHistory || [])
-        .filter(o => {
+  const fullyServedActive = orders.filter(o => allCoursesServed(o) && o.items?.some(i => getItemDestination(i.id, menu) === 'kitchen') && new Date(o.placedAt || 0) >= shiftStart)
+
+const displayOrders = filter === 'previous'
+    ? [
+        ...fullyServedActive.map(o => ({ ...o, _servedNotPaid: true })),
+        ...(orderHistory || []).filter(o => {
           const hasKitchenItems = o.items?.some(i => getItemDestination(i.id, menu) === 'kitchen')
           return hasKitchenItems && o.closedAt && o.status === 'closed' && new Date(o.closedAt) >= shiftStart
         })
-        .sort((a, b) => new Date(b.closedAt) - new Date(a.closedAt))
-        .slice(0, 50)
+      ].sort((a, b) => new Date(b.closedAt || b.placedAt || 0) - new Date(a.closedAt || a.placedAt || 0))
+       .slice(0, 50)
     : filtered
 
   const sorted = [...filtered].sort((a, b) => {
@@ -329,10 +332,10 @@ export default function KDSView() {
                     )
                   )}
                   {filter === 'previous' && (
-                    <div style={{ fontSize: '0.62rem', fontWeight: 700, color: '#10B981', background: '#10B98122', border: '1px solid #10B98144', borderRadius: 5, padding: '2px 8px', display: 'inline-block' }}>
-                      ✓ COMPLETED
-                    </div>
-                  )}
+  <div style={{ fontSize: '0.62rem', fontWeight: 700, color: order._servedNotPaid ? '#F59E0B' : '#10B981', background: order._servedNotPaid ? '#F59E0B22' : '#10B98122', border: `1px solid ${order._servedNotPaid ? '#F59E0B44' : '#10B98144'}`, borderRadius: 5, padding: '2px 8px', display: 'inline-block' }}>
+    {order._servedNotPaid ? '⏳ Awaiting Payment' : '✓ COMPLETED'}
+  </div>
+)}
 
                   {/* Allergens — food only */}
                   {foodAllergens.length > 0 && (
