@@ -423,16 +423,29 @@ function ItemPicker({ tableId, existingOrder, onClose, covers }) {
             {/* MODIFIERS */}
 {(() => {
   const menuItem = Object.values(menu).flat().find(m => m.id === editingItem.id)
-  return menuItem?.modifiers?.length > 0 && (
+  if (!menuItem?.modifiers?.length) return null
+  const [activeGroup, setActiveGroup] = useState(menuItem.modifiers[0]?.id)
+  const group = menuItem.modifiers.find(g => g.id === activeGroup)
+  return (
     <div style={{ marginBottom: '1rem' }}>
-      <div style={{ fontSize: '0.65rem', fontWeight: 700, marginBottom: '0.5rem', color: '#F97316' }}>OPTIONS</div>
-      {menuItem.modifiers.map(group => (
-        <div key={group.id} style={{ marginBottom: '0.8rem' }}>
-          <div style={{ fontSize: '0.62rem', color: group.required ? '#F97316' : '#64748B', fontWeight: 700, marginBottom: '0.4rem', letterSpacing: '0.08em' }}>
-            {group.name.toUpperCase()} {group.required && <span style={{ fontSize: '0.55rem', background: '#F9731622', padding: '1px 5px', borderRadius: 3 }}>REQUIRED</span>}
-          </div>
+      <div style={{ fontSize: '0.65rem', fontWeight: 700, marginBottom: '0.6rem', color: '#F97316' }}>OPTIONS</div>
+      {/* Group tabs */}
+      <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginBottom: '0.6rem' }}>
+        {menuItem.modifiers.map(g => {
+          const hasSelection = (editingItem.modifiers || []).some(m => m.groupName === g.name)
+          return (
+            <button key={g.id} onClick={() => setActiveGroup(g.id)}
+              style={{ padding: '0.3rem 0.8rem', borderRadius: 6, border: '1px solid', borderColor: activeGroup === g.id ? '#F97316' : hasSelection ? '#10B98166' : '#1E1E2E', background: activeGroup === g.id ? '#F9731622' : hasSelection ? '#10B98111' : '#13131A', color: activeGroup === g.id ? '#F97316' : hasSelection ? '#10B981' : '#64748B', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.68rem', fontWeight: 700 }}>
+              {g.name} {hasSelection ? '✓' : ''}
+            </button>
+          )
+        })}
+      </div>
+      {/* Options for active group */}
+      {group && (
+        <div style={{ background: '#0D0D14', border: '1px solid #1E1E2E', borderRadius: 8, padding: '0.6rem' }}>
           {group.options.map(opt => {
-            const isSelected = (editingItem.modifiers || []).some(m => m.optionName === opt.name)
+            const isSelected = (editingItem.modifiers || []).some(m => m.optionName === opt.name && m.groupName === group.name)
             return (
               <button key={opt.id} onClick={() => {
                 let updatedMods
@@ -440,21 +453,37 @@ function ItemPicker({ tableId, existingOrder, onClose, covers }) {
                   updatedMods = [...(editingItem.modifiers || []).filter(m => m.groupName !== group.name), { groupName: group.name, optionName: opt.name, price: opt.price, required: true }]
                 } else {
                   updatedMods = isSelected
-                    ? (editingItem.modifiers || []).filter(m => m.optionName !== opt.name)
+                    ? (editingItem.modifiers || []).filter(m => !(m.optionName === opt.name && m.groupName === group.name))
                     : [...(editingItem.modifiers || []), { groupName: group.name, optionName: opt.name, price: opt.price, required: false }]
                 }
                 const newModTotal = updatedMods.reduce((s, m) => s + (m.price || 0), 0)
                 setEditingItem({ ...editingItem, modifiers: updatedMods, modifierTotal: newModTotal })
                 setCurrentItems(prev => prev.map(i => i._key === editingItem._key ? { ...i, modifiers: updatedMods, modifierTotal: newModTotal } : i))
               }}
-              style={{ width: '100%', textAlign: 'left', padding: '0.45rem 0.7rem', borderRadius: 8, border: '1px solid', borderColor: isSelected ? '#F97316' : '#1E1E2E', background: isSelected ? '#F9731622' : '#13131A', color: isSelected ? '#F97316' : '#94A3B8', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.73rem', marginBottom: '0.3rem', display: 'flex', justifyContent: 'space-between' }}>
+              style={{ width: '100%', textAlign: 'left', padding: '0.5rem 0.7rem', borderRadius: 8, border: '1px solid', borderColor: isSelected ? '#F97316' : '#1E1E2E', background: isSelected ? '#F9731622' : '#13131A', color: isSelected ? '#F97316' : '#94A3B8', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.75rem', marginBottom: '0.3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>{opt.name}</span>
-                {opt.price > 0 && <span style={{ color: isSelected ? '#F97316' : '#10B981' }}>+€{opt.price.toFixed(2)}</span>}
+                {opt.price !== 0 && <span style={{ color: isSelected ? '#F97316' : opt.price > 0 ? '#10B981' : '#EF4444', fontSize: '0.68rem', fontWeight: 700 }}>{opt.price > 0 ? `+€${opt.price.toFixed(2)}` : `-€${Math.abs(opt.price).toFixed(2)}`}</span>}
               </button>
             )
           })}
         </div>
-      ))}
+      )}
+      {/* Selected summary */}
+      {(editingItem.modifiers || []).length > 0 && (
+        <div style={{ marginTop: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
+          {(editingItem.modifiers || []).map((m, i) => (
+            <div key={i} style={{ fontSize: '0.62rem', background: '#F9731622', border: '1px solid #F9731644', borderRadius: 4, padding: '2px 8px', color: '#F97316', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              <span>{m.groupName}: {m.optionName}</span>
+              <button onClick={() => {
+                const updatedMods = (editingItem.modifiers || []).filter((_, idx) => idx !== i)
+                const newModTotal = updatedMods.reduce((s, m) => s + (m.price || 0), 0)
+                setEditingItem({ ...editingItem, modifiers: updatedMods, modifierTotal: newModTotal })
+                setCurrentItems(prev => prev.map(item => item._key === editingItem._key ? { ...item, modifiers: updatedMods, modifierTotal: newModTotal } : item))
+              }} style={{ border: 'none', background: 'none', color: '#F97316', cursor: 'pointer', padding: 0, fontSize: '0.65rem', lineHeight: 1 }}>✕</button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 })()}
