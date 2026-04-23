@@ -18,14 +18,19 @@ function Ticker({ placedAt }) {
 }
 
 export default function BarView() {
-  const { orders, menu, tables } = usePOS()
+  const { orders, menu, tables, updateBarStatus, acknowledgeOrder } = usePOS()
 
   const barOrders = orders.filter(o =>
     o.items.some(i => getItemDestination(i.id, menu) === 'bar') &&
-    o.barStatus !== 'none'
+    o.barStatus !== 'none' &&
+    o.barStatus !== 'done'
   )
 
   const sorted = [...barOrders].sort((a, b) => new Date(a.placedAt || 0) - new Date(b.placedAt || 0))
+
+  const pending  = barOrders.filter(o => o.barStatus === 'pending')
+  const making   = barOrders.filter(o => o.barStatus === 'making')
+  const barReady = barOrders.filter(o => o.barStatus === 'ready')
 
   const getDrinkItems = (order) =>
     order.items.filter(i => getItemDestination(i.id, menu) === 'bar')
@@ -51,10 +56,18 @@ export default function BarView() {
             <div style={{ fontSize: '0.6rem', letterSpacing: '0.2em', color: '#475569', marginBottom: '0.3rem' }}>BAR</div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Bar Display 🍺</h1>
           </div>
-          <div style={{ background: '#3B82F622', border: '1px solid #3B82F644', borderRadius: 8, padding: '0.35rem 0.8rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#3B82F6' }}>{barOrders.length}</div>
-            <div style={{ fontSize: '0.55rem', color: '#3B82F6', letterSpacing: '0.08em' }}>ACTIVE</div>
-          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+  {[
+    { label: 'PENDING', color: '#F59E0B', count: pending.length },
+    { label: 'MAKING',  color: '#3B82F6', count: making.length },
+    { label: 'READY',   color: '#10B981', count: barReady.length },
+  ].map(s => (
+    <div key={s.label} style={{ background: s.color + '22', border: `1px solid ${s.color}44`, borderRadius: 8, padding: '0.35rem 0.8rem', textAlign: 'center' }}>
+      <div style={{ fontSize: '1rem', fontWeight: 700, color: s.color }}>{s.count}</div>
+      <div style={{ fontSize: '0.55rem', color: s.color, letterSpacing: '0.08em' }}>{s.label}</div>
+    </div>
+  ))}
+</div>
         </div>
 
         {/* Additions panel */}
@@ -110,7 +123,7 @@ export default function BarView() {
 
               return (
                 <div key={order.id} className={`ticket ${hasNewDrinks ? 'new-drinks' : ''}`}
-                  style={{ animation: 'slidein 0.2s ease' }}>
+                  style={{ animation: 'slidein 0.2s ease', borderColor: order.barStatus === 'ready' ? '#10B98166' : order.barStatus === 'making' ? '#3B82F666' : '#1E1E2E' }}>
 
                   {hasNewDrinks && (
                     <div style={{ background: '#3B82F622', border: '1px solid #3B82F644', borderRadius: 7, padding: '0.35rem 0.6rem', fontSize: '0.68rem', color: '#3B82F6', fontWeight: 700 }}>
@@ -158,6 +171,26 @@ export default function BarView() {
                         )}
                       </div>
                     ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.2rem' }}>
+                    {order.barStatus === 'pending' && (
+                      <button className="bar-btn" style={{ flex: 1, background: '#F59E0B22', color: '#F59E0B', border: '1px solid #F59E0B44' }}
+                        onClick={() => updateBarStatus(order.id, 'making')}>
+                        🍹 Start Making
+                      </button>
+                    )}
+                    {order.barStatus === 'making' && (
+                      <button className="bar-btn" style={{ flex: 1, background: '#10B98122', color: '#10B981', border: '1px solid #10B98144' }}
+                        onClick={() => updateBarStatus(order.id, 'ready')}>
+                        ✓ Ready
+                      </button>
+                    )}
+                    {order.barStatus === 'ready' && (
+                      <button className="bar-btn" style={{ flex: 1, background: '#10B981', color: '#000', border: 'none', animation: 'pulse 1.5s infinite' }}
+                        onClick={() => { updateBarStatus(order.id, 'done'); acknowledgeOrder(order.id) }}>
+                        ✓ Served — Clear
+                      </button>
+                    )}
                   </div>
                 </div>
               )
