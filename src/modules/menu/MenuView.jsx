@@ -383,6 +383,8 @@ export default function MenuView() {
           </div>
         ))}
 
+        {showLibrary && <ModifierLibrary />}
+
         {/* Add / Edit form */}
         {(showAddItem || editingItem) && (
           <div className="panel" style={{ borderColor: '#F9731644' }}>
