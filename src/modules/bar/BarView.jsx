@@ -22,6 +22,8 @@ export default function BarView() {
 const [showNewTab, setShowNewTab] = useState(false)
 const [tabName, setTabName]       = useState('')
 const [activeTab, setActiveTab]   = useState(null)
+const [barNotes, setBarNotes] = useState({})
+const [editingNote, setEditingNote] = useState(null)
 
   const barOrders = orders.filter(o =>
     o.items.some(i => getItemDestination(i.id, menu) === 'bar') &&
@@ -306,6 +308,28 @@ const [activeTab, setActiveTab]   = useState(null)
                       </div>
                     ))}
                   </div>
+                  {barNotes[order.id] && (
+  <div style={{ background: '#3B82F611', border: '1px solid #3B82F633', borderRadius: 6, padding: '0.4rem 0.6rem', fontSize: '0.65rem', color: '#3B82F6' }}>
+    📝 {barNotes[order.id]}
+  </div>
+)}
+{editingNote === order.id ? (
+  <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.3rem' }}>
+    <input autoFocus defaultValue={barNotes[order.id] || ''}
+      onKeyDown={e => { if (e.key === 'Enter') { setBarNotes(p => ({ ...p, [order.id]: e.target.value })); setEditingNote(null) }}}
+      placeholder="Add bartender note..."
+      style={{ flex: 1, background: '#0D0D14', border: '1px solid #3B82F6', borderRadius: 6, padding: '0.3rem 0.5rem', color: '#E2E8F0', fontFamily: "'Courier New', monospace", fontSize: '0.68rem', outline: 'none' }} />
+    <button onClick={e => { setBarNotes(p => ({ ...p, [order.id]: e.target.previousSibling?.value || '' })); setEditingNote(null) }}
+      style={{ border: 'none', background: '#3B82F6', color: '#fff', borderRadius: 6, padding: '0.3rem 0.6rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.65rem', fontWeight: 700 }}>✓</button>
+    <button onClick={() => setEditingNote(null)}
+      style={{ border: '1px solid #1E1E2E', background: '#13131A', color: '#64748B', borderRadius: 6, padding: '0.3rem 0.6rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.65rem' }}>✕</button>
+  </div>
+) : (
+  <button onClick={() => setEditingNote(order.id)}
+    style={{ border: '1px solid #1E1E2E', background: 'transparent', color: '#334155', borderRadius: 6, padding: '0.2rem 0.6rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.62rem', fontWeight: 700, marginBottom: '0.3rem', width: '100%', textAlign: 'left' }}>
+    📝 {barNotes[order.id] ? 'Edit note' : 'Add note'}
+  </button>
+)}
                   <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.2rem' }}>
                     {order.barStatus === 'pending' && (
                       <button className="bar-btn" style={{ flex: 1, background: '#F59E0B22', color: '#F59E0B', border: '1px solid #F59E0B44' }}
