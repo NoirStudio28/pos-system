@@ -158,7 +158,9 @@ export default function StockView() {
                 const status   = getStockStatus(item)
                 const isAdjust = adjustingId === item.id
                 const linked   = allMenuItems.find(m => m.id === item.menuItemId)
+                const isEditing = editingItem?.id === item.id && showForm
                 return (
+                  <>
                   <div key={item.id} className="stock-row">
                     <div>
                       <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#CBD5E1' }}>{item.name}</div>
@@ -211,6 +213,30 @@ export default function StockView() {
                       <button className="btn btn-danger btn-sm" style={{ padding: '0.15rem 0.5rem', fontSize: '0.62rem' }} onClick={() => deleteStockItem(item.id)}>✕</button>
                     </div>
                   </div>
+                  {isEditing && (
+                    <div style={{ padding: '1.2rem', background: '#0D0D14', borderBottom: '1px solid #F9731644' }}>
+                      <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#F97316', marginBottom: '1rem' }}>Editing — {editingItem.name}</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.8rem', marginBottom: '0.8rem' }}>
+                        <div><span className="label">ITEM NAME</span><input className="input" value={form.name} onChange={e => f('name', e.target.value)} /></div>
+                        <div><span className="label">CATEGORY</span><input className="input" value={form.category} onChange={e => f('category', e.target.value)} /></div>
+                        <div><span className="label">UNIT</span><select className="input" value={form.unit} onChange={e => f('unit', e.target.value)}>{UNITS.map(u => <option key={u} value={u}>{u}</option>)}</select></div>
+                        <div><span className="label">CURRENT QTY</span><input className="input" type="number" value={form.quantity} onChange={e => f('quantity', e.target.value)} /></div>
+                        <div><span className="label">MIN THRESHOLD</span><input className="input" type="number" value={form.minThreshold} onChange={e => f('minThreshold', e.target.value)} /></div>
+                        <div><span className="label">COST PRICE (€)</span><input className="input" type="number" step="0.01" value={form.costPrice} onChange={e => f('costPrice', e.target.value)} /></div>
+                        <div><span className="label">DELIVERY DAY</span><select className="input" value={form.deliveryDay} onChange={e => f('deliveryDay', e.target.value)}>{DELIVERY_DAYS.map(d => <option key={d} value={d}>{d}</option>)}</select></div>
+                        <div><span className="label">SUPPLIER</span><input className="input" value={form.supplier} onChange={e => f('supplier', e.target.value)} /></div>
+                        <div><span className="label">SUPPLIER PHONE</span><input className="input" value={form.supplierPhone || ''} onChange={e => f('supplierPhone', e.target.value)} /></div>
+                        <div><span className="label">SUPPLIER EMAIL</span><input className="input" value={form.supplierEmail || ''} onChange={e => f('supplierEmail', e.target.value)} /></div>
+                        <div><span className="label">LINK TO MENU ITEM</span><select className="input" value={form.menuItemId} onChange={e => f('menuItemId', e.target.value)}><option value="">Not linked</option>{allMenuItems.map(m => <option key={m.id} value={m.id}>{m.cat} — {m.name}</option>)}</select></div>
+                        {form.menuItemId && <div><span className="label">UNITS PER SALE</span><input className="input" type="number" step="0.01" value={form.portionPerSale} onChange={e => f('portionPerSale', e.target.value)} /></div>}
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button className="btn btn-primary" onClick={handleSave}>Save Changes</button>
+                        <button className="btn btn-ghost" onClick={() => { setShowForm(false); setEditingItem(null) }}>Cancel</button>
+                      </div>
+                    </div>
+                  )}
+                  </>
                 )
               })}
             </div>
@@ -311,8 +337,8 @@ export default function StockView() {
           </div>
         )}
 
-        {/* ADD / EDIT FORM */}
-        {showForm && (
+        {/* ADD / EDIT FORM — only show for new items */}
+        {showForm && !editingItem && (
           <div className="panel">
             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#F97316', marginBottom: '1.2rem' }}>
               {editingItem ? `Editing — ${editingItem.name}` : 'New Stock Item'}
