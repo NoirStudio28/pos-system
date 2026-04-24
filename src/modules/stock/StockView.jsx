@@ -91,7 +91,7 @@ export default function StockView() {
         .tab.active{background:#F9731622;border-color:#F97316;color:#F97316}
         .cat-tab{padding:0.35rem 0.8rem;border-radius:6px;border:1px solid #1E1E2E;background:transparent;color:#64748B;cursor:pointer;font-family:'Courier New',monospace;font-size:0.68rem;font-weight:700;transition:all 0.15s}
         .cat-tab.active{background:#1E293B;border-color:#334155;color:#94A3B8}
-        .stock-row{display:grid;grid-template-columns:1fr 80px 80px 90px 100px 110px 80px;gap:0;padding:0.7rem 1rem;border-bottom:1px solid #0D0D14;align-items:center;transition:background 0.1s}
+        .stock-row{display:grid;grid-template-columns:2fr 80px 80px 70px 90px 160px 140px;gap:0;padding:0.7rem 1rem;border-bottom:1px solid #0D0D14;align-items:center;transition:background 0.1s}
         .stock-row:hover{background:#13131A}
         .panel{background:#13131A;border:1px solid #F9731644;border-radius:14px;padding:1.5rem;margin-top:1.5rem}
         .alert-row{display:flex;justify-content:space-between;align-items:center;padding:0.65rem 1rem;border-radius:8px;margin-bottom:0.4rem}
@@ -144,7 +144,7 @@ export default function StockView() {
 
             {/* Table */}
             <div style={{ background: '#13131A', border: '1px solid #1E1E2E', borderRadius: 12, overflow: 'hidden' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 90px 100px 110px 80px', padding: '0.6rem 1rem', borderBottom: '1px solid #1E1E2E' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 80px 80px 70px 90px 160px 140px', padding: '0.6rem 1rem', borderBottom: '1px solid #1E1E2E' }}>
                 {['ITEM', 'QTY', 'UNIT', 'MIN', 'COST/UNIT', 'SUPPLIER', 'STATUS'].map(h => (
                   <span key={h} style={{ fontSize: '0.58rem', color: '#334155', letterSpacing: '0.1em' }}>{h}</span>
                 ))}
