@@ -447,6 +447,35 @@ function PaymentModalInner({ order, onClose }) {
                 )}
               </div>
 
+              <button className="btn btn-ghost" style={{ width: '100%', marginBottom: '0.5rem' }} onClick={() => {
+  const itemRows = order.items.map(i => `
+    <tr>
+      <td>${i.name}${i.modifiers?.length > 0 ? '<br/><span style="font-size:0.75em;color:#666">' + i.modifiers.map(m => m.groupName + ': ' + m.optionName).join(', ') + '</span>' : ''}${i.note ? '<br/><span style="font-size:0.75em;color:#888">📝 ' + i.note + '</span>' : ''}</td>
+      <td style="text-align:center">×${i.qty}</td>
+      <td style="text-align:right">€${((i.price + (i.modifierTotal || 0)) * i.qty).toFixed(2)}</td>
+    </tr>`).join('')
+  const html = `<html><head><title>Bill</title><style>body{font-family:monospace;padding:1.5rem;max-width:380px;margin:0 auto}h1{font-size:1rem;text-align:center}.sub{text-align:center;font-size:0.72rem;color:#555;margin-bottom:1rem}table{width:100%;border-collapse:collapse;font-size:0.8rem}td,th{padding:0.3rem 0.2rem}th{text-align:left;border-bottom:1px solid #000}.div{border-top:1px dashed #bbb;margin:0.5rem 0}.bold{font-weight:bold}.right{text-align:right}</style></head><body>
+    <h1>BILL</h1>
+    <div style="text-align:center;font-size:0.7em;color:#999;font-style:italic;margin-bottom:0.5rem">— Preview copy —</div>
+    <div class="sub">Table ${order.table} · ${order.covers > 0 ? order.covers + ' covers · ' : ''}${new Date().toLocaleTimeString('en-IE', { hour: '2-digit', minute: '2-digit' })}</div>
+    <div class="div"></div>
+    <table><thead><tr><th>Item</th><th style="text-align:center">Qty</th><th style="text-align:right">€</th></tr></thead><tbody>${itemRows}</tbody></table>
+    <div class="div"></div>
+    <table>
+      ${discountAmount > 0 ? `<tr><td>Discount</td><td class="right">-€${discountAmount.toFixed(2)}</td></tr>` : ''}
+      ${serviceChargeAmount > 0 ? `<tr><td>Service Charge</td><td class="right">€${serviceChargeAmount.toFixed(2)}</td></tr>` : ''}
+      ${depositDeduction > 0 ? `<tr><td>Deposit</td><td class="right">-€${depositDeduction.toFixed(2)}</td></tr>` : ''}
+      <tr class="bold"><td>TOTAL</td><td class="right">€${finalTotal.toFixed(2)}</td></tr>
+    </table>
+    <div class="div"></div>
+    <div style="text-align:center;margin-top:1rem;font-size:0.75rem">${settings.receiptFooter || 'Thank you for dining with us!'}</div>
+  </body></html>`
+  const win = window.open('', '_blank')
+  win.document.write(html)
+  win.document.close()
+  win.print()
+}}>🖨️ Print Bill Preview</button>
+
               <button className="btn btn-primary" style={{ width: '100%', padding: '0.75rem', fontSize: '0.88rem', opacity: remaining > 0.01 ? 0.35 : 1 }}
                 disabled={remaining > 0.01} onClick={handleProcess}>
                 {remaining > 0.01 ? `€${remaining.toFixed(2)} remaining` : '✓ Process Payment'}

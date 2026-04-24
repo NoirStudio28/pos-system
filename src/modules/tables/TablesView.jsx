@@ -719,6 +719,47 @@ const [merging, setMerging] = useState(false)
     return { stage: 'ordered', label: 'Order placed — waiting', color: '#475569', icon: '⏳' }
   }
 
+  const printBill = () => {
+    const itemRows = order.items.map(i => `
+      <tr>
+        <td>${i.name}${i.modifiers?.length > 0 ? '<br/><span style="font-size:0.75em;color:#666">' + i.modifiers.map(m => m.groupName + ': ' + m.optionName).join(', ') + '</span>' : ''}${i.note ? '<br/><span style="font-size:0.75em;color:#888">📝 ' + i.note + '</span>' : ''}</td>
+        <td style="text-align:center">×${i.qty}</td>
+        <td style="text-align:right">€${((i.price + (i.modifierTotal || 0)) * i.qty).toFixed(2)}</td>
+      </tr>`).join('')
+    const html = `<html><head><title>Bill</title><style>
+      body{font-family:monospace;padding:1.5rem;max-width:380px;margin:0 auto;color:#000}
+      h1{font-size:1rem;text-align:center;margin-bottom:0.2rem}
+      .sub{text-align:center;font-size:0.72rem;color:#555;margin-bottom:1rem}
+      table{width:100%;border-collapse:collapse;font-size:0.8rem;margin-bottom:0.5rem}
+      td{padding:0.3rem 0.2rem}
+      th{text-align:left;border-bottom:1px solid #000;padding:0.3rem 0.2rem}
+      .div{border-top:1px dashed #bbb;margin:0.5rem 0}
+      .bold{font-weight:bold}
+      .right{text-align:right}
+      .preview{text-align:center;font-size:0.7em;color:#999;margin-bottom:0.5rem;font-style:italic}
+    </style></head><body>
+      <h1>BILL</h1>
+      <div class="preview">— Preview copy —</div>
+      <div class="sub">Table ${order.table} · ${order.covers > 0 ? order.covers + ' covers · ' : ''}${new Date().toLocaleTimeString('en-IE', { hour: '2-digit', minute: '2-digit' })}</div>
+      ${order.mergedTables?.length > 0 ? `<div class="sub">Merged: T${order.table} + T${order.mergedTables.join(', T')}</div>` : ''}
+      <div class="div"></div>
+      <table>
+        <thead><tr><th>Item</th><th style="text-align:center">Qty</th><th style="text-align:right">€</th></tr></thead>
+        <tbody>${itemRows}</tbody>
+      </table>
+      <div class="div"></div>
+      <table>
+        <tr class="bold"><td>TOTAL</td><td class="right">€${order.total.toFixed(2)}</td></tr>
+      </table>
+      <div class="div"></div>
+      <div style="text-align:center;margin-top:1rem;font-size:0.75rem">Thank you for dining with us!</div>
+    </body></html>`
+    const win = window.open('', '_blank')
+    win.document.write(html)
+    win.document.close()
+    win.print()
+  }
+
   const stage = getTableStage()
   const canFireMains    = courses.mains    === 'waiting'
   const canFireDesserts = courses.desserts === 'waiting'
@@ -905,6 +946,7 @@ const [merging, setMerging] = useState(false)
             {/* ── ACTIONS ── */}
             <NoteEditor table={table} />
             <button className="tp-btn" style={{ background: '#F9731622', color: '#F97316', border: '1px solid #F9731644' }} onClick={() => { onClose(); onOpenEditPicker(order) }}>✏️ Edit Order</button>
+            <button className="tp-btn" style={{ background: '#13131A', color: '#94A3B8', border: '1px solid #1E1E2E' }} onClick={printBill}>🖨️ Print Bill</button>
             <button className="tp-btn" style={{ background: '#3B82F622', color: '#3B82F6', border: '1px solid #3B82F644' }} onClick={() => setTransferring(true)}>🔀 Transfer Table</button>
             <button className="tp-btn" style={{ background: '#8B5CF622', color: '#8B5CF6', border: '1px solid #8B5CF644' }} onClick={() => setMerging(true)}>🔗 Merge Tables</button>
             <button className="tp-btn" style={{ background: '#10B98122', color: '#10B981', border: '1px solid #10B98144' }} onClick={() => { onClose(); openPayment(order.id) }}>💳 Pay — €{order.total.toFixed(2)}</button>
