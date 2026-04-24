@@ -154,6 +154,8 @@ const [guestMethods,      setGuestMethods]      = useState({})
     fontFamily: "'Courier New', monospace", color: '#E2E8F0',
   }
 
+  console.log('showReceipt:', showReceipt, 'paymentRecord:', !!paymentRecord)
+
   if (showReceipt && paymentRecord) {
     return (
       <div style={overlayStyle}>
