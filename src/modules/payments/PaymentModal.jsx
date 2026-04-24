@@ -109,7 +109,7 @@ function PaymentModalInner({ order, onClose }) {
         ${paymentRecord.change > 0 ? `<tr><td>Change</td><td class="right">€${paymentRecord.change.toFixed(2)}</td></tr>` : ''}
       </table>
       <div class="div"></div><table>${pmtRows}</table>
-      <div class="div"></div><div style="text-align:center;margin-top:1rem;font-size:0.75rem">Thank you for dining with us!</div>
+      <div class="div"></div><div style="text-align:center;margin-top:1rem;font-size:0.75rem">${settings.receiptFooter || 'Thank you for dining with us!'}</div>
     </body></html>`
     const win = window.open('', '_blank'); win.document.write(html); win.document.close(); win.print()
   }
