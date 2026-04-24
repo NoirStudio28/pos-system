@@ -156,7 +156,7 @@ const displayOrders = filter === 'previous'
   const getFoodItems = (order, course) =>
     order.items.filter(i =>
       getItemDestination(i.id, menu) === 'kitchen' &&
-      getItemCourse(i.id, menu) === course
+      (i._overrideCourse || getItemCourse(i.id, menu)) === course
     )
 
   return (

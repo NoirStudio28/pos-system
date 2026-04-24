@@ -180,7 +180,7 @@ export const getItemCourse = (itemId, menu) => {
 const buildCourses = (items, menu) => {
   const courses = { starters: 'none', mains: 'none', desserts: 'none' }
   items.filter(i => getItemDestination(i.id, menu) === 'kitchen').forEach(i => {
-    const course = getItemCourse(i.id, menu)
+    const course = i._overrideCourse || getItemCourse(i.id, menu)
     if (course === 'starters' && courses.starters === 'none') courses.starters = 'fired'
     if (course === 'mains'    && courses.mains    === 'none') courses.mains    = 'waiting'
     if (course === 'desserts' && courses.desserts === 'none') courses.desserts = 'waiting'
