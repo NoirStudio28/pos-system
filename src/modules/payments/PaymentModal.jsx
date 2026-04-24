@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { usePOS } from '../../context/POSContext'
 import useBreakpoint from '../../hooks/useBreakpoint'
 
@@ -653,9 +653,9 @@ export default function PaymentModal() {
   const [frozenOrder, setFrozenOrder] = useState(null)
   const order = orders.find(o => o.id === activePaymentOrderId)
 
-  useEffect(() => {
-    if (order) setFrozenOrder(order)
-  }, [activePaymentOrderId])
+  if (order && (!frozenOrder || frozenOrder.id !== order.id)) {
+    setFrozenOrder(order)
+  }
 
   if (!activePaymentOrderId) return null
   if (!frozenOrder) return null
