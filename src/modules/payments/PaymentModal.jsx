@@ -30,6 +30,7 @@ function PaymentModalInner({ order, onClose }) {
   const [showSplitItems,    setShowSplitItems]    = useState(false)
 const [splitAssignments,  setSplitAssignments]  = useState({})
 const [guestCount,        setGuestCount]        = useState(2)
+const [guestMethods,      setGuestMethods]      = useState({})
 
   const linkedBooking = bookings.find(b =>
     b.preferredTable === order.table && b.depositPaid && b.status !== 'cancelled'
@@ -65,7 +66,7 @@ const [guestCount,        setGuestCount]        = useState(2)
     const totals = getSplitTotals()
     if (Object.keys(totals).length === 0) return
     setPaymentRows(Object.entries(totals).map(([guest, amount], i) => ({
-      id: Date.now() + i, method: 'Card', amount: amount.toFixed(2), note: guest
+      id: Date.now() + i, method: guestMethods[guest] || 'Card', amount: amount.toFixed(2), note: guest
     })))
     setShowSplitItems(false)
   }
@@ -438,11 +439,19 @@ const [guestCount,        setGuestCount]        = useState(2)
                         const guestLabel = `Guest ${i + 1}`
                         const total = getSplitTotals()[guestLabel] || 0
                         return (
-                          <div key={i} style={{ background: '#13131A', border: '1px solid #1E1E2E', borderRadius: 8, padding: '0.4rem 0.7rem', textAlign: 'center' }}>
-                            <div style={{ fontSize: '0.65rem', color: '#475569' }}>{guestLabel}</div>
-                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: total > 0 ? '#F97316' : '#334155' }}>€{total.toFixed(2)}</div>
-                          </div>
-                        )
+  <div key={i} style={{ background: '#13131A', border: '1px solid #1E1E2E', borderRadius: 8, padding: '0.4rem 0.7rem', textAlign: 'center', minWidth: 80 }}>
+    <div style={{ fontSize: '0.65rem', color: '#475569', marginBottom: '0.2rem' }}>{guestLabel}</div>
+    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: total > 0 ? '#F97316' : '#334155', marginBottom: '0.3rem' }}>€{total.toFixed(2)}</div>
+    <div style={{ display: 'flex', gap: '0.2rem', justifyContent: 'center' }}>
+      {['Cash', 'Card', 'Voucher'].map(m => (
+        <button key={m} onClick={() => setGuestMethods(p => ({ ...p, [guestLabel]: m }))}
+          style={{ padding: '0.15rem 0.3rem', borderRadius: 4, border: '1px solid', borderColor: (guestMethods[guestLabel] || 'Card') === m ? '#F97316' : '#1E1E2E', background: (guestMethods[guestLabel] || 'Card') === m ? '#F9731622' : '#0D0D14', color: (guestMethods[guestLabel] || 'Card') === m ? '#F97316' : '#475569', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.55rem', fontWeight: 700 }}>
+          {m === 'Cash' ? '💵' : m === 'Card' ? '💳' : '🎫'}
+        </button>
+      ))}
+    </div>
+  </div>
+)
                       })}
                       {(() => {
                         const assigned = Object.values(getSplitTotals()).reduce((s, v) => s + v, 0)
