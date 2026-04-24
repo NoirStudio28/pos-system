@@ -375,7 +375,7 @@ const [activeModifierGroup, setActiveModifierGroup] = useState(null)
   COURSE_ORDER.forEach(c => grouped[c] = [])
   currentItems.forEach(i => {
     const dest   = getItemDestination(i.id, menu)
-    const course = dest === 'bar' ? 'drinks' : getItemCourse(i.id, menu)
+    const course = dest === 'bar' ? 'drinks' : (i._overrideCourse || getItemCourse(i.id, menu))
     grouped[course] = [...(grouped[course] || []), i]
   })
 
@@ -396,7 +396,8 @@ const [activeModifierGroup, setActiveModifierGroup] = useState(null)
     const cc = COURSE_CONFIG[course]
     return (
       <div key={course}
-        onDragOver={e => { if (course !== 'drinks') e.preventDefault() }}
+        onDragOver={e => { if (course !== 'drinks') { e.preventDefault(); e.currentTarget.style.borderColor = cc.color } }}
+onDragLeave={e => { e.currentTarget.style.borderColor = cc.color + '33' }}
         onDrop={e => handleDrop(e, course)}
         style={{ marginBottom: '0.8rem', border: `1px dashed ${cc.color}33`, borderRadius: 8, padding: '0.4rem' }}>
         <div style={{ fontSize: '0.58rem', color: cc.color, fontWeight: 700, letterSpacing: '0.1em', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
