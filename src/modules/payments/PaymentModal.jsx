@@ -231,11 +231,20 @@ function PaymentModalInner({ order, onClose }) {
               <div style={{ background: '#0D0D14', borderRadius: 10, padding: '0.8rem', marginBottom: '1rem' }}>
                 <span className="label">ORDER ITEMS</span>
                 {order.items.map((i, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
-                    <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>{i.name} ×{i.qty}</span>
-                    <span style={{ fontSize: '0.75rem', color: '#CBD5E1' }}>€{(i.price * i.qty).toFixed(2)}</span>
-                  </div>
-                ))}
+  <div key={idx} style={{ marginBottom: '0.4rem' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+      <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>{i.name} ×{i.qty}</span>
+      <span style={{ fontSize: '0.75rem', color: '#CBD5E1' }}>€{((i.price + (i.modifierTotal || 0)) * i.qty).toFixed(2)}</span>
+    </div>
+    {i.modifiers?.length > 0 && i.modifiers.map((m, mi) => (
+      <div key={mi} style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: '0.65rem', color: '#8B5CF6' }}>{m.groupName}: {m.optionName}</span>
+        {m.price !== 0 && <span style={{ fontSize: '0.65rem', color: m.price > 0 ? '#10B981' : '#EF4444' }}>{m.price > 0 ? `+€${m.price.toFixed(2)}` : `-€${Math.abs(m.price).toFixed(2)}`}</span>}
+      </div>
+    ))}
+    {i.note && <div style={{ fontSize: '0.65rem', color: '#F59E0B' }}>📝 {i.note}</div>}
+  </div>
+))}
                 <div style={{ borderTop: '1px solid #1E1E2E', marginTop: '0.5rem', paddingTop: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>Subtotal</span>
                   <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>€{subtotal.toFixed(2)}</span>
