@@ -230,7 +230,15 @@ function PaymentModalInner({ order, onClose }) {
               {/* Items */}
               <div style={{ background: '#0D0D14', borderRadius: 10, padding: '0.8rem', marginBottom: '1rem' }}>
                 <span className="label">ORDER ITEMS</span>
-                {order.items.map((i, idx) => (
+                {Object.values(order.items.reduce((acc, i) => {
+  const key = i.name + JSON.stringify(i.modifiers || []) + (i.note || '')
+  if (acc[key]) {
+    acc[key] = { ...acc[key], qty: acc[key].qty + i.qty }
+  } else {
+    acc[key] = { ...i }
+  }
+  return acc
+}, {})).map((i, idx) => (
   <div key={idx} style={{ marginBottom: '0.4rem' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
       <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>{i.name} ×{i.qty}</span>
