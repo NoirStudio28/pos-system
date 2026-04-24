@@ -499,7 +499,6 @@ const moveItems = (fromOrderId, itemKeys, toTableId) => {
   const processPayment = (id, data) => {
     if (data.giftCardCode && data.giftCardRemainder > 0) setGiftCards(prev => ({ ...prev, [data.giftCardCode]: data.giftCardRemainder }))
     closeOrder(id, data)
-    setActivePaymentOrderId(null)
   }
   const checkGiftCard = (code) => { const b = giftCards[code.toUpperCase()]; return b !== undefined ? b : null }
 
