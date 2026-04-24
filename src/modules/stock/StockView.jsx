@@ -15,6 +15,7 @@ export default function StockView() {
   const [form,         setForm]         = useState(EMPTY_FORM)
   const [adjustingId,  setAdjustingId]  = useState(null)
   const [adjustDelta,  setAdjustDelta]  = useState('')
+  const [adjustReason, setAdjustReason] = useState('Manual adjustment')
   const [recoPeriod,   setRecoPeriod]   = useState('week')
   const [historySearch, setHistorySearch] = useState('')
 
@@ -39,8 +40,8 @@ export default function StockView() {
   const handleAdjust = (id) => {
     const delta = parseFloat(adjustDelta)
     if (isNaN(delta)) return
-    adjustStock(id, delta)
-    setAdjustingId(null); setAdjustDelta('')
+    adjustStock(id, delta, adjustReason)
+    setAdjustingId(null); setAdjustDelta(''); setAdjustReason('Manual adjustment')
   }
 
   const getStockStatus = (item) => {
@@ -174,18 +175,30 @@ export default function StockView() {
                     {/* Qty with adjust */}
                     <div>
                       {isAdjust ? (
-                        <div style={{ display: 'flex', gap: '0.2rem', alignItems: 'center' }}>
-                          <input
-                            className="input"
-                            style={{ width: 52, padding: '0.2rem 0.4rem', fontSize: '0.72rem' }}
-                            placeholder="+/-"
-                            value={adjustDelta}
-                            onChange={e => setAdjustDelta(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && handleAdjust(item.id)}
-                            autoFocus
-                          />
-                          <button className="btn btn-primary btn-sm" style={{ padding: '0.2rem 0.4rem' }} onClick={() => handleAdjust(item.id)}>✓</button>
-                          <button className="btn btn-ghost btn-sm" style={{ padding: '0.2rem 0.4rem' }} onClick={() => setAdjustingId(null)}>✕</button>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                          <div style={{ display: 'flex', gap: '0.2rem', alignItems: 'center' }}>
+                            <input
+                              className="input"
+                              style={{ width: 52, padding: '0.2rem 0.4rem', fontSize: '0.72rem' }}
+                              placeholder="+/-"
+                              value={adjustDelta}
+                              onChange={e => setAdjustDelta(e.target.value)}
+                              onKeyDown={e => e.key === 'Enter' && handleAdjust(item.id)}
+                              autoFocus
+                            />
+                            <select value={adjustReason} onChange={e => setAdjustReason(e.target.value)}
+                              style={{ background: '#0D0D14', border: '1px solid #2D2D3F', borderRadius: 6, padding: '0.2rem 0.3rem', color: '#E2E8F0', fontFamily: "'Courier New', monospace", fontSize: '0.62rem', outline: 'none' }}>
+                              <option value="Manual adjustment">Manual</option>
+                              <option value="Waste">🗑 Waste</option>
+                              <option value="Spoilage">🤢 Spoilage</option>
+                              <option value="Delivery received">🚚 Delivery</option>
+                              <option value="Returned to supplier">↩ Return</option>
+                              <option value="Damaged">💥 Damaged</option>
+                              <option value="Staff meal">🍽 Staff meal</option>
+                            </select>
+                            <button className="btn btn-primary btn-sm" style={{ padding: '0.2rem 0.4rem' }} onClick={() => handleAdjust(item.id)}>✓</button>
+                            <button className="btn btn-ghost btn-sm" style={{ padding: '0.2rem 0.4rem' }} onClick={() => setAdjustingId(null)}>✕</button>
+                          </div>
                         </div>
                       ) : (
                         <span
