@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { usePOS, getAutoTableStatus, getItemCourse } from '../../context/POSContext'
+import { usePOS, getAutoTableStatus, getItemCourse, getItemDestination } from '../../context/POSContext'
 import useBreakpoint from '../../hooks/useBreakpoint'
 
 const DEFAULT_SIZE = 90
@@ -361,44 +361,77 @@ const [activeModifierGroup, setActiveModifierGroup] = useState(null)
           <div style={{ padding: '0.8rem 1rem', borderBottom: '1px solid #1E1E2E', fontSize: '0.6rem', color: '#475569', letterSpacing: '0.12em' }}>ORDER SUMMARY</div>
           <div style={{ flex: 1, overflowY: 'auto', padding: '0.8rem' }}>
             {currentItems.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '1.5rem 0', fontSize: '0.75rem', color: '#334155' }}>No items yet</div>
-            ) : currentItems.map(i => (
-              <div key={i._key} style={{ marginBottom: '0.6rem', padding: '0.5rem', background: '#0D0D14', borderRadius: 8, border: '1px solid #1E1E2E', cursor: 'pointer' }} onClick={() => setEditingItem(i)}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>{i.name} ×{i.qty}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <span style={{ fontSize: '0.75rem', color: '#CBD5E1' }}>€{((i.price + (i.modifierTotal || 0)) * i.qty).toFixed(2)}</span>
-                    <button className="qty-btn" style={{ width: 20, height: 20, fontSize: '0.7rem' }} onClick={(e) => { e.stopPropagation(); removeItem(i._key) }}>−</button>
-                  </div>
-                </div>
-                {i.modifiers?.length > 0 && (
-  <div style={{ marginTop: '0.25rem', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-    {i.modifiers.map((m, idx) => (
-      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.62rem' }}>
-        <span style={{ color: '#8B5CF6' }}>{m.groupName}: <span style={{ color: '#CBD5E1' }}>{m.optionName}</span></span>
-        {m.price !== 0 && <span style={{ color: m.price > 0 ? '#10B981' : '#EF4444', fontWeight: 700 }}>{m.price > 0 ? `+€${m.price.toFixed(2)}` : `-€${Math.abs(m.price).toFixed(2)}`}</span>}
-      </div>
-    ))}
-  </div>
-)}
-                {i.specialInstructions?.length > 0 && (
-                  <div style={{ fontSize: '0.62rem', color: '#F97316', marginTop: '0.1rem' }}>
-                    {(() => {
-                      const menuItem = Object.values(menu).flat().find(m => m.id === i.id)
-                      return menuItem?.modifiers?.map(group => {
-                        const selected = i.specialInstructions.filter(s => s.startsWith(group.id + ':'))
-                        return selected.length > 0 && (
-                          <div key={group.id}>
-                            {group.name}: {selected.map(s => menuItem.modifiers.find(g => g.id === s.split(':')[0])?.options.find(o => o.id === s.split(':')[1])?.name).join(', ')}
-                          </div>
-                        )
-                      })
-                    })()}
-                  </div>
-                )}
-                {i.note && <div style={{ fontSize: '0.6rem', color: '#F59E0B', marginTop: '0.1rem' }}>📝 {i.note}</div>}
+  <div style={{ textAlign: 'center', padding: '1.5rem 0', fontSize: '0.75rem', color: '#334155' }}>No items yet</div>
+) : (() => {
+  const COURSE_ORDER = ['starters', 'mains', 'desserts', 'other', 'drinks']
+  const COURSE_CONFIG = {
+    starters: { label: 'STARTERS', color: '#10B981', icon: '🥗' },
+    mains:    { label: 'MAINS',    color: '#F97316', icon: '🍽️' },
+    desserts: { label: 'DESSERTS', color: '#8B5CF6', icon: '🍰' },
+    other:    { label: 'OTHER',    color: '#94A3B8', icon: '🍴' },
+    drinks:   { label: 'DRINKS',   color: '#3B82F6', icon: '🍹' },
+  }
+  const grouped = {}
+  COURSE_ORDER.forEach(c => grouped[c] = [])
+  currentItems.forEach(i => {
+    const dest   = getItemDestination(i.id, menu)
+    const course = dest === 'bar' ? 'drinks' : getItemCourse(i.id, menu)
+    grouped[course] = [...(grouped[course] || []), i]
+  })
+
+  const handleDragStart = (e, item) => e.dataTransfer.setData('itemKey', item._key)
+  const handleDrop = (e, targetCourse) => {
+    if (targetCourse === 'drinks') return
+    const key = e.dataTransfer.getData('itemKey')
+    const item = currentItems.find(i => i._key === key)
+    if (!item) return
+    const sourceCourse = getItemDestination(item.id, menu) === 'bar' ? 'drinks' : getItemCourse(item.id, menu)
+    if (sourceCourse === 'drinks' || sourceCourse === targetCourse) return
+    setCurrentItems(prev => prev.map(i => i._key === key ? { ...i, _overrideCourse: targetCourse } : i))
+  }
+
+  return COURSE_ORDER.map(course => {
+    const items = grouped[course]
+    if (items.length === 0) return null
+    const cc = COURSE_CONFIG[course]
+    return (
+      <div key={course}
+        onDragOver={e => { if (course !== 'drinks') e.preventDefault() }}
+        onDrop={e => handleDrop(e, course)}
+        style={{ marginBottom: '0.8rem', border: `1px dashed ${cc.color}33`, borderRadius: 8, padding: '0.4rem' }}>
+        <div style={{ fontSize: '0.58rem', color: cc.color, fontWeight: 700, letterSpacing: '0.1em', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+          <span>{cc.icon}</span>{cc.label}
+        </div>
+        {items.map(i => (
+          <div key={i._key}
+            draggable={getItemDestination(i.id, menu) !== 'bar'}
+            onDragStart={e => handleDragStart(e, i)}
+            style={{ marginBottom: '0.4rem', padding: '0.5rem', background: '#0D0D14', borderRadius: 8, border: '1px solid #1E1E2E', cursor: 'pointer' }}
+            onClick={() => setEditingItem(i)}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>{i.name} ×{i.qty}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <span style={{ fontSize: '0.75rem', color: '#CBD5E1' }}>€{((i.price + (i.modifierTotal || 0)) * i.qty).toFixed(2)}</span>
+                <button className="qty-btn" style={{ width: 20, height: 20, fontSize: '0.7rem' }} onClick={e => { e.stopPropagation(); removeItem(i._key) }}>−</button>
               </div>
-            ))}
+            </div>
+            {i.modifiers?.length > 0 && (
+              <div style={{ marginTop: '0.25rem', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                {i.modifiers.map((m, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.62rem' }}>
+                    <span style={{ color: '#8B5CF6' }}>{m.groupName}: <span style={{ color: '#CBD5E1' }}>{m.optionName}</span></span>
+                    {m.price !== 0 && <span style={{ color: m.price > 0 ? '#10B981' : '#EF4444', fontWeight: 700 }}>{m.price > 0 ? `+€${m.price.toFixed(2)}` : `-€${Math.abs(m.price).toFixed(2)}`}</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+            {i.note && <div style={{ fontSize: '0.6rem', color: '#F59E0B', marginTop: '0.1rem' }}>📝 {i.note}</div>}
+          </div>
+        ))}
+      </div>
+    )
+  })
+})()}
           </div>
           {orderAllergens.length > 0 && (
             <div style={{ margin: '0 0.8rem', background: '#F59E0B22', border: '1px solid #F59E0B44', borderRadius: 8, padding: '0.5rem 0.7rem' }}>
