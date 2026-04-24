@@ -720,7 +720,13 @@ const [merging, setMerging] = useState(false)
   }
 
   const printBill = () => {
-    const itemRows = order.items.map(i => `
+    const grouped = Object.values(order.items.reduce((acc, i) => {
+      const key = i.name + JSON.stringify(i.modifiers || []) + (i.note || '')
+      if (acc[key]) acc[key] = { ...acc[key], qty: acc[key].qty + i.qty }
+      else acc[key] = { ...i }
+      return acc
+    }, {}))
+    const itemRows = grouped.map(i => `
       <tr>
         <td>${i.name}${i.modifiers?.length > 0 ? '<br/><span style="font-size:0.75em;color:#666">' + i.modifiers.map(m => m.groupName + ': ' + m.optionName).join(', ') + '</span>' : ''}${i.note ? '<br/><span style="font-size:0.75em;color:#888">📝 ' + i.note + '</span>' : ''}</td>
         <td style="text-align:center">×${i.qty}</td>
