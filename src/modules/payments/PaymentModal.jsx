@@ -186,10 +186,40 @@ const [guestMethods,      setGuestMethods]      = useState({})
               🎁 Gift card <strong>{paymentRecord.giftCardCode}</strong> — remaining: <strong>€{paymentRecord.giftCardRemainder.toFixed(2)}</strong>
             </div>
           )}
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button className="btn btn-print" style={{ flex: 1 }} onClick={handlePrint}>🖨️ Print Receipt</button>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={onClose}>Done ✓</button>
-          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
+  {(() => {
+    const customer = customers.find(c => c.id === paymentRecord.customerId)
+    const subject  = encodeURIComponent(`Receipt — Table ${paymentRecord.table} — €${paymentRecord.finalTotal.toFixed(2)}`)
+    const body     = encodeURIComponent([
+      `Receipt`,
+      `Table ${paymentRecord.table} · ${new Date(paymentRecord.paidAt).toLocaleString('en-IE')}`,
+      ``,
+      ...paymentRecord.items.map(i => `${i.name} ×${i.qty}  €${((i.price + (i.modifierTotal || 0)) * i.qty).toFixed(2)}`),
+      ``,
+      paymentRecord.discountAmount > 0    ? `Discount: -€${paymentRecord.discountAmount.toFixed(2)}`       : null,
+      paymentRecord.serviceChargeAmount > 0 ? `Service Charge: €${paymentRecord.serviceChargeAmount.toFixed(2)}` : null,
+      paymentRecord.depositDeduction > 0  ? `Deposit: -€${paymentRecord.depositDeduction.toFixed(2)}`      : null,
+      paymentRecord.pointsDiscount > 0    ? `Points Redeemed: -€${paymentRecord.pointsDiscount.toFixed(2)}` : null,
+      `TOTAL: €${paymentRecord.finalTotal.toFixed(2)}`,
+      paymentRecord.tip > 0    ? `Tip: €${paymentRecord.tip.toFixed(2)}`    : null,
+      paymentRecord.change > 0 ? `Change: €${paymentRecord.change.toFixed(2)}` : null,
+      ``,
+      paymentRecord.payments.map(p => `${p.method}${p.note ? ` (${p.note})` : ''}: €${parseFloat(p.amount).toFixed(2)}`).join('\n'),
+      ``,
+      settings.receiptFooter || 'Thank you for dining with us!',
+    ].filter(l => l !== null).join('\n'))
+    return (
+      <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <button className="btn btn-print" style={{ flex: 1 }} onClick={handlePrint}>🖨️ Print</button>
+        <a href={`mailto:${customer?.email || ''}?subject=${subject}&body=${body}`}
+          style={{ flex: 1, border: '1px solid #3B82F644', background: '#3B82F622', color: '#3B82F6', borderRadius: 8, padding: '0.5rem 1rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontWeight: 700, fontSize: '0.78rem', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+          ✉️ Email{customer?.email ? ` ${customer.name.split(' ')[0]}` : ''}
+        </a>
+      </div>
+    )
+  })()}
+  <button className="btn btn-primary" onClick={onClose}>Done ✓</button>
+</div>
         </div>
       </div>
     )
