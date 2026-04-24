@@ -27,6 +27,9 @@ function PaymentModalInner({ order, onClose }) {
   const [redeemPts,          setRedeemPts]          = useState(0)
   const [selectedCustomerId, setSelectedCustomerId] = useState(null)
   const [activeTab,          setActiveTab]          = useState('adjustments')
+  const [showSplitItems,    setShowSplitItems]    = useState(false)
+const [splitAssignments,  setSplitAssignments]  = useState({})
+const [guestCount,        setGuestCount]        = useState(2)
 
   const linkedBooking = bookings.find(b =>
     b.preferredTable === order.table && b.depositPaid && b.status !== 'cancelled'
@@ -45,6 +48,27 @@ function PaymentModalInner({ order, onClose }) {
   const roundUpTarget       = parseFloat(roundUpAmount) || 0
   const tipAmount           = roundUpTarget > finalTotal ? roundUpTarget - finalTotal : 0
   const resolvedCustomerId  = selectedCustomerId || order.customerId || null
+
+  const getSplitTotals = () => {
+    const totals = {}
+    order.items.forEach(item => {
+      const key = item._key
+      const guest = splitAssignments[key]
+      if (!guest) return
+      const itemTotal = (item.price + (item.modifierTotal || 0)) * item.qty
+      totals[guest] = (totals[guest] || 0) + itemTotal
+    })
+    return totals
+  }
+
+  const applySplitByItem = () => {
+    const totals = getSplitTotals()
+    if (Object.keys(totals).length === 0) return
+    setPaymentRows(Object.entries(totals).map(([guest, amount], i) => ({
+      id: Date.now() + i, method: 'Card', amount: amount.toFixed(2), note: guest
+    })))
+    setShowSplitItems(false)
+  }
 
   const addRow    = (method) => setPaymentRows(prev => [...prev, { id: Date.now(), method, amount: remaining > 0 ? remaining.toFixed(2) : '0.00', note: '' }])
   const updateRow = (id, field, val) => setPaymentRows(prev => prev.map(r => r.id === id ? { ...r, [field]: val } : r))
@@ -377,13 +401,98 @@ function PaymentModalInner({ order, onClose }) {
 
               {/* Split */}
               <div style={{ background: '#0D0D14', border: '1px solid #1E1E2E', borderRadius: 8, padding: '0.7rem', marginBottom: '0.7rem' }}>
-                <span className="label">SPLIT BY GUESTS</span>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                  <input className="input" style={{ width: 55 }} type="number" min="2" max="20" value={splitGuests} onChange={e => setSplitGuests(parseInt(e.target.value) || 2)} />
-                  <span style={{ fontSize: '0.72rem', color: '#475569' }}>× €{(finalTotal / splitGuests).toFixed(2)}</span>
-                  <button className="btn btn-ghost btn-sm" onClick={handleSplitGuests}>Apply</button>
+                <span className="label">SPLIT</span>
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flex: 1 }}>
+                    <input className="input" style={{ width: 55 }} type="number" min="2" max="20" value={splitGuests} onChange={e => setSplitGuests(parseInt(e.target.value) || 2)} />
+                    <span style={{ fontSize: '0.72rem', color: '#475569' }}>× €{(finalTotal / splitGuests).toFixed(2)}</span>
+                    <button className="btn btn-ghost btn-sm" onClick={handleSplitGuests}>Equal</button>
+                  </div>
+                  <button className="btn btn-ghost btn-sm" onClick={() => { setGuestCount(splitGuests); setShowSplitItems(true) }}>By Item</button>
                 </div>
               </div>
+
+              {/* Split by item modal */}
+              {showSplitItems && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '1rem' }}>
+                  <div style={{ background: '#0F0F17', border: '1px solid #1E1E2E', borderRadius: 14, padding: '1.5rem', width: '100%', maxWidth: 480, fontFamily: "'Courier New', monospace", color: '#E2E8F0', maxHeight: '90vh', overflowY: 'auto' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                      <div>
+                        <div style={{ fontSize: '0.6rem', color: '#475569', letterSpacing: '0.1em' }}>SPLIT BY ITEM</div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>Assign items to guests</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                          <span style={{ fontSize: '0.68rem', color: '#475569' }}>Guests:</span>
+                          <input value={guestCount} onChange={e => setGuestCount(parseInt(e.target.value) || 2)} type="number" min="2" max="20"
+                            style={{ width: 45, background: '#0D0D14', border: '1px solid #2D2D3F', borderRadius: 6, padding: '0.2rem 0.4rem', color: '#E2E8F0', fontFamily: "'Courier New', monospace", fontSize: '0.75rem', outline: 'none', textAlign: 'center' }} />
+                        </div>
+                        <button onClick={() => setShowSplitItems(false)}
+                          style={{ border: '1px solid #1E1E2E', background: 'transparent', color: '#64748B', borderRadius: 8, padding: '0.3rem 0.6rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem' }}>✕</button>
+                      </div>
+                    </div>
+
+                    {/* Guest totals */}
+                    <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                      {Array.from({ length: guestCount }, (_, i) => {
+                        const guestLabel = `Guest ${i + 1}`
+                        const total = getSplitTotals()[guestLabel] || 0
+                        return (
+                          <div key={i} style={{ background: '#13131A', border: '1px solid #1E1E2E', borderRadius: 8, padding: '0.4rem 0.7rem', textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.65rem', color: '#475569' }}>{guestLabel}</div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: total > 0 ? '#F97316' : '#334155' }}>€{total.toFixed(2)}</div>
+                          </div>
+                        )
+                      })}
+                      {(() => {
+                        const assigned = Object.values(getSplitTotals()).reduce((s, v) => s + v, 0)
+                        const unassigned = finalTotal - assigned
+                        return unassigned > 0.01 && (
+                          <div style={{ background: '#EF444411', border: '1px solid #EF444433', borderRadius: 8, padding: '0.4rem 0.7rem', textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.65rem', color: '#EF4444' }}>Unassigned</div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#EF4444' }}>€{unassigned.toFixed(2)}</div>
+                          </div>
+                        )
+                      })()}
+                    </div>
+
+                    {/* Items */}
+                    {order.items.map((item, idx) => (
+                      <div key={idx} style={{ background: '#0D0D14', border: '1px solid #1E1E2E', borderRadius: 8, padding: '0.6rem 0.8rem', marginBottom: '0.4rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                          <div>
+                            <div style={{ fontSize: '0.78rem', color: '#CBD5E1', fontWeight: 600 }}>{item.name} ×{item.qty}</div>
+                            {item.modifiers?.length > 0 && <div style={{ fontSize: '0.62rem', color: '#8B5CF6' }}>{item.modifiers.map(m => m.optionName).join(', ')}</div>}
+                            {item.note && <div style={{ fontSize: '0.62rem', color: '#F59E0B' }}>📝 {item.note}</div>}
+                          </div>
+                          <span style={{ fontSize: '0.78rem', color: '#F97316', fontWeight: 700 }}>€{((item.price + (item.modifierTotal || 0)) * item.qty).toFixed(2)}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                          <button onClick={() => setSplitAssignments(p => { const u = { ...p }; delete u[item._key]; return u })}
+                            style={{ padding: '0.2rem 0.6rem', borderRadius: 6, border: '1px solid', borderColor: !splitAssignments[item._key] ? '#F97316' : '#1E1E2E', background: !splitAssignments[item._key] ? '#F9731622' : '#13131A', color: !splitAssignments[item._key] ? '#F97316' : '#475569', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.65rem', fontWeight: 700 }}>
+                            Shared
+                          </button>
+                          {Array.from({ length: guestCount }, (_, i) => {
+                            const guestLabel = `Guest ${i + 1}`
+                            const isSelected = splitAssignments[item._key] === guestLabel
+                            return (
+                              <button key={i} onClick={() => setSplitAssignments(p => ({ ...p, [item._key]: guestLabel }))}
+                                style={{ padding: '0.2rem 0.6rem', borderRadius: 6, border: '1px solid', borderColor: isSelected ? '#10B981' : '#1E1E2E', background: isSelected ? '#10B98122' : '#13131A', color: isSelected ? '#10B981' : '#475569', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.65rem', fontWeight: 700 }}>
+                                G{i + 1}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ))}
+
+                    <button onClick={applySplitByItem}
+                      style={{ width: '100%', border: 'none', background: '#F97316', color: '#000', borderRadius: 8, padding: '0.65rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontWeight: 700, fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                      ✓ Apply Split
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Gift card */}
               <div style={{ background: '#0D0D14', border: '1px solid #1E1E2E', borderRadius: 8, padding: '0.7rem', marginBottom: '1rem' }}>
