@@ -3,7 +3,7 @@ import { usePOS } from '../../context/POSContext'
 
 const UNITS = ['portions', 'bottles', 'cans', 'kegs', 'kg', 'g', 'litres', 'units', 'boxes', 'bags']
 const DELIVERY_DAYS = ['Daily', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-const EMPTY_FORM = { name: '', category: '', unit: 'portions', quantity: 0, minThreshold: 5, costPrice: 0, supplier: '', deliveryDay: 'Monday', menuItemId: '', portionPerSale: 1 }
+const EMPTY_FORM = { name: '', category: '', unit: 'portions', quantity: 0, minThreshold: 5, costPrice: 0, supplier: '', supplierPhone: '', supplierEmail: '', deliveryDay: 'Monday', menuItemId: '', portionPerSale: 1 }
 
 export default function StockView() {
   const { stock, menu, orderHistory, addStockItem, updateStockItem, deleteStockItem, adjustStock } = usePOS()
@@ -197,7 +197,11 @@ export default function StockView() {
                     <span style={{ fontSize: '0.72rem', color: '#64748B' }}>{item.unit}</span>
                     <span style={{ fontSize: '0.72rem', color: '#475569' }}>{item.minThreshold}</span>
                     <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>€{item.costPrice.toFixed(2)}</span>
-                    <span style={{ fontSize: '0.68rem', color: '#475569' }}>{item.supplier}</span>
+                    <div>
+  <div style={{ fontSize: '0.68rem', color: '#475569' }}>{item.supplier}</div>
+  {item.supplierPhone && <a href={`tel:${item.supplierPhone}`} style={{ fontSize: '0.6rem', color: '#3B82F6', textDecoration: 'none' }}>📞 {item.supplierPhone}</a>}
+  {item.supplierEmail && <a href={`mailto:${item.supplierEmail}`} style={{ fontSize: '0.6rem', color: '#3B82F6', textDecoration: 'none', display: 'block' }}>✉️ {item.supplierEmail}</a>}
+</div>
 
                     <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
                       <span style={{ fontSize: '0.6rem', fontWeight: 700, background: status.bg, color: status.color, border: `1px solid ${status.color}44`, borderRadius: 5, padding: '1px 6px' }}>
@@ -235,8 +239,10 @@ export default function StockView() {
                       <div>
                         <div style={{ fontSize: '0.85rem', fontWeight: 700, color: status.color }}>{item.name}</div>
                         <div style={{ fontSize: '0.68rem', color: '#64748B', marginTop: '0.15rem' }}>
-                          {item.supplier} · Delivery: {item.deliveryDay}
-                        </div>
+  {item.supplier} · Delivery: {item.deliveryDay}
+</div>
+{item.supplierPhone && <a href={`tel:${item.supplierPhone}`} style={{ fontSize: '0.62rem', color: '#3B82F6', textDecoration: 'none' }}>📞 {item.supplierPhone}</a>}
+{item.supplierEmail && <a href={`mailto:${item.supplierEmail}`} style={{ fontSize: '0.62rem', color: '#3B82F6', textDecoration: 'none', marginLeft: '0.5rem' }}>✉️ {item.supplierEmail}</a>}
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: '1.1rem', fontWeight: 700, color: status.color }}>{item.quantity} <span style={{ fontSize: '0.65rem' }}>{item.unit}</span></div>
@@ -334,6 +340,8 @@ export default function StockView() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', marginBottom: '0.8rem' }}>
               <div><span className="label">SUPPLIER</span><input className="input" placeholder="Supplier name" value={form.supplier} onChange={e => f('supplier', e.target.value)} /></div>
+<div><span className="label">SUPPLIER PHONE</span><input className="input" placeholder="01 234 5678" value={form.supplierPhone || ''} onChange={e => f('supplierPhone', e.target.value)} /></div>
+<div><span className="label">SUPPLIER EMAIL</span><input className="input" placeholder="orders@supplier.com" value={form.supplierEmail || ''} onChange={e => f('supplierEmail', e.target.value)} /></div>
               <div>
                 <span className="label">LINK TO MENU ITEM (optional — for auto-deduct)</span>
                 <select className="input" value={form.menuItemId} onChange={e => f('menuItemId', e.target.value)}>
