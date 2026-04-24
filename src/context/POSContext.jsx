@@ -296,25 +296,31 @@ export function POSProvider({ children }) {
 
   // ── Stock ──
   const deductStock = (items) => {
-    setStock(prev => prev.map(s => {
-      if (!s.menuItemId) return s
-      const o = items.find(i => i.id === s.menuItemId)
-      if (!o) return s
-      const delta = -(o.qty * s.portionPerSale)
-      setStockMovements(p => [...p, {
-        id: Date.now() + s.id,
-        stockItemId: s.id,
-        stockItemName: s.name,
-        delta,
-        reason: `Sale — ${o.name}`,
-        before: s.quantity,
-        after: Math.max(0, s.quantity + delta),
-        by: currentUser?.name || 'System',
-        at: new Date().toISOString(),
-      }])
-      return { ...s, quantity: Math.max(0, s.quantity + delta) }
-    }))
+    const movements = []
+    setStock(prev => {
+      const updated = prev.map(s => {
+        if (!s.menuItemId) return s
+        const o = items.find(i => i.id === s.menuItemId)
+        if (!o) return s
+        const delta = -(o.qty * s.portionPerSale)
+        movements.push({
+          id: Date.now() + Math.random(),
+          stockItemId: s.id,
+          stockItemName: s.name,
+          delta,
+          reason: `Sale — ${o.name}`,
+          before: s.quantity,
+          after: Math.max(0, s.quantity + delta),
+          by: currentUser?.name || 'System',
+          at: new Date().toISOString(),
+        })
+        return { ...s, quantity: Math.max(0, s.quantity + delta) }
+      })
+      return updated
+    })
+    if (movements.length > 0) setStockMovements(prev => [...prev, ...movements])
   }
+
   const addStockItem    = (item)      => setStock(prev => [...prev, { ...item, id: Date.now() }])
   const updateStockItem = (item)      => setStock(prev => prev.map(s => s.id === item.id ? item : s))
   const deleteStockItem = (id)        => setStock(prev => prev.filter(s => s.id !== id))
