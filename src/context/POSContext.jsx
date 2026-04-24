@@ -449,7 +449,7 @@ const moveItems = (fromOrderId, itemKeys, toTableId) => {
         })
         .filter(o => o.items.length > 0)
     } else {
-      const newOrder = { ...fromOrder, id: Date.now(), table: toTableId, items: itemsToMove.map(i => ({ ...i, isAddition: false, isNew: false })), total: moveTotal, placedAt: new Date().toISOString() }
+      const newOrder = { ...fromOrder, id: Date.now(), table: toTableId, items: itemsToMove.map(i => ({ ...i, isAddition: false, isNew: true })), total: moveTotal, placedAt: new Date().toISOString(), modified: true, modifiedAt: new Date().toISOString() }
       return [
         ...prev
           .map(o => o.id === fromOrderId ? { ...o, items: itemsToStay, total: stayTotal } : o)
