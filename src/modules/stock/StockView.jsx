@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { usePOS } from '../../context/POSContext'
+import useBreakpoint from '../../hooks/useBreakpoint'
 
 const UNITS = ['portions', 'bottles', 'cans', 'kegs', 'kg', 'g', 'litres', 'units', 'boxes', 'bags']
 const DELIVERY_DAYS = ['Daily', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -7,6 +8,7 @@ const EMPTY_FORM = { name: '', category: '', unit: 'portions', quantity: 0, minT
 
 export default function StockView() {
   const { stock, menu, orderHistory, addStockItem, updateStockItem, deleteStockItem, adjustStock, stockMovements } = usePOS()
+  const { isMobile } = useBreakpoint()
 
   const [activeTab,    setActiveTab]    = useState('stock')
   const [filterCat,    setFilterCat]    = useState('All')
@@ -150,11 +152,11 @@ export default function StockView() {
 
             {/* Table */}
             <div style={{ background: '#13131A', border: '1px solid #1E1E2E', borderRadius: 12, overflow: 'hidden' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 80px 80px 70px 90px 160px 140px', padding: '0.6rem 1rem', borderBottom: '1px solid #1E1E2E' }}>
+              {!isMobile && <div style={{ display: 'grid', gridTemplateColumns: '2fr 80px 80px 70px 90px 160px 140px', padding: '0.6rem 1rem', borderBottom: '1px solid #1E1E2E' }}>
                 {['ITEM', 'QTY', 'UNIT', 'MIN', 'COST/UNIT', 'SUPPLIER', 'STATUS'].map(h => (
                   <span key={h} style={{ fontSize: '0.58rem', color: '#334155', letterSpacing: '0.1em' }}>{h}</span>
                 ))}
-              </div>
+              </div>}
 
               {filtered.length === 0 && (
                 <div style={{ padding: '2rem', textAlign: 'center', fontSize: '0.78rem', color: '#334155' }}>No stock items yet</div>
@@ -167,7 +169,51 @@ export default function StockView() {
                 const isEditing = editingItem?.id === item.id && showForm
                 return (
                   <>
-                  <div key={item.id} className="stock-row">
+                  {isMobile ? (
+                    <div key={item.id} style={{ padding: '0.8rem 1rem', borderBottom: '1px solid #0D0D14' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
+                        <div>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#CBD5E1' }}>{item.name}</div>
+                          <div style={{ fontSize: '0.62rem', color: '#334155', marginTop: '0.1rem' }}>{item.category}{linked ? ` · ${linked.name}` : ''} · 🚚 {item.deliveryDay}</div>
+                          {item.supplierPhone && <a href={`tel:${item.supplierPhone}`} style={{ fontSize: '0.6rem', color: '#3B82F6', textDecoration: 'none', display: 'block' }}>📞 {item.supplierPhone}</a>}
+                        </div>
+                        <span style={{ fontSize: '0.6rem', fontWeight: 700, background: status.bg, color: status.color, border: `1px solid ${status.color}44`, borderRadius: 5, padding: '1px 6px' }}>{status.label}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <div>
+                          <div style={{ fontSize: '0.58rem', color: '#475569', letterSpacing: '0.08em' }}>QTY</div>
+                          {isAdjust ? (
+                            <div style={{ display: 'flex', gap: '0.2rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                              <input className="input" style={{ width: 52, padding: '0.2rem 0.4rem', fontSize: '0.72rem' }} placeholder="qty" value={adjustDelta} onChange={e => setAdjustDelta(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAdjust(item.id)} autoFocus />
+                              <select value={adjustReason} onChange={e => setAdjustReason(e.target.value)} style={{ background: '#0D0D14', border: '1px solid #2D2D3F', borderRadius: 6, padding: '0.2rem 0.3rem', color: '#E2E8F0', fontFamily: "'Courier New', monospace", fontSize: '0.62rem', outline: 'none' }}>
+                                <option value="Manual adjustment">Manual</option>
+                                <option value="Waste">🗑 Waste</option>
+                                <option value="Spoilage">🤢 Spoilage</option>
+                                <option value="Delivery received">🚚 Delivery</option>
+                                <option value="Returned to supplier">↩ Return</option>
+                                <option value="Damaged">💥 Damaged</option>
+                                <option value="Staff meal">🍽 Staff meal</option>
+                              </select>
+                              <button className="btn btn-primary btn-sm" style={{ padding: '0.2rem 0.4rem' }} onClick={() => handleAdjust(item.id)}>✓</button>
+                              <button className="btn btn-ghost btn-sm" style={{ padding: '0.2rem 0.4rem' }} onClick={() => setAdjustingId(null)}>✕</button>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: '0.88rem', fontWeight: 700, color: status.color, cursor: 'pointer', textDecoration: 'underline dotted' }} onClick={() => { setAdjustingId(item.id); setAdjustDelta('') }}>
+                              {item.quantity % 1 === 0 ? item.quantity : item.quantity.toFixed(2)} {item.unit}
+                            </span>
+                          )}
+                        </div>
+                        <div><div style={{ fontSize: '0.58rem', color: '#475569', letterSpacing: '0.08em' }}>MIN</div><span style={{ fontSize: '0.78rem', color: '#475569' }}>{item.minThreshold}</span></div>
+                        <div><div style={{ fontSize: '0.58rem', color: '#475569', letterSpacing: '0.08em' }}>COST</div><span style={{ fontSize: '0.78rem', color: '#94A3B8' }}>€{item.costPrice.toFixed(2)}</span></div>
+                        <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.3rem' }}>
+                          <button className="btn btn-ghost btn-sm" onClick={() => openEdit(item)}>✏</button>
+                          <button className="btn btn-danger btn-sm" onClick={() => deleteStockItem(item.id)}>✕</button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                  <div className="stock-row">
+                    
                     <div>
                       <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#CBD5E1' }}>{item.name}</div>
                       <div style={{ fontSize: '0.65rem', color: '#334155', marginTop: '0.1rem' }}>
@@ -231,6 +277,7 @@ export default function StockView() {
                       <button className="btn btn-danger btn-sm" style={{ padding: '0.15rem 0.5rem', fontSize: '0.62rem' }} onClick={() => deleteStockItem(item.id)}>✕</button>
                     </div>
                   </div>
+                  )}
                   {isEditing && (
                     <div style={{ padding: '1.2rem', background: '#0D0D14', borderBottom: '1px solid #F9731644' }}>
                       <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#F97316', marginBottom: '1rem' }}>Editing — {editingItem.name}</div>
