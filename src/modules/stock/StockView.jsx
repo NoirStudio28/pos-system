@@ -175,8 +175,8 @@ export default function StockView() {
                     {/* Qty with adjust */}
                     <div>
                       {isAdjust ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                          <div style={{ display: 'flex', gap: '0.2rem', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', gridColumn: 'span 2' }}>
+                          <div style={{ display: 'flex', gap: '0.2rem', alignItems: 'center', flexWrap: 'wrap' }}>
                             <input
                               className="input"
                               style={{ width: 52, padding: '0.2rem 0.4rem', fontSize: '0.72rem' }}
