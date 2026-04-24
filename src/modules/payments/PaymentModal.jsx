@@ -7,7 +7,7 @@ const METHOD_COLORS = {
 }
 
 function PaymentModalInner({ order, onClose }) {
-  const { bookings, processPayment, checkGiftCard, customers, settings } = usePOS()
+  const { bookings, processPayment, checkGiftCard, customers, settings, tables } = usePOS()
   const { isMobile } = useBreakpoint()
 
   const [discountType,       setDiscountType]       = useState('%')
@@ -225,7 +225,13 @@ const [guestMethods,      setGuestMethods]      = useState({})
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <div>
             <div style={{ fontSize: '0.6rem', letterSpacing: '0.2em', color: '#475569', marginBottom: '0.2rem' }}>PAYMENT</div>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>T{order.table} — €{subtotal.toFixed(2)}</h2>
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>
+  T{order.table}{order.mergedTables?.length > 0 ? ` + T${order.mergedTables.join(' + T')}` : ''} — €{subtotal.toFixed(2)}
+</h2>
+{order.table && (() => {
+  const tbl = tables?.find(t => t.id === order.table)
+  return tbl?.note ? <div style={{ fontSize: '0.72rem', color: '#F59E0B', marginTop: '0.2rem' }}>{tbl.note}</div> : null
+})()}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {/* Total pill */}
