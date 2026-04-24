@@ -216,6 +216,7 @@ export function POSProvider({ children }) {
   const [customers,    setCustomers]    = usePersist('customers',    SAMPLE_CUSTOMERS)
   const [settings,     setSettings]     = usePersist('settings',     DEFAULT_SETTINGS)
   const [giftCards,    setGiftCards]    = usePersist('giftCards',    { 'GIFT50': 50.00, 'GIFT25': 25.00 })
+  const [stockMovements, setStockMovements] = usePersist('stockMovements', [])
 
   const [modifierLibrary, setModifierLibrary] = usePersist('modifierLibrary', [
   { id: 'lib-1', name: 'Extra',       required: false, options: [{ id: 'e1', name: 'Cheese', price: 1.00 }, { id: 'e2', name: 'Bacon', price: 1.50 }, { id: 'e3', name: 'Fries', price: 2.00 }] },
@@ -299,13 +300,40 @@ export function POSProvider({ children }) {
       if (!s.menuItemId) return s
       const o = items.find(i => i.id === s.menuItemId)
       if (!o) return s
-      return { ...s, quantity: Math.max(0, s.quantity - o.qty * s.portionPerSale) }
+      const delta = -(o.qty * s.portionPerSale)
+      setStockMovements(p => [...p, {
+        id: Date.now() + s.id,
+        stockItemId: s.id,
+        stockItemName: s.name,
+        delta,
+        reason: `Sale — ${o.name}`,
+        before: s.quantity,
+        after: Math.max(0, s.quantity + delta),
+        by: currentUser?.name || 'System',
+        at: new Date().toISOString(),
+      }])
+      return { ...s, quantity: Math.max(0, s.quantity + delta) }
     }))
   }
   const addStockItem    = (item)      => setStock(prev => [...prev, { ...item, id: Date.now() }])
   const updateStockItem = (item)      => setStock(prev => prev.map(s => s.id === item.id ? item : s))
   const deleteStockItem = (id)        => setStock(prev => prev.filter(s => s.id !== id))
-  const adjustStock     = (id, delta) => setStock(prev => prev.map(s => s.id === id ? { ...s, quantity: Math.max(0, s.quantity + delta) } : s))
+  const adjustStock = (id, delta, reason = 'Manual adjustment') => {
+  setStock(prev => prev.map(s => s.id === id ? { ...s, quantity: Math.max(0, s.quantity + delta) } : s))
+  const item = stock.find(s => s.id === id)
+  if (!item) return
+  setStockMovements(prev => [...prev, {
+    id: Date.now(),
+    stockItemId: id,
+    stockItemName: item.name,
+    delta,
+    reason,
+    before: item.quantity,
+    after: Math.max(0, item.quantity + delta),
+    by: currentUser?.name || 'Unknown',
+    at: new Date().toISOString(),
+  }])
+}
 
   // ── Orders ──
   const placeOrder = (order) => {
@@ -565,7 +593,7 @@ const moveItems = (fromOrderId, itemKeys, toTableId) => {
       addBooking, updateBooking, deleteBooking, updateBookingStatus,
       addCategory, deleteCategory, addMenuItem, updateMenuItem, deleteMenuItem, toggleItemAvailability,
       kitchenAlerts, dismissAlert, dismissAllAlerts,
-      addStockItem, updateStockItem, deleteStockItem, adjustStock,
+      addStockItem, updateStockItem, deleteStockItem, adjustStock, stockMovements,
       addCustomer, updateCustomer, deleteCustomer, awardPoints, redeemPoints,
       updateSettings,modifierLibrary, setModifierLibrary,
     }}>

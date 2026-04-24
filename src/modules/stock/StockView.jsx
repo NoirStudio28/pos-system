@@ -6,7 +6,7 @@ const DELIVERY_DAYS = ['Daily', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'F
 const EMPTY_FORM = { name: '', category: '', unit: 'portions', quantity: 0, minThreshold: 5, costPrice: 0, supplier: '', supplierPhone: '', supplierEmail: '', deliveryDay: 'Monday', menuItemId: '', portionPerSale: 1 }
 
 export default function StockView() {
-  const { stock, menu, orderHistory, addStockItem, updateStockItem, deleteStockItem, adjustStock } = usePOS()
+  const { stock, menu, orderHistory, addStockItem, updateStockItem, deleteStockItem, adjustStock, stockMovements } = usePOS()
 
   const [activeTab,    setActiveTab]    = useState('stock')
   const [filterCat,    setFilterCat]    = useState('All')
@@ -16,6 +16,7 @@ export default function StockView() {
   const [adjustingId,  setAdjustingId]  = useState(null)
   const [adjustDelta,  setAdjustDelta]  = useState('')
   const [recoPeriod,   setRecoPeriod]   = useState('week')
+  const [historySearch, setHistorySearch] = useState('')
 
   const f = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
@@ -113,6 +114,7 @@ export default function StockView() {
               🔔 Alerts {lowStock.length > 0 && <span style={{ background: '#EF4444', color: '#fff', borderRadius: '50%', fontSize: '0.6rem', padding: '0 5px', marginLeft: 4 }}>{lowStock.length}</span>}
             </button>
             <button className={`tab ${activeTab === 'reorder' ? 'active' : ''}`} onClick={() => setActiveTab('reorder')}>📋 Reorder</button>
+            <button className={`tab ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>📜 History</button>
             <button className="btn btn-primary btn-sm" onClick={openAdd}>+ Add Item</button>
           </div>
         </div>
@@ -336,6 +338,37 @@ export default function StockView() {
             </div>
           </div>
         )}
+
+        {/* HISTORY TAB */}
+{activeTab === 'history' && (
+  <div>
+    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+      <input placeholder="Search item..." onChange={e => setHistorySearch(e.target.value)}
+        style={{ background: '#0D0D14', border: '1px solid #2D2D3F', borderRadius: 8, padding: '0.45rem 0.7rem', color: '#E2E8F0', fontFamily: "'Courier New', monospace", fontSize: '0.75rem', outline: 'none', flex: 1 }} />
+    </div>
+    {[...stockMovements].reverse().filter(m => !historySearch || m.stockItemName.toLowerCase().includes(historySearch.toLowerCase())).slice(0, 100).length === 0 ? (
+      <div style={{ textAlign: 'center', padding: '3rem', color: '#334155', fontSize: '0.85rem' }}>No stock movements yet</div>
+    ) : (
+      <div style={{ background: '#13131A', border: '1px solid #1E1E2E', borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 1fr 120px 100px', padding: '0.6rem 1rem', borderBottom: '1px solid #1E1E2E' }}>
+          {['ITEM', 'CHANGE', 'AFTER', 'REASON', 'BY', 'TIME'].map(h => (
+            <span key={h} style={{ fontSize: '0.58rem', color: '#334155', letterSpacing: '0.1em' }}>{h}</span>
+          ))}
+        </div>
+        {[...stockMovements].reverse().filter(m => !historySearch || m.stockItemName.toLowerCase().includes(historySearch.toLowerCase())).slice(0, 100).map(m => (
+          <div key={m.id} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 1fr 120px 100px', padding: '0.6rem 1rem', borderBottom: '1px solid #0D0D14', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.78rem', color: '#CBD5E1', fontWeight: 600 }}>{m.stockItemName}</span>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: m.delta > 0 ? '#10B981' : '#EF4444' }}>{m.delta > 0 ? `+${m.delta.toFixed(2)}` : m.delta.toFixed(2)}</span>
+            <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>{m.after.toFixed(2)}</span>
+            <span style={{ fontSize: '0.68rem', color: '#475569' }}>{m.reason}</span>
+            <span style={{ fontSize: '0.68rem', color: '#475569' }}>{m.by}</span>
+            <span style={{ fontSize: '0.65rem', color: '#334155' }}>{new Date(m.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} {new Date(m.at).toLocaleDateString([], { day: '2-digit', month: '2-digit' })}</span>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
 
         {/* ADD / EDIT FORM — only show for new items */}
         {showForm && !editingItem && (
