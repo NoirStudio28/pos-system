@@ -110,8 +110,10 @@ const [guestMethods,      setGuestMethods]      = useState({})
       paidAt: new Date().toISOString(),
     }
     setPaymentRecord(record)
-    processPayment(order.id, { ...record, redeemedPoints: redeemPts, pointsDiscount })
-    setShowReceipt(true)
+setShowReceipt(true)
+setTimeout(() => {
+  processPayment(order.id, { ...record, redeemedPoints: redeemPts, pointsDiscount })
+}, 100)
   }
 
   const handlePrint = () => {
