@@ -38,8 +38,10 @@ export default function StockView() {
   }
 
   const handleAdjust = (id) => {
-    const delta = parseFloat(adjustDelta)
+    let delta = parseFloat(adjustDelta)
     if (isNaN(delta)) return
+    const negativeReasons = ['Waste', 'Spoilage', 'Damaged', 'Staff meal', 'Returned to supplier']
+    if (negativeReasons.includes(adjustReason) && delta > 0) delta = -delta
     adjustStock(id, delta, adjustReason)
     setAdjustingId(null); setAdjustDelta(''); setAdjustReason('Manual adjustment')
   }
@@ -180,7 +182,7 @@ export default function StockView() {
                             <input
                               className="input"
                               style={{ width: 52, padding: '0.2rem 0.4rem', fontSize: '0.72rem' }}
-                              placeholder="+/-"
+                              placeholder={['Waste','Spoilage','Damaged','Staff meal','Returned to supplier'].includes(adjustReason) ? 'qty' : '+/-'}
                               value={adjustDelta}
                               onChange={e => setAdjustDelta(e.target.value)}
                               onKeyDown={e => e.key === 'Enter' && handleAdjust(item.id)}
