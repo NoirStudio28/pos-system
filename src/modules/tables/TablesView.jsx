@@ -665,12 +665,93 @@ function TransferPicker({ order, onClose, onDone }) {
   )
 }
 
+function ItemMover({ order, onClose }) {
+  const { tables, orders, moveItems } = usePOS()
+  const [selectedKeys, setSelectedKeys] = useState([])
+  const [targetTable,  setTargetTable]  = useState(null)
+
+  const toggleItem = (key) => setSelectedKeys(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
+
+  const availableTables = tables.filter(t => t.id !== order.table)
+
+  const handleMove = () => {
+    if (selectedKeys.length === 0 || !targetTable) return
+    moveItems(order.id, selectedKeys, targetTable)
+    onClose()
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '1rem' }}>
+      <div style={{ background: '#0F0F17', border: '1px solid #1E1E2E', borderRadius: 14, padding: '1.5rem', width: '100%', maxWidth: 420, fontFamily: "'Courier New', monospace", color: '#E2E8F0', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div>
+            <div style={{ fontSize: '0.6rem', color: '#475569', letterSpacing: '0.1em' }}>MOVE ITEMS</div>
+            <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>Select items to move</div>
+          </div>
+          <button onClick={onClose} style={{ border: '1px solid #1E1E2E', background: 'transparent', color: '#64748B', borderRadius: 8, padding: '0.3rem 0.6rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem' }}>✕</button>
+        </div>
+
+        {/* Items */}
+        <div style={{ marginBottom: '1rem' }}>
+          <div style={{ fontSize: '0.6rem', color: '#475569', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>ITEMS</div>
+          {order.items.map(item => {
+            const selected = selectedKeys.includes(item._key)
+            return (
+              <div key={item._key} onClick={() => toggleItem(item._key)}
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0.8rem', background: selected ? '#F9731622' : '#0D0D14', border: `1px solid ${selected ? '#F97316' : '#1E1E2E'}`, borderRadius: 8, marginBottom: '0.3rem', cursor: 'pointer' }}>
+                <div>
+                  <div style={{ fontSize: '0.78rem', color: selected ? '#F97316' : '#CBD5E1', fontWeight: 600 }}>{item.name} ×{item.qty}</div>
+                  {item.modifiers?.length > 0 && <div style={{ fontSize: '0.62rem', color: '#8B5CF6' }}>{item.modifiers.map(m => m.optionName).join(', ')}</div>}
+                  {item.note && <div style={{ fontSize: '0.62rem', color: '#F59E0B' }}>📝 {item.note}</div>}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#475569' }}>€{((item.price + (item.modifierTotal || 0)) * item.qty).toFixed(2)}</span>
+                  <div style={{ width: 18, height: 18, borderRadius: 4, border: `2px solid ${selected ? '#F97316' : '#334155'}`, background: selected ? '#F97316' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: '#000' }}>
+                    {selected ? '✓' : ''}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Target table */}
+        {selectedKeys.length > 0 && (
+          <div style={{ marginBottom: '1rem' }}>
+            <div style={{ fontSize: '0.6rem', color: '#475569', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>MOVE TO TABLE</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+              {availableTables.map(t => {
+                const hasOrder = orders.find(o => o.table === t.id)
+                const isSelected = targetTable === t.id
+                return (
+                  <button key={t.id} onClick={() => setTargetTable(t.id)}
+                    style={{ width: 44, height: 44, borderRadius: 8, border: '1px solid', borderColor: isSelected ? '#F97316' : hasOrder ? '#F9731644' : '#1E1E2E', background: isSelected ? '#F9731622' : hasOrder ? '#F9731611' : '#13131A', color: isSelected ? '#F97316' : hasOrder ? '#F97316' : '#64748B', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.78rem', fontWeight: 700, position: 'relative' }}>
+                    {t.id}
+                    {hasOrder && <div style={{ position: 'absolute', top: -3, right: -3, width: 8, height: 8, borderRadius: '50%', background: '#F97316' }} />}
+                  </button>
+                )
+              })}
+            </div>
+            <div style={{ fontSize: '0.62rem', color: '#475569', marginTop: '0.4rem' }}>🟠 = has existing order</div>
+          </div>
+        )}
+
+        <button onClick={handleMove} disabled={selectedKeys.length === 0 || !targetTable}
+          style={{ width: '100%', border: 'none', background: selectedKeys.length > 0 && targetTable ? '#F97316' : '#1E1E2E', color: selectedKeys.length > 0 && targetTable ? '#000' : '#334155', borderRadius: 8, padding: '0.65rem', cursor: selectedKeys.length > 0 && targetTable ? 'pointer' : 'not-allowed', fontFamily: "'Courier New', monospace", fontWeight: 700, fontSize: '0.8rem' }}>
+          {selectedKeys.length > 0 && targetTable ? `Move ${selectedKeys.length} item${selectedKeys.length > 1 ? 's' : ''} to T${targetTable}` : 'Select items and destination'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Table Popup ──────────────────────────────────────────────────────────────
 function TablePopup({ table, status, order, booking, onClose, onOpenPicker, onOpenEditPicker }) {
   const { closeOrder, openPayment, updateBookingStatus, fireCourse, serveCourse, orderHistory, staff, currentUser } = usePOS()
   const [covers, setCovers] = useState(2)
 const [transferring, setTransferring] = useState(false)
 const [merging, setMerging] = useState(false)
+const [movingItems, setMovingItems] = useState(false)
 
   const shiftStart = (() => {
     const member = staff.find(s => s.id === currentUser?.id)
@@ -948,6 +1029,9 @@ const [merging, setMerging] = useState(false)
 {merging && (
   <MergePicker order={order} onClose={() => setMerging(false)} onDone={() => { setMerging(false); onClose() }} />
 )}
+{movingItems && (
+  <ItemMover order={order} onClose={() => { setMovingItems(false); onClose() }} />
+)}
 
             {/* ── ACTIONS ── */}
             <NoteEditor table={table} />
@@ -955,6 +1039,7 @@ const [merging, setMerging] = useState(false)
             <button className="tp-btn" style={{ background: '#13131A', color: '#94A3B8', border: '1px solid #1E1E2E' }} onClick={printBill}>🖨️ Print Bill</button>
             <button className="tp-btn" style={{ background: '#3B82F622', color: '#3B82F6', border: '1px solid #3B82F644' }} onClick={() => setTransferring(true)}>🔀 Transfer Table</button>
             <button className="tp-btn" style={{ background: '#8B5CF622', color: '#8B5CF6', border: '1px solid #8B5CF644' }} onClick={() => setMerging(true)}>🔗 Merge Tables</button>
+            <button className="tp-btn" style={{ background: '#14B8A622', color: '#14B8A6', border: '1px solid #14B8A644' }} onClick={() => setMovingItems(true)}>↔️ Move Items</button>
             <button className="tp-btn" style={{ background: '#10B98122', color: '#10B981', border: '1px solid #10B98144' }} onClick={() => { onClose(); openPayment(order.id) }}>💳 Pay — €{order.total.toFixed(2)}</button>
             <button className="tp-btn" style={{ background: '#EF444422', color: '#EF4444', border: '1px solid #EF444433' }} onClick={() => { closeOrder(order.id); onClose() }}>🗑 Cancel Order</button>
 

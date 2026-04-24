@@ -431,6 +431,35 @@ return { ...newItem, isNew: noteChanged || modsChanged }
   })
 }
 
+const moveItems = (fromOrderId, itemKeys, toTableId) => {
+  setOrders(prev => {
+    const fromOrder = prev.find(o => o.id === fromOrderId)
+    if (!fromOrder) return prev
+    const itemsToMove = fromOrder.items.filter(i => itemKeys.includes(i._key))
+    const itemsToStay = fromOrder.items.filter(i => !itemKeys.includes(i._key))
+    const moveTotal   = itemsToMove.reduce((s, i) => s + (i.price + (i.modifierTotal || 0)) * i.qty, 0)
+    const stayTotal   = itemsToStay.reduce((s, i) => s + (i.price + (i.modifierTotal || 0)) * i.qty, 0)
+    const toOrder     = prev.find(o => o.table === toTableId)
+    if (toOrder) {
+      return prev
+        .map(o => {
+          if (o.id === fromOrderId) return { ...o, items: itemsToStay, total: stayTotal }
+          if (o.id === toOrder.id) return { ...o, items: [...o.items, ...itemsToMove.map(i => ({ ...i, _key: i._key + '_moved', isAddition: true, isNew: true }))], total: toOrder.total + moveTotal, modified: true, modifiedAt: new Date().toISOString() }
+          return o
+        })
+        .filter(o => o.items.length > 0)
+    } else {
+      const newOrder = { ...fromOrder, id: Date.now(), table: toTableId, items: itemsToMove.map(i => ({ ...i, isAddition: false, isNew: false })), total: moveTotal, placedAt: new Date().toISOString() }
+      return [
+        ...prev
+          .map(o => o.id === fromOrderId ? { ...o, items: itemsToStay, total: stayTotal } : o)
+          .filter(o => o.items.length > 0),
+        newOrder
+      ]
+    }
+  })
+}
+
   // ── Fire course ──
   const fireCourse = (orderId, course) => {
     setOrders(prev => prev.map(o => o.id !== orderId ? o : {
@@ -532,7 +561,7 @@ return { ...newItem, isNew: noteChanged || modsChanged }
       addFloor, updateFloor, deleteFloor,
       updateTableStatus, updateTablePosition, updateTableData, addTableToFloor, removeTable,
       placeOrder, closeOrder, toggleOrderStatus, advanceOrderStatus, toggleUrgent,
-      updateOrder, mergeTables, fireCourse, serveCourse, acknowledgeOrder, updateBarStatus,tabs, openTab, updateTab, closeTab,
+      updateOrder, mergeTables, moveItems, fireCourse, serveCourse, acknowledgeOrder, updateBarStatus,tabs, openTab, updateTab, closeTab,
       openPayment, closePayment, processPayment, checkGiftCard,
       addBooking, updateBooking, deleteBooking, updateBookingStatus,
       addCategory, deleteCategory, addMenuItem, updateMenuItem, deleteMenuItem, toggleItemAvailability,
