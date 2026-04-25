@@ -70,7 +70,9 @@ function TodayLog() {
             return (
               <div key={order.id} style={{ background: '#13131A', border: '1px solid #1E1E2E', borderRadius: 10, padding: '0.7rem 0.9rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>T{order.table}</span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>
+  {order.isTakeaway ? `🥡 ${order.takeawayName}` : `T${order.table}`}
+</span>
                   <span style={{ fontSize: '0.62rem', color: order._pending ? '#F59E0B' : '#334155' }}>
                     {order._pending ? '⏳ Awaiting payment' : new Date(order.closedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
@@ -453,7 +455,9 @@ const displayOrders = filter === 'previous'
               {ready.map(order => (
                 <div key={order.id} style={{ background: '#13131A', border: '1px solid #10B98133', borderRadius: 12, padding: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#10B981' }}>T{order.table}</div>
+                    <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#10B981' }}>
+  {order.isTakeaway ? `🥡 ${order.takeawayName}` : `T${order.table}`}
+</div>
                     <div style={{ fontSize: '0.65rem', color: '#334155' }}>{order.items.filter(i => getItemDestination(i.id, menu) === 'kitchen').length} food items</div>
                   </div>
                   {order.placedAt && <Ticker placedAt={order.placedAt} />}
