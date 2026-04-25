@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
 import { usePOS, getItemCourse, getItemDestination } from '../../context/POSContext'
 
-const COURSE_CONFIG = {
+const DEFAULT_COURSE_CONFIG = {
   starters: { label: 'Starters', color: '#10B981', icon: '🥗' },
   mains:    { label: 'Mains',    color: '#F97316', icon: '🍽️' },
   desserts: { label: 'Desserts', color: '#8B5CF6', icon: '🍰' },
 }
+
+const COURSE_COLORS = ['#10B981','#F97316','#8B5CF6','#3B82F6','#F59E0B','#EC4899','#14B8A6','#EF4444']
+const COURSE_ICONS  = ['🥗','🍽️','🍰','🐟','🥩','🫕','🧀','🍮']
 
 function Ticker({ placedAt }) {
   const [elapsed, setElapsed] = useState(0)
@@ -88,7 +91,12 @@ function TodayLog() {
 }
 
 export default function KDSView() {
-  const { orders, menu, orderHistory, tables, staff, currentUser, advanceOrderStatus, toggleUrgent, acknowledgeOrder, serveCourse, toggleItemAvailability } = usePOS()
+  const { orders, menu, orderHistory, tables, staff, currentUser, settings, advanceOrderStatus, toggleUrgent, acknowledgeOrder, serveCourse, toggleItemAvailability } = usePOS()
+
+const customCourses = settings?.courses || []
+const COURSE_CONFIG = customCourses.length
+  ? Object.fromEntries(customCourses.sort((a,b) => a.position - b.position).map((c, i) => [c.id, { label: c.name, color: COURSE_COLORS[i % COURSE_COLORS.length], icon: COURSE_ICONS[i % COURSE_ICONS.length] }]))
+  : DEFAULT_COURSE_CONFIG
 
   const handle86 = (itemId) => {
     for (const [cat, items] of Object.entries(menu)) {
@@ -156,7 +164,7 @@ const displayOrders = filter === 'previous'
   const getFoodItems = (order, course) =>
     order.items.filter(i =>
       getItemDestination(i.id, menu) === 'kitchen' &&
-      (i._overrideCourse || getItemCourse(i.id, menu)) === course
+      (i._overrideCourse || getItemCourse(i.id, menu, customCourses)) === course
     )
 
   return (
@@ -348,7 +356,7 @@ const displayOrders = filter === 'previous'
                   )}
 
                   {/* Course sections — food only */}
-                  {['starters', 'mains', 'desserts'].map(course => {
+                  {Object.keys(COURSE_CONFIG).map(course => {
                     const cc          = COURSE_CONFIG[course]
                     const courseItems = getFoodItems(order, course)
                     if (courseItems.length === 0) return null

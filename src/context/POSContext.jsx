@@ -107,6 +107,11 @@ const SAMPLE_CUSTOMERS = [
 const DEFAULT_SETTINGS = {
   plan: 'pro',
   activeModules: ['dashboard','tables','orders','kds','bar','menu','bookings','reports','stock','staff','staff-analytics','customers','eod','history'],
+  courses: [
+    { id: 'starters', name: 'Starters', position: 1, menuCategories: ['Starters'] },
+    { id: 'mains',    name: 'Mains',    position: 2, menuCategories: ['Mains']    },
+    { id: 'desserts', name: 'Desserts', position: 3, menuCategories: ['Desserts'] },
+  ],
   restaurantName:       'My Restaurant',
   address:              '123 Main Street',
   phone:                '01 234 5678',
@@ -164,9 +169,13 @@ export const getItemDestination = (itemId, menu) => {
 }
 
 // Returns which course food item belongs to
-export const getItemCourse = (itemId, menu) => {
+export const getItemCourse = (itemId, menu, courses) => {
   for (const [cat, items] of Object.entries(menu)) {
     if (items.find(i => i.id === itemId)) {
+      if (courses?.length) {
+        const match = courses.find(c => c.menuCategories?.some(mc => mc.toLowerCase() === cat.toLowerCase()))
+        if (match) return match.id
+      }
       const c = cat.toLowerCase()
       if (c.includes('starter') || c.includes('appetizer') || c.includes('soup')) return 'starters'
       if (c.includes('main'))    return 'mains'
@@ -177,16 +186,25 @@ export const getItemCourse = (itemId, menu) => {
   return 'other'
 }
 
-const buildCourses = (items, menu) => {
-  const courses = { starters: 'none', mains: 'none', desserts: 'none' }
+const buildCourses = (items, menu, customCourses) => {
+  const activeCourses = customCourses?.length ? customCourses : [
+    { id: 'starters', position: 1 },
+    { id: 'mains',    position: 2 },
+    { id: 'desserts', position: 3 },
+  ]
+  const sorted = [...activeCourses].sort((a, b) => a.position - b.position)
+  const result = {}
+  sorted.forEach(c => { result[c.id] = 'none' })
   items.filter(i => getItemDestination(i.id, menu) === 'kitchen').forEach(i => {
-    const course = i._overrideCourse || getItemCourse(i.id, menu)
-    if (course === 'starters' && courses.starters === 'none') courses.starters = 'fired'
-    if (course === 'mains'    && courses.mains    === 'none') courses.mains    = 'waiting'
-    if (course === 'desserts' && courses.desserts === 'none') courses.desserts = 'waiting'
+    const course = i._overrideCourse || getItemCourse(i.id, menu, customCourses)
+    if (result[course] === 'none') {
+      result[course] = sorted.findIndex(c => c.id === course) === 0 ? 'fired' : 'waiting'
+    }
   })
-  if (courses.starters === 'none' && courses.mains === 'waiting') courses.mains = 'fired'
-  return courses
+  // If first course is none but second exists, fire second
+  const first = sorted.find(c => result[c.id] !== 'none')
+  if (first && result[first.id] === 'waiting') result[first.id] = 'fired'
+  return result
 }
 export function POSProvider({ children }) {
 
@@ -349,7 +367,7 @@ export function POSProvider({ children }) {
   // ── Orders ──
   const placeOrder = (order) => {
     const itemsMarked  = order.items.map(i => ({ ...i, isNew: false }))
-    const courses      = buildCourses(itemsMarked, menu)
+    const courses = buildCourses(itemsMarked, menu, settings.courses)
     const hasDrinks    = itemsMarked.some(i => getItemDestination(i.id, menu) === 'bar')
     setOrders(prev => [...prev, {
       ...order,
@@ -428,7 +446,7 @@ const closeTab = (id) => {
 const modsChanged = JSON.stringify(newItem.modifiers) !== JSON.stringify(oldItem.modifiers)
 return { ...newItem, isNew: noteChanged || modsChanged }
       })
-      const newCourses    = buildCourses(markedItems, menu)
+      const newCourses    = buildCourses(markedItems, menu, settings.courses)
       const mergedCourses = { ...newCourses }
       Object.keys(o.courses || {}).forEach(k => { if (o.courses[k] === 'fired') mergedCourses[k] = 'fired' })
       const hasNewItems   = markedItems.some(i => i.isNew)

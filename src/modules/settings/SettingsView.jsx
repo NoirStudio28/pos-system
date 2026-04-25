@@ -27,12 +27,13 @@ export default function SettingsView() {
   const hasChanges = JSON.stringify(form) !== JSON.stringify(settings)
 
   const TABS = [
-  { id: 'restaurant', label: '🏠 Restaurant' },
-  { id: 'operations', label: '⚙️ Operations' },
-  { id: 'modules',    label: '🧩 Modules' },
-  { id: 'loyalty',    label: '🏆 Loyalty' },
-  { id: 'receipt',    label: '🧾 Receipt' },
-]
+    { id: 'restaurant', label: '🏠 Restaurant' },
+    { id: 'operations', label: '⚙️ Operations' },
+    { id: 'modules',    label: '🧩 Modules' },
+    { id: 'courses',    label: '🍽️ Courses' },
+    { id: 'loyalty',    label: '🏆 Loyalty' },
+    { id: 'receipt',    label: '🧾 Receipt' },
+  ]
 
   return (
     <div style={{ minHeight: '100vh', background: '#0A0A0F', fontFamily: "'Courier New', monospace", color: '#E2E8F0', padding: '2rem' }}>
@@ -211,6 +212,44 @@ export default function SettingsView() {
             </div>
           </Section>
         )}
+
+        {/* COURSES */}
+{section === 'courses' && (
+  <Section title="COURSE CONFIGURATION">
+    <div style={{ fontSize: '0.68rem', color: '#475569', marginBottom: '1rem' }}>
+      Define the courses for your service. Each course maps to menu categories. Drag to reorder.
+    </div>
+    {(form.courses || []).sort((a,b) => a.position - b.position).map((course, idx) => (
+      <div key={course.id} style={{ background: '#0D0D14', border: '1px solid #1E1E2E', borderRadius: 10, padding: '0.8rem 1rem', marginBottom: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.7rem', color: '#475569', fontWeight: 700, minWidth: 24 }}>{idx + 1}.</span>
+          <input className="input" style={{ flex: 1, minWidth: 120 }} value={course.name}
+            onChange={e => f('courses', form.courses.map(c => c.id === course.id ? { ...c, name: e.target.value } : c))} />
+          <div style={{ display: 'flex', gap: '0.3rem' }}>
+            <button onClick={() => f('courses', form.courses.map(c => c.id === course.id ? { ...c, position: c.position - 1 } : c.position === course.position - 1 ? { ...c, position: c.position + 1 } : c))}
+              disabled={idx === 0}
+              style={{ border: '1px solid #1E1E2E', background: '#13131A', color: '#64748B', borderRadius: 6, padding: '0.2rem 0.5rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.7rem', opacity: idx === 0 ? 0.3 : 1 }}>↑</button>
+            <button onClick={() => f('courses', form.courses.map(c => c.id === course.id ? { ...c, position: c.position + 1 } : c.position === course.position + 1 ? { ...c, position: c.position - 1 } : c))}
+              disabled={idx === form.courses.length - 1}
+              style={{ border: '1px solid #1E1E2E', background: '#13131A', color: '#64748B', borderRadius: 6, padding: '0.2rem 0.5rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.7rem', opacity: idx === form.courses.length - 1 ? 0.3 : 1 }}>↓</button>
+            <button onClick={() => f('courses', form.courses.filter(c => c.id !== course.id))}
+              style={{ border: '1px solid #EF444433', background: '#EF444411', color: '#EF4444', borderRadius: 6, padding: '0.2rem 0.5rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.7rem' }}>✕</button>
+          </div>
+        </div>
+        <div style={{ marginTop: '0.5rem' }}>
+          <span className="label">MENU CATEGORIES (comma separated)</span>
+          <input className="input" placeholder="e.g. Starters, Soups"
+            value={(course.menuCategories || []).join(', ')}
+            onChange={e => f('courses', form.courses.map(c => c.id === course.id ? { ...c, menuCategories: e.target.value.split(',').map(s => s.trim()).filter(Boolean) } : c))} />
+        </div>
+      </div>
+    ))}
+    <button onClick={() => f('courses', [...(form.courses || []), { id: 'course-' + Date.now(), name: 'New Course', position: (form.courses?.length || 0) + 1, menuCategories: [] }])}
+      style={{ border: '1px dashed #334155', background: 'transparent', color: '#475569', borderRadius: 8, padding: '0.5rem 1rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem', fontWeight: 700, width: '100%', marginTop: '0.3rem' }}>
+      + Add Course
+    </button>
+  </Section>
+)}
 
         {/* RECEIPT */}
         {section === 'receipt' && (

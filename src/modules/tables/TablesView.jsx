@@ -140,7 +140,7 @@ function ModifierPicker({ item, onConfirm, onCancel }) {
 function ItemPicker({ tableId, existingOrder, onClose, covers }) {
   const [editingItem, setEditingItem] = useState(null)
 const [activeModifierGroup, setActiveModifierGroup] = useState(null)
-  const { menu, placeOrder, updateOrder, orders, currentUser, customers } = usePOS()
+  const { menu, placeOrder, updateOrder, orders, currentUser, customers, settings } = usePOS()
   const { isMobile: pickerMobile } = useBreakpoint()
 
   const existing    = existingOrder || orders.find(o => o.table === tableId)
@@ -360,19 +360,28 @@ const [activeModifierGroup, setActiveModifierGroup] = useState(null)
             {currentItems.length === 0 ? (
   <div style={{ textAlign: 'center', padding: '1.5rem 0', fontSize: '0.75rem', color: '#334155' }}>No items yet</div>
 ) : (() => {
-  const COURSE_ORDER = ['starters', 'mains', 'desserts', 'other', 'drinks']
-  const COURSE_CONFIG = {
-    starters: { label: 'STARTERS', color: '#10B981', icon: '🥗' },
-    mains:    { label: 'MAINS',    color: '#F97316', icon: '🍽️' },
-    desserts: { label: 'DESSERTS', color: '#8B5CF6', icon: '🍰' },
-    other:    { label: 'OTHER',    color: '#94A3B8', icon: '🍴' },
-    drinks:   { label: 'DRINKS',   color: '#3B82F6', icon: '🍹' },
-  }
+  const customCourses = settings?.courses || []
+      const COURSE_COLORS_IP = ['#10B981','#F97316','#8B5CF6','#3B82F6','#F59E0B','#EC4899']
+      const COURSE_ICONS_IP  = ['🥗','🍽️','🍰','🐟','🥩','🫕']
+      const COURSE_CONFIG = customCourses.length
+        ? {
+            ...Object.fromEntries(customCourses.sort((a,b) => a.position - b.position).map((c,i) => [c.id, { label: c.name.toUpperCase(), color: COURSE_COLORS_IP[i % COURSE_COLORS_IP.length], icon: COURSE_ICONS_IP[i % COURSE_ICONS_IP.length] }])),
+            other:  { label: 'OTHER',  color: '#94A3B8', icon: '🍴' },
+            drinks: { label: 'DRINKS', color: '#3B82F6', icon: '🍹' },
+          }
+        : {
+            starters: { label: 'STARTERS', color: '#10B981', icon: '🥗' },
+            mains:    { label: 'MAINS',    color: '#F97316', icon: '🍽️' },
+            desserts: { label: 'DESSERTS', color: '#8B5CF6', icon: '🍰' },
+            other:    { label: 'OTHER',    color: '#94A3B8', icon: '🍴' },
+            drinks:   { label: 'DRINKS',   color: '#3B82F6', icon: '🍹' },
+          }
+      const COURSE_ORDER = [...Object.keys(COURSE_CONFIG)]
   const grouped = {}
   COURSE_ORDER.forEach(c => grouped[c] = [])
   currentItems.forEach(i => {
     const dest   = getItemDestination(i.id, menu)
-    const course = dest === 'bar' ? 'drinks' : (i._overrideCourse || getItemCourse(i.id, menu))
+    const course = dest === 'bar' ? 'drinks' : (i._overrideCourse || getItemCourse(i.id, menu, customCourses))
     grouped[course] = [...(grouped[course] || []), i]
   })
 
