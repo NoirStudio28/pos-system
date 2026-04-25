@@ -18,24 +18,26 @@ import SettingsView from './modules/settings/SettingsView'
 import useBreakpoint from './hooks/useBreakpoint'
 import EODView from './modules/eod/EODView'
 import OrderHistoryView from './modules/history/OrderHistoryView'
-const MODULE_ROUTES = { 'dashboard':'/dashboard','tables':'/tables','orders':'/orders','kds':'/kds','bar':'/bar','menu':'/menu','bookings':'/bookings','reports':'/reports','stock':'/stock','staff':'/staff','staff-analytics':'/staff-analytics','customers':'/customers','eod':'/eod','history':'/history','settings':'/settings' }
+import TakeawayView from './modules/takeaway/TakeawayView'
+const MODULE_ROUTES = { 'dashboard':'/dashboard','tables':'/tables','orders':'/orders','kds':'/kds','bar':'/bar','menu':'/menu','bookings':'/bookings','reports':'/reports','stock':'/stock','staff':'/staff','staff-analytics':'/staff-analytics','customers':'/customers','eod':'/eod','history':'/history','takeaway':'/takeaway','settings':'/settings' }
 
 const ALL_LINKS = [
   { to: '/dashboard',       label: '🏠 Dashboard'   },
   { to: '/tables',          label: '🍽️ Tables'       },
-  { to: '/orders',          label: '📋 Orders'       },
   { to: '/kds',             label: '👨‍🍳 Kitchen'      },
   { to: '/bar',             label: '🍺 Bar'          },
   { to: '/menu',            label: '📖 Menu'         },
   { to: '/bookings',        label: '📅 Bookings'     },
-  { to: '/reports',         label: '📊 Reports'      },
   { to: '/stock',           label: '📦 Stock'        },
   { to: '/staff',           label: '👥 Staff'        },
   { to: '/staff-analytics', label: '📈 Performance'  },
   { to: '/customers',       label: '💳 Customers'    },
-  { to: '/settings',        label: '⚙️ Settings'     },
-  { to: '/eod',             label: '📋 EOD Report'   },
   { to: '/history',         label: '🗂️ History'      },
+  { to: '/takeaway',        label: '🥡 Takeaway'      },
+  { to: '/orders',          label: '📋 Orders'       },
+  { to: '/reports',         label: '📊 Reports'      },
+  { to: '/eod',             label: '📋 EOD Report'   },
+  { to: '/settings',        label: '⚙️ Settings'     },
 ]
 
 function Nav() {
@@ -170,6 +172,7 @@ function AppRoutes() {
         <Route path="/customers" element={<ProtectedRoute path="/customers" element={<CustomersView />}  />} />
         <Route path="/eod" element={<ProtectedRoute path="/eod" element={<EODView />} />} />
         <Route path="/history" element={<ProtectedRoute path="/history" element={<OrderHistoryView />} />} />
+        <Route path="/takeaway" element={<ProtectedRoute path="/takeaway" element={<TakeawayView />} />} />
         <Route path="/settings"  element={<ProtectedRoute path="/settings"  element={<SettingsView />}   />} />
       </Routes>
       <PaymentModal />

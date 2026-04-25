@@ -80,10 +80,10 @@ const DEFAULT_TABLES = [
 
 export const ROLE_CONFIG = {
   admin:   { label: 'Admin',   color: '#EF4444', routes: ['*'] },
-  manager: { label: 'Manager', color: '#F97316', routes: ['/dashboard', '/tables', '/orders', '/kds', '/bar', '/menu', '/bookings', '/reports', '/stock', '/customers', '/settings', '/staff', '/eod', '/history', '/staff-analytics'] },
-  waiter:  { label: 'Waiter',  color: '#3B82F6', routes: ['/tables', '/orders', '/bookings','/history'] },
-  kitchen: { label: 'Kitchen', color: '#10B981', routes: ['/kds', '/bookings','/history'] },
-  cashier: { label: 'Cashier', color: '#8B5CF6', routes: ['/tables', '/orders', '/bar','/history'] },
+  manager: { label: 'Manager', color: '#F97316', routes: ['/dashboard', '/tables', '/orders', '/kds', '/bar', '/menu', '/bookings', '/reports', '/stock', '/customers', '/settings', '/staff', '/eod', '/history', '/staff-analytics', '/takeaway'] },
+  waiter:  { label: 'Waiter',  color: '#3B82F6', routes: ['/tables', '/orders', '/bookings', '/history', '/takeaway'] },
+  kitchen: { label: 'Kitchen', color: '#10B981', routes: ['/kds', '/bookings', '/history'] },
+  cashier: { label: 'Cashier', color: '#8B5CF6', routes: ['/tables', '/orders', '/bar', '/history', '/takeaway'] },
 }
 
 export const TIER_CONFIG = {
@@ -106,7 +106,7 @@ const SAMPLE_CUSTOMERS = [
 
 const DEFAULT_SETTINGS = {
   plan: 'pro',
-  activeModules: ['dashboard','tables','orders','kds','bar','menu','bookings','reports','stock','staff','staff-analytics','customers','eod','history'],
+  activeModules: ['dashboard','tables','orders','kds','bar','menu','bookings','reports','stock','staff','staff-analytics','customers','eod','history','takeaway'],
   courses: [
     { id: 'starters', name: 'Starters', position: 1, menuCategories: ['Starters'] },
     { id: 'mains',    name: 'Mains',    position: 2, menuCategories: ['Mains']    },
