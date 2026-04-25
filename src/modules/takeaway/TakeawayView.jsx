@@ -143,7 +143,7 @@ function TakeawayItemPicker({ onClose, onPlace }) {
 }
 
 export default function TakeawayView() {
-  const { orders, placeOrder, closeOrder, openPayment, currentUser, menu } = usePOS()
+  const { orders, placeOrder, closeOrder, openPayment, currentUser, menu, advanceOrderStatus } = usePOS()
   const { isMobile } = useBreakpoint()
   const [showPicker, setShowPicker] = useState(false)
   const [counter, setCounter] = useState(1)
@@ -248,11 +248,11 @@ export default function TakeawayView() {
                   <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.2rem' }}>
                     {order.status === 'pending' && (
                       <button className="btn btn-ghost btn-sm" style={{ flex: 1, background: '#F59E0B22', color: '#F59E0B', border: '1px solid #F59E0B44' }}
-                        onClick={() => {}}>🍳 Start</button>
+                        onClick={() => advanceOrderStatus(order.id)}>🍳 Start</button>
                     )}
                     {order.status === 'in-progress' && (
                       <button className="btn btn-ghost btn-sm" style={{ flex: 1, background: '#10B98122', color: '#10B981', border: '1px solid #10B98144' }}
-                        onClick={() => {}}>✓ Ready</button>
+                        onClick={() => advanceOrderStatus(order.id)}>✓ Ready</button>
                     )}
                     {order.status === 'ready' && (
                       <button className="btn btn-primary btn-sm" style={{ flex: 1 }}
