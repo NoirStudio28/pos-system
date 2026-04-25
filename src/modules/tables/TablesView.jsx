@@ -389,8 +389,8 @@ const [activeModifierGroup, setActiveModifierGroup] = useState(null)
 
   return COURSE_ORDER.map(course => {
     const items = grouped[course]
-    if (items.length === 0) return null
     const cc = COURSE_CONFIG[course]
+    if (items.length === 0 && course === 'drinks') return null
     return (
       <div key={course}
         onDragOver={e => { if (course !== 'drinks') { e.preventDefault(); e.currentTarget.style.borderColor = cc.color } }}
