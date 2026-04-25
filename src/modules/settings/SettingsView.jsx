@@ -248,6 +248,14 @@ export default function SettingsView() {
       style={{ border: '1px dashed #334155', background: 'transparent', color: '#475569', borderRadius: 8, padding: '0.5rem 1rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem', fontWeight: 700, width: '100%', marginTop: '0.3rem' }}>
       + Add Course
     </button>
+    <button onClick={() => f('courses', [
+      { id: 'starters', name: 'Starters', position: 1, menuCategories: ['Starters'] },
+      { id: 'mains',    name: 'Mains',    position: 2, menuCategories: ['Mains']    },
+      { id: 'desserts', name: 'Desserts', position: 3, menuCategories: ['Desserts'] },
+    ])}
+      style={{ border: '1px solid #1E1E2E', background: '#13131A', color: '#475569', borderRadius: 8, padding: '0.5rem 1rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem', fontWeight: 700, width: '100%', marginTop: '0.3rem' }}>
+      ↺ Restore Defaults
+    </button>
   </Section>
 )}
 
