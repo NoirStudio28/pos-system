@@ -311,6 +311,7 @@ export default function SettingsView() {
       { id: 'customers',        label: '💳 Customers',      desc: 'Customer profiles and loyalty programme',       plans: ['pro','enterprise'] },
       { id: 'eod',              label: '📋 EOD Report',     desc: 'End of day cash reconciliation and summary',    plans: ['pro','enterprise'] },
       { id: 'history',          label: '🗂️ History',        desc: 'Full searchable order history log',             plans: ['starter','pro','enterprise'] },
+      { id: 'takeaway',         label: '🥡 Takeaway',        desc: 'Takeaway order taking and management',          plans: ['starter','pro','enterprise'] },
     ].map(mod => {
       const hasPlan  = mod.plans.includes(form.plan || 'pro')
       const isActive = (form.activeModules || []).includes(mod.id)
