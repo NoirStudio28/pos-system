@@ -556,16 +556,26 @@ export function POSProvider({ children }) {
   }
 
   // ── Customers ──
-  const addCustomer    = (c)  => setCustomers(prev => [...prev, { ...c, id: Date.now(), points: 0, stamps: 0, totalSpend: 0, visits: 0, visitHistory: [] }])
-  const updateCustomer = (c)  => setCustomers(prev => prev.map(x => x.id === c.id ? c : x))
-  const deleteCustomer = (id) => setCustomers(prev => prev.filter(c => c.id !== id))
+  const addCustomer = async (c) => {
+    const newCustomer = { ...c, id: Date.now(), points: 0, stamps: 0, totalSpend: 0, visits: 0, visitHistory: [] }
+    setCustomers(prev => [...prev, newCustomer])
+    await db.customers.upsert({ id: newCustomer.id, name: newCustomer.name, phone: newCustomer.phone, email: newCustomer.email, birthday: newCustomer.birthday, notes: newCustomer.notes, points: 0, stamps: 0, total_spend: 0, visits: 0, visit_history: [] })
+  }
+  const updateCustomer = async (c) => {
+    setCustomers(prev => prev.map(x => x.id === c.id ? c : x))
+    await db.customers.upsert({ id: c.id, name: c.name, phone: c.phone, email: c.email, birthday: c.birthday, notes: c.notes, points: c.points, stamps: c.stamps, total_spend: c.totalSpend, visits: c.visits, visit_history: c.visitHistory })
+  }
+  const deleteCustomer = async (id) => {
+    setCustomers(prev => prev.filter(c => c.id !== id))
+    await db.customers.delete(id)
+  }
 
-  const awardPoints = (customerId, orderTotal, orderId) => {
+  const awardPoints = async (customerId, orderTotal, orderId) => {
     setCustomers(prev => prev.map(c => {
       if (c.id !== customerId) return c
       const earned    = Math.floor(orderTotal * settings.pointsPerEuro)
       const newStamps = c.stamps + 1
-      return {
+      const updated = {
         ...c,
         points:       c.points + earned,
         stamps:       newStamps >= settings.stampTarget ? 0 : newStamps,
@@ -573,9 +583,18 @@ export function POSProvider({ children }) {
         visits:       c.visits + 1,
         visitHistory: [...c.visitHistory, { orderId, total: orderTotal, date: new Date().toISOString(), pointsEarned: earned }],
       }
+      db.customers.upsert({ id: c.id, name: c.name, phone: c.phone, email: c.email, birthday: c.birthday, notes: c.notes, points: updated.points, stamps: updated.stamps, total_spend: updated.totalSpend, visits: updated.visits, visit_history: updated.visitHistory })
+      return updated
     }))
   }
-  const redeemPoints = (customerId, points) => setCustomers(prev => prev.map(c => c.id !== customerId ? c : { ...c, points: Math.max(0, c.points - points) }))
+  const redeemPoints = async (customerId, points) => {
+    setCustomers(prev => prev.map(c => {
+      if (c.id !== customerId) return c
+      const updated = { ...c, points: Math.max(0, c.points - points) }
+      db.customers.upsert({ id: c.id, name: c.name, phone: c.phone, email: c.email, birthday: c.birthday, notes: c.notes, points: updated.points, stamps: updated.stamps, total_spend: updated.totalSpend, visits: updated.visits, visit_history: updated.visitHistory })
+      return updated
+    }))
+  }
 
   // ── Stock ──
   const deductStock = (items) => {
@@ -609,32 +628,45 @@ export function POSProvider({ children }) {
     })
   }
 
-  const addStockItem    = (item)      => setStock(prev => [...prev, { ...item, id: Date.now() }])
-  const updateStockItem = (item)      => setStock(prev => prev.map(s => s.id === item.id ? item : s))
-  const deleteStockItem = (id)        => setStock(prev => prev.filter(s => s.id !== id))
-  const adjustStock = (id, delta, reason = 'Manual adjustment') => {
-  setStock(prev => prev.map(s => s.id === id ? { ...s, quantity: Math.max(0, s.quantity + delta) } : s))
+  const addStockItem = async (item) => {
+    const newItem = { ...item, id: Date.now() }
+    setStock(prev => [...prev, newItem])
+    await db.stock.upsert({ id: newItem.id, name: newItem.name, category: newItem.category, unit: newItem.unit, quantity: newItem.quantity, min_threshold: newItem.minThreshold, cost_price: newItem.costPrice, supplier: newItem.supplier, supplier_phone: newItem.supplierPhone, supplier_email: newItem.supplierEmail, delivery_day: newItem.deliveryDay, menu_item_id: newItem.menuItemId, portion_per_sale: newItem.portionPerSale })
+  }
+  const updateStockItem = async (item) => {
+    setStock(prev => prev.map(s => s.id === item.id ? item : s))
+    await db.stock.upsert({ id: item.id, name: item.name, category: item.category, unit: item.unit, quantity: item.quantity, min_threshold: item.minThreshold, cost_price: item.costPrice, supplier: item.supplier, supplier_phone: item.supplierPhone, supplier_email: item.supplierEmail, delivery_day: item.deliveryDay, menu_item_id: item.menuItemId, portion_per_sale: item.portionPerSale })
+  }
+  const deleteStockItem = async (id) => {
+    setStock(prev => prev.filter(s => s.id !== id))
+    await db.stock.delete(id)
+  }
+  const adjustStock = async (id, delta, reason = 'Manual adjustment') => {
   const item = stock.find(s => s.id === id)
   if (!item) return
-  setStockMovements(prev => [...prev, {
+  const newQty = Math.max(0, item.quantity + delta)
+  setStock(prev => prev.map(s => s.id === id ? { ...s, quantity: newQty } : s))
+  await db.stock.upsert({ id, quantity: newQty })
+  const movement = {
     id: Date.now(),
     stockItemId: id,
     stockItemName: item.name,
     delta,
     reason,
     before: item.quantity,
-    after: Math.max(0, item.quantity + delta),
+    after: newQty,
     by: currentUser?.name || 'Unknown',
     at: new Date().toISOString(),
-  }])
+  }
+  
 }
 
   // ── Orders ──
-  const placeOrder = (order) => {
+  const placeOrder = async (order) => {
     const itemsMarked  = order.items.map(i => ({ ...i, isNew: false }))
-    const courses = buildCourses(itemsMarked, menu, settings.courses)
+    const courses      = buildCourses(itemsMarked, menu, settings.courses)
     const hasDrinks    = itemsMarked.some(i => getItemDestination(i.id, menu) === 'bar')
-    setOrders(prev => [...prev, {
+    const newOrder = {
       ...order,
       items:     itemsMarked,
       courses,
@@ -642,7 +674,19 @@ export function POSProvider({ children }) {
       placedAt:  new Date().toISOString(),
       placedBy:  currentUser?.name || 'Unknown',
       modified:  false,
-    }])
+    }
+    setOrders(prev => [...prev, newOrder])
+    await db.orders.upsert({
+      id: newOrder.id, table_id: newOrder.table, items: newOrder.items,
+      total: newOrder.total, status: newOrder.status, courses: newOrder.courses,
+      served_courses: {}, bar_status: newOrder.barStatus, covers: newOrder.covers || 0,
+      placed_at: newOrder.placedAt, placed_by: newOrder.placedBy, modified: false,
+      customer_id: newOrder.customerId, merged_tables: [],
+      is_takeaway: newOrder.isTakeaway || false, takeaway_name: newOrder.takeawayName,
+      takeaway_phone: newOrder.takeawayPhone, collection_time: newOrder.collectionTime,
+      order_num: newOrder.orderNum, note: newOrder.note, round: newOrder.round || 1,
+      time: newOrder.time, urgent: false,
+    })
     updateTableStatus(order.table, 'occupied')
     deductStock(order.items)
     const hasFoodItems = order.items.some(i => getItemDestination(i.id, menu) === 'kitchen')
@@ -651,42 +695,66 @@ export function POSProvider({ children }) {
     if (hasDrinkItems) setTimeout(() => printDocket('bar', { ...order, placedBy: currentUser?.name || 'Staff' }), 600)
   }
 
-  const closeOrder = (id, paymentData = null) => {
+  const closeOrder = async (id, paymentData = null) => {
     const order = orders.find(o => o.id === id)
     if (!order) return
     const enrichedItems = order.items.map(item => {
       const category = Object.entries(menu).find(([, items]) => items.find(i => i.id === item.id))?.[0] || 'Other'
       return { ...item, category }
     })
-  setOrderHistory(prev => [...prev, { ...order, items: enrichedItems, closedAt: new Date().toISOString(), payment: paymentData, placedBy: order.placedBy || currentUser?.name || 'Unknown', status: 'closed' }])    
-       setOrders(prev => prev.filter(o => o.id !== id))
+    const closedAt = new Date().toISOString()
+    const historyRecord = { ...order, items: enrichedItems, closedAt, payment: paymentData, placedBy: order.placedBy || currentUser?.name || 'Unknown', status: 'closed' }
+    setOrderHistory(prev => [...prev, historyRecord])
+    setOrders(prev => prev.filter(o => o.id !== id))
+    await db.orderHistory.insert({
+      id: order.id, table_id: order.table, items: enrichedItems,
+      total: order.total, status: 'closed', payment: paymentData,
+      placed_by: order.placedBy || currentUser?.name || 'Unknown',
+      closed_at: closedAt, covers: order.covers || 0,
+      is_takeaway: order.isTakeaway || false,
+      takeaway_name: order.takeawayName, order_num: order.orderNum,
+    })
+    await db.orders.delete(id)
     const still = orders.filter(o => o.id !== id && o.table === order.table).length > 0
-if (!still) updateTableStatus(order.table, 'free')
-if (order.mergedTables?.length > 0) {
-  order.mergedTables.forEach(tableId => updateTableStatus(tableId, 'free'))
-}
+    if (!still) updateTableStatus(order.table, 'free')
     const customerId = order.customerId || paymentData?.customerId
     if (customerId) awardPoints(customerId, order.total, id)
     if (paymentData?.redeemedPoints && customerId) redeemPoints(customerId, paymentData.redeemedPoints)
   }
 
-  const toggleOrderStatus  = (id) => setOrders(prev => prev.map(o => o.id !== id ? o : { ...o, status: o.status === 'pending' ? 'ready' : 'pending' }))
-  const advanceOrderStatus = (id) => {
+  const toggleOrderStatus = async (id) => {
     setOrders(prev => prev.map(o => {
       if (o.id !== id) return o
-      const newStatus = o.status === 'pending' ? 'in-progress' : 'ready'
+      const newStatus = o.status === 'pending' ? 'ready' : 'pending'
+      db.orders.upsert({ id, status: newStatus })
       return { ...o, status: newStatus }
     }))
   }
-  const toggleUrgent       = (id) => setOrders(prev => prev.map(o => o.id !== id ? o : { ...o, urgent: !o.urgent }))
+  const advanceOrderStatus = async (id) => {
+    setOrders(prev => prev.map(o => {
+      if (o.id !== id) return o
+      const newStatus = o.status === 'pending' ? 'in-progress' : 'ready'
+      db.orders.upsert({ id, status: newStatus })
+      return { ...o, status: newStatus }
+    }))
+  }
+  const toggleUrgent = async (id) => {
+    setOrders(prev => prev.map(o => {
+      if (o.id !== id) return o
+      db.orders.upsert({ id, urgent: !o.urgent })
+      return { ...o, urgent: !o.urgent }
+    }))
+  }
 
   // ── Bar status ──
-  const updateBarStatus = (orderId, barStatus) =>
+  const updateBarStatus = async (orderId, barStatus) => {
     setOrders(prev => prev.map(o => {
       if (o.id !== orderId) return o
       const round = barStatus === 'pending' ? (o.round || 1) + 1 : o.round || 1
-      return { ...o, barStatus, round: barStatus === 'done' ? round : o.round || 1 }
+      db.orders.upsert({ id: orderId, bar_status: barStatus, round })
+      return { ...o, barStatus, round }
     }))
+  }
 
 
   const openTab = (name) => {
@@ -787,36 +855,56 @@ const moveItems = (fromOrderId, itemKeys, toTableId) => {
 }
 
   // ── Fire course ──
-  const fireCourse = (orderId, course) => {
-    setOrders(prev => prev.map(o => o.id !== orderId ? o : {
-      ...o,
-      courses:    { ...o.courses, [course]: 'fired' },
-      status:     'in-progress',
-      modified:   true,
-      modifiedAt: new Date().toISOString(),
-      items:      o.items.map(i => {
-        const ic = getItemCourse(i.id, menu)
-        if (ic === course && getItemDestination(i.id, menu) === 'kitchen') return { ...i, isNew: true }
-        return i
-      }),
+  const fireCourse = async (orderId, course) => {
+    setOrders(prev => prev.map(o => {
+      if (o.id !== orderId) return o
+      const updated = {
+        ...o,
+        courses:    { ...o.courses, [course]: 'fired' },
+        status:     'in-progress',
+        modified:   true,
+        modifiedAt: new Date().toISOString(),
+        items:      o.items.map(i => {
+          const ic = getItemCourse(i.id, menu)
+          if (ic === course && getItemDestination(i.id, menu) === 'kitchen') return { ...i, isNew: true }
+          return i
+        }),
+      }
+      db.orders.upsert({ id: orderId, courses: updated.courses, status: 'in-progress', modified: true, modified_at: updated.modifiedAt, items: updated.items })
+      return updated
     }))
   }
 
-  const serveCourse = (orderId, course) => {
-    setOrders(prev => prev.map(o => o.id !== orderId ? o : {
-      ...o,
-      servedCourses: { ...(o.servedCourses || {}), [course]: true },
-      status: 'in-progress',
+  const serveCourse = async (orderId, course) => {
+    setOrders(prev => prev.map(o => {
+      if (o.id !== orderId) return o
+      const servedCourses = { ...(o.servedCourses || {}), [course]: true }
+      db.orders.upsert({ id: orderId, served_courses: servedCourses, status: 'in-progress' })
+      return { ...o, servedCourses, status: 'in-progress' }
     }))
   }
 
   // ── Kitchen acknowledges ──
-  const acknowledgeOrder = (id) => {
-    setOrders(prev => prev.map(o => o.id !== id ? o : {
-      ...o,
-      modified: false,
-      items:    o.items.map(i => ({ ...i, isNew: false, _addedQty: undefined })),
+  const acknowledgeOrder = async (id) => {
+    setOrders(prev => prev.map(o => {
+      if (o.id !== id) return o
+      const updated = { ...o, modified: false, items: o.items.map(i => ({ ...i, isNew: false, _addedQty: undefined })) }
+      db.orders.upsert({ id, modified: false, items: updated.items })
+      return updated
     }))
+  }
+
+  const addModifierLibraryGroup = async (group) => {
+    setModifierLibrary(prev => [...prev, group])
+    await db.modifierLibrary.upsert({ id: group.id, name: group.name, required: group.required, options: group.options })
+  }
+  const updateModifierLibrary = async (groups) => {
+    setModifierLibrary(groups)
+    await Promise.all(groups.map(g => db.modifierLibrary.upsert({ id: g.id, name: g.name, required: g.required, options: g.options })))
+  }
+  const deleteModifierLibraryGroup = async (id) => {
+    setModifierLibrary(prev => prev.filter(g => g.id !== id))
+    await db.modifierLibrary.delete(id)
   }
 
   // ── Payments ──
@@ -835,11 +923,22 @@ const moveItems = (fromOrderId, itemKeys, toTableId) => {
   const checkGiftCard = (code) => { const b = giftCards[code.toUpperCase()]; return b !== undefined ? b : null }
 
   // ── Bookings ──
-  const addBooking          = (b)          => setBookings(prev => [...prev, { ...b, id: Date.now() }])
-  const updateBooking       = (b)          => setBookings(prev => prev.map(x => x.id === b.id ? b : x))
-  const deleteBooking       = (id)         => setBookings(prev => prev.filter(b => b.id !== id))
-  const updateBookingStatus = (id, status) => {
+  const addBooking = async (b) => {
+    const newBooking = { ...b, id: Date.now() }
+    setBookings(prev => [...prev, newBooking])
+    await db.bookings.upsert({ id: newBooking.id, name: newBooking.name, phone: newBooking.phone, email: newBooking.email, guests: newBooking.guests, date: newBooking.date, time: newBooking.time, duration: newBooking.duration, status: newBooking.status, notes: newBooking.notes, deposit_paid: newBooking.depositPaid, deposit_amount: newBooking.depositAmount, preferred_table: newBooking.preferredTable, fav_dishes: newBooking.favDishes, fav_drinks: newBooking.favDrinks })
+  }
+  const updateBooking = async (b) => {
+    setBookings(prev => prev.map(x => x.id === b.id ? b : x))
+    await db.bookings.upsert({ id: b.id, name: b.name, phone: b.phone, email: b.email, guests: b.guests, date: b.date, time: b.time, duration: b.duration, status: b.status, notes: b.notes, deposit_paid: b.depositPaid, deposit_amount: b.depositAmount, preferred_table: b.preferredTable, fav_dishes: b.favDishes, fav_drinks: b.favDrinks })
+  }
+  const deleteBooking = async (id) => {
+    setBookings(prev => prev.filter(b => b.id !== id))
+    await db.bookings.delete(id)
+  }
+  const updateBookingStatus = async (id, status) => {
     setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b))
+    await db.bookings.upsert({ id, status })
     if (status === 'seated') { const b = bookings.find(x => x.id === id); if (b?.preferredTable) updateTableStatus(b.preferredTable, 'occupied') }
   }
 
@@ -917,7 +1016,7 @@ const moveItems = (fromOrderId, itemKeys, toTableId) => {
       kitchenAlerts, dismissAlert, dismissAllAlerts,
       addStockItem, updateStockItem, deleteStockItem, adjustStock, stockMovements,
       addCustomer, updateCustomer, deleteCustomer, awardPoints, redeemPoints,
-      updateSettings,modifierLibrary, setModifierLibrary,
+      updateSettings,modifierLibrary, setModifierLibrary, addModifierLibraryGroup, updateModifierLibrary, deleteModifierLibraryGroup,
     }}>
       {children}
     </POSContext.Provider>
