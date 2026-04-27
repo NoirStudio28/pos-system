@@ -292,8 +292,10 @@ export default function SettingsView() {
       <button className="btn btn-ghost btn-sm" onClick={async () => {
         setQzStatus('connecting')
         const ok = await connectQZ()
+        console.log('QZ connected:', ok)
         if (ok) {
           const found = await getAvailablePrinters()
+          console.log('Printers found:', found)
           setPrinters(found)
           setQzStatus('connected')
         } else {
