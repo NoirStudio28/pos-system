@@ -480,16 +480,40 @@ export function POSProvider({ children }) {
   }
 
   // ── Staff ──
-  const clockIn       = (id) => setStaff(prev => prev.map(s => { if (s.id !== id || s.clockRecords.some(r => !r.out)) return s; return { ...s, clockRecords: [...s.clockRecords, { in: new Date().toISOString(), out: null }] } }))
-  const clockOut      = (id) => setStaff(prev => prev.map(s => s.id !== id ? s : { ...s, clockRecords: s.clockRecords.map(r => !r.out ? { ...r, out: new Date().toISOString() } : r) }))
+  const clockIn = async (id) => {
+    setStaff(prev => prev.map(s => {
+      if (s.id !== id || s.clockRecords.some(r => !r.out)) return s
+      const updated = { ...s, clockRecords: [...s.clockRecords, { in: new Date().toISOString(), out: null }] }
+      db.staff.upsert({ id: s.id, name: s.name, username: s.username, password: s.password, role: s.role, section: s.section, experience: s.experience, active: s.active, clock_records: updated.clockRecords })
+      return updated
+    }))
+  }
+  const clockOut = async (id) => {
+    setStaff(prev => prev.map(s => {
+      if (s.id !== id) return s
+      const updated = { ...s, clockRecords: s.clockRecords.map(r => !r.out ? { ...r, out: new Date().toISOString() } : r) }
+      db.staff.upsert({ id: s.id, name: s.name, username: s.username, password: s.password, role: s.role, section: s.section, experience: s.experience, active: s.active, clock_records: updated.clockRecords })
+      return updated
+    }))
+  }
   const isClockedIn   = (id) => staff.find(s => s.id === id)?.clockRecords.some(r => !r.out) || false
   const getTotalHours = (id) => (staff.find(s => s.id === id)?.clockRecords || []).reduce((t, r) => {
     if (!r.out) return t + (Date.now() - new Date(r.in).getTime()) / 3600000
     return t + (new Date(r.out) - new Date(r.in)) / 3600000
   }, 0)
-  const addStaff      = (m)  => setStaff(prev => [...prev, { ...m, id: Date.now(), clockRecords: [] }])
-  const updateStaff   = (m)  => setStaff(prev => prev.map(s => s.id === m.id ? m : s))
-  const deleteStaff   = (id) => setStaff(prev => prev.filter(s => s.id !== id))
+  const addStaff = async (m) => {
+    const newStaff = { ...m, id: Date.now(), clockRecords: [] }
+    setStaff(prev => [...prev, newStaff])
+    await db.staff.upsert({ id: newStaff.id, name: newStaff.name, username: newStaff.username, password: newStaff.password, role: newStaff.role, section: newStaff.section, experience: newStaff.experience, active: newStaff.active, clock_records: [] })
+  }
+  const updateStaff = async (m) => {
+    setStaff(prev => prev.map(s => s.id === m.id ? m : s))
+    await db.staff.upsert({ id: m.id, name: m.name, username: m.username, password: m.password, role: m.role, section: m.section, experience: m.experience, active: m.active, clock_records: m.clockRecords })
+  }
+  const deleteStaff = async (id) => {
+    setStaff(prev => prev.filter(s => s.id !== id))
+    await db.staff.delete(id)
+  }
 
   // ── Floors ──
   const addFloor = async (floor) => {
@@ -840,8 +864,9 @@ const moveItems = (fromOrderId, itemKeys, toTableId) => {
   const dismissAllAlerts = () => setKitchenAlerts([])
 
   // ── Settings ──
-  const updateSettings = (updated) => {
+  const updateSettings = async (updated) => {
     setSettings(updated)
+    await db.settings.upsert(updated)
     if (updated.tableCount !== settings.tableCount) {
       const current = tables.length
       const target  = updated.tableCount
