@@ -844,17 +844,34 @@ const moveItems = (fromOrderId, itemKeys, toTableId) => {
   }
 
   // ── Menu ──
-  const addCategory            = (n)     => { if (!n || menu[n]) return; setMenu(prev => ({ ...prev, [n]: [] })) }
-  const deleteCategory         = (n)     => setMenu(prev => { const u = { ...prev }; delete u[n]; return u })
-  const addMenuItem            = (c, i)  => setMenu(prev => ({ ...prev, [c]: [...(prev[c] || []), { ...i, id: Date.now().toString(), available: true }] }))
-  const updateMenuItem         = (c, i)  => setMenu(prev => ({ ...prev, [c]: prev[c].map(x => x.id === i.id ? i : x) }))
-  const deleteMenuItem         = (c, id) => setMenu(prev => ({ ...prev, [c]: prev[c].filter(i => i.id !== id) }))
-  const toggleItemAvailability = (c, id) => {
+  const addCategory = async (n) => {
+    if (!n || menu[n]) return
+    setMenu(prev => ({ ...prev, [n]: [] }))
+    await db.menu.upsertCategory({ id: n, name: n, position: Object.keys(menu).length })
+  }
+  const deleteCategory = async (n) => {
+    setMenu(prev => { const u = { ...prev }; delete u[n]; return u })
+    await db.menu.deleteCategory(n)
+  }
+  const addMenuItem = async (c, i) => {
+    const newItem = { ...i, id: Date.now().toString(), available: true }
+    setMenu(prev => ({ ...prev, [c]: [...(prev[c] || []), newItem] }))
+    await db.menu.upsertItem({ id: newItem.id, category_id: c, name: newItem.name, price: newItem.price, description: newItem.description, allergens: newItem.allergens, available: newItem.available, modifiers: newItem.modifiers || [] })
+  }
+  const updateMenuItem = async (c, i) => {
+    setMenu(prev => ({ ...prev, [c]: prev[c].map(x => x.id === i.id ? i : x) }))
+    await db.menu.upsertItem({ id: i.id, category_id: c, name: i.name, price: i.price, description: i.description, allergens: i.allergens, available: i.available, modifiers: i.modifiers || [] })
+  }
+  const deleteMenuItem = async (c, id) => {
+    setMenu(prev => ({ ...prev, [c]: prev[c].filter(i => i.id !== id) }))
+    await db.menu.deleteItem(id)
+  }
+  const toggleItemAvailability = async (c, id) => {
     const item = (menu[c] || []).find(i => i.id === id)
     if (!item) return
     setMenu(prev => ({ ...prev, [c]: prev[c].map(i => i.id === id ? { ...i, available: !i.available } : i) }))
+    await db.menu.upsertItem({ id: item.id, category_id: c, name: item.name, price: item.price, description: item.description, allergens: item.allergens, available: !item.available, modifiers: item.modifiers || [] })
     if (item.available) {
-      // Going unavailable — fire an alert
       const alert = { id: Date.now(), itemName: item.name, category: c, time: new Date().toISOString() }
       setKitchenAlerts(prev => [...prev, alert])
     }
