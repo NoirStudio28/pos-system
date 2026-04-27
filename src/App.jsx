@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { usePOS, ROLE_CONFIG } from './context/POSContext'
 import TablesView from './modules/tables/TablesView'
 import OrdersView from './modules/orders/OrdersView'
@@ -16,6 +17,7 @@ import DashboardView from './modules/dashboard/DashboardView'
 import StaffAnalyticsView from './modules/staff/StaffAnalyticsView'
 import SettingsView from './modules/settings/SettingsView'
 import useBreakpoint from './hooks/useBreakpoint'
+import { connectQZ } from './utils/qzPrint'
 import EODView from './modules/eod/EODView'
 import OrderHistoryView from './modules/history/OrderHistoryView'
 import TakeawayView from './modules/takeaway/TakeawayView'
@@ -182,6 +184,12 @@ function AppRoutes() {
 }
 
 export default function App() {
+  useEffect(() => {
+    connectQZ().then(ok => {
+      if (ok) console.log('QZ Tray ready')
+    })
+  }, [])
+
   return (
     <BrowserRouter>
       <AppRoutes />
