@@ -1,3 +1,4 @@
+import { connectQZ, getAvailablePrinters } from '../../utils/qzPrint'
 import { useState } from 'react'
 import { usePOS } from '../../context/POSContext'
 
@@ -15,6 +16,8 @@ export default function SettingsView() {
   const [form,    setForm]    = useState({ ...settings })
   const [saved,   setSaved]   = useState(false)
   const [section, setSection] = useState('restaurant')
+  const [printers, setPrinters] = useState([])
+  const [qzStatus, setQzStatus] = useState('disconnected')
 
   const f = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
@@ -263,6 +266,30 @@ export default function SettingsView() {
         {/* PRINTING */}
 {section === 'printing' && (
   <div>
+    {/* QZ Tray status */}
+    <div style={{ background: '#13131A', border: '1px solid #1E1E2E', borderRadius: 12, padding: '1rem', marginBottom: '1.2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div>
+        <div style={{ fontSize: '0.7rem', fontWeight: 700, color: qzStatus === 'connected' ? '#10B981' : '#EF4444' }}>
+          {qzStatus === 'connected' ? '✓ QZ Tray Connected' : '✕ QZ Tray Not Connected'}
+        </div>
+        <div style={{ fontSize: '0.62rem', color: '#475569', marginTop: '0.2rem' }}>
+          {qzStatus === 'connected' ? `${printers.length} printer${printers.length !== 1 ? 's' : ''} found` : 'Make sure QZ Tray is running on your PC'}
+        </div>
+      </div>
+      <button className="btn btn-ghost btn-sm" onClick={async () => {
+        setQzStatus('connecting')
+        const ok = await connectQZ()
+        if (ok) {
+          const found = await getAvailablePrinters()
+          setPrinters(found)
+          setQzStatus('connected')
+        } else {
+          setQzStatus('disconnected')
+        }
+      }}>
+        {qzStatus === 'connecting' ? '...' : '🔌 Connect'}
+      </button>
+    </div>
     {[
       { id: 'kitchen', label: '👨‍🍳 Kitchen Docket',    sizes: ['80x80','80x70'], canDouble: true },
       { id: 'bar',     label: '🍺 Bar Docket',          sizes: ['80x80','80x70'], canDouble: false },
@@ -304,6 +331,15 @@ export default function SettingsView() {
           </div>
 
           {/* Preview button */}
+          {printers.length > 0 && (
+  <div style={{ marginBottom: '0.8rem' }}>
+    <span className="label">PRINTER</span>
+    <select className="input" style={{ width: 'auto' }} value={config.printerName || ''} onChange={e => update('printerName', e.target.value)}>
+      <option value="">Default printer</option>
+      {printers.map(p => <option key={p} value={p}>{p}</option>)}
+    </select>
+  </div>
+)}
           <button className="btn btn-ghost btn-sm" onClick={() => {
             const now = new Date()
             const date = now.toLocaleDateString('en-IE')

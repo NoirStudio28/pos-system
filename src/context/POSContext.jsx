@@ -1,3 +1,4 @@
+import { printDocket as qzPrint } from '../utils/qzPrint'
 import { createContext, useContext, useState, useEffect } from 'react'
 
 const POSContext = createContext()
@@ -365,10 +366,8 @@ const printDocket = (type, order, paymentData = null) => {
     @media print{body{width:${width}}}
   </style></head><body>${content}</body></html>`
 
-  const win = window.open('', '_blank', `width=400,height=600`)
-  win.document.write(html)
-  win.document.close()
-  setTimeout(() => win.print(), 500)
+  const printerName = settings.printing?.[type]?.printerName || null
+  qzPrint(html, printerName)
 }
 
 
