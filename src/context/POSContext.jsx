@@ -1,5 +1,7 @@
 import { printDocket as qzPrint } from '../utils/qzPrint'
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { db } from '../lib/database'
+import { supabase } from '../lib/supabase'
 
 const POSContext = createContext()
 
@@ -373,40 +375,89 @@ const printDocket = (type, order, paymentData = null) => {
 
 export function POSProvider({ children }) {
 
-  const load = (key, fallback) => {
-    try {
-      const saved = localStorage.getItem('pos_' + key)
-      return saved ? JSON.parse(saved) : fallback
-    } catch { return fallback }
-  }
-
   const usePersist = (key, defaultValue) => {
-    const [state, setState] = useState(() => load(key, defaultValue))
-    useEffect(() => {
-      try { localStorage.setItem('pos_' + key, JSON.stringify(state)) }
-      catch {}
-    }, [state])
+    const [state, setState] = useState(defaultValue)
     return [state, setState]
   }
 
-  const [tables,       setTables]       = usePersist('tables',       DEFAULT_TABLES)
-  const [floors,       setFloors]       = usePersist('floors',       DEFAULT_FLOORS)
-  const [menu,         setMenu]         = usePersist('menu',         DEFAULT_MENU)
-  const [bookings,     setBookings]     = usePersist('bookings',     SAMPLE_BOOKINGS)
-  const [orderHistory, setOrderHistory] = usePersist('orderHistory', SAMPLE_HISTORY)
-  const [stock,        setStock]        = usePersist('stock',        SAMPLE_STOCK)
-  const [staff,        setStaff]        = usePersist('staff',        SAMPLE_STAFF)
-  const [customers,    setCustomers]    = usePersist('customers',    SAMPLE_CUSTOMERS)
-  const [settings,     setSettings]     = usePersist('settings',     DEFAULT_SETTINGS)
-  const [giftCards,    setGiftCards]    = usePersist('giftCards',    { 'GIFT50': 50.00, 'GIFT25': 25.00 })
-  const [stockMovements, setStockMovements] = usePersist('stockMovements', [])
+  const [tables,          setTables]          = useState(DEFAULT_TABLES)
+  const [floors,          setFloors]          = useState(DEFAULT_FLOORS)
+  const [menu,            setMenu]            = useState(DEFAULT_MENU)
+  const [bookings,        setBookings]        = useState(SAMPLE_BOOKINGS)
+  const [orderHistory,    setOrderHistory]    = useState(SAMPLE_HISTORY)
+  const [stock,           setStock]           = useState(SAMPLE_STOCK)
+  const [staff,           setStaff]           = useState(SAMPLE_STAFF)
+  const [customers,       setCustomers]       = useState(SAMPLE_CUSTOMERS)
+  const [settings,        setSettings]        = useState(DEFAULT_SETTINGS)
+  const [giftCards,       setGiftCards]       = useState({ 'GIFT50': 50.00, 'GIFT25': 25.00 })
+  const [stockMovements,  setStockMovements]  = useState([])
+  const [modifierLibrary, setModifierLibrary] = useState([])
+  const [loaded,          setLoaded]          = useState(false)
 
-  const [modifierLibrary, setModifierLibrary] = usePersist('modifierLibrary', [
-  { id: 'lib-1', name: 'Extra',       required: false, options: [{ id: 'e1', name: 'Cheese', price: 1.00 }, { id: 'e2', name: 'Bacon', price: 1.50 }, { id: 'e3', name: 'Fries', price: 2.00 }] },
-  { id: 'lib-2', name: 'No',          required: false, options: [{ id: 'n1', name: 'Cheese', price: 0 }, { id: 'n2', name: 'Onion', price: 0 }, { id: 'n3', name: 'Sauce', price: 0 }] },
-  { id: 'lib-3', name: 'Sauce',       required: false, options: [{ id: 'sa1', name: 'Mayo', price: 0 }, { id: 'sa2', name: 'Ketchup', price: 0 }, { id: 'sa3', name: 'BBQ', price: 0 }, { id: 'sa4', name: 'Garlic Aioli', price: 0.50 }] },
-  { id: 'lib-4', name: 'Temperature', required: true,  options: [{ id: 't1', name: 'Rare', price: 0 }, { id: 't2', name: 'Medium', price: 0 }, { id: 't3', name: 'Well Done', price: 0 }] },
-])
+  // ── Load all data from Supabase on startup ──
+  useEffect(() => {
+    const loadAll = async () => {
+      try {
+        const [
+          { data: floorsData },
+          { data: tablesData },
+          { data: staffData },
+          { data: settingsData },
+          { data: giftCardsData },
+          { data: stockData },
+          { data: stockMovementsData },
+          { data: customersData },
+          { data: bookingsData },
+          { data: orderHistoryData },
+          { data: modifierLibraryData },
+          { data: categoriesData },
+          { data: itemsData },
+        ] = await Promise.all([
+          db.floors.getAll(),
+          db.tables.getAll(),
+          db.staff.getAll(),
+          db.settings.get(),
+          db.giftCards.getAll(),
+          db.stock.getAll(),
+          db.stockMovements.getAll(),
+          db.customers.getAll(),
+          db.bookings.getAll(),
+          db.orderHistory.getAll(),
+          db.modifierLibrary.getAll(),
+          db.menu.getCategories(),
+          db.menu.getItems(),
+        ])
+
+        if (floorsData?.length)          setFloors(floorsData.map(f => ({ id: f.id, name: f.name, color: f.color })))
+        if (tablesData?.length)          setTables(tablesData.map(t => ({ id: t.id, floorId: t.floor_id, x: t.x, y: t.y, shape: t.shape, seats: t.seats, width: t.width, height: t.height, sizeKey: t.size_key, note: t.note, status: t.status })))
+        if (staffData?.length)           setStaff(staffData.map(s => ({ id: s.id, name: s.name, username: s.username, password: s.password, role: s.role, section: s.section, experience: s.experience, active: s.active, clockRecords: s.clock_records || [] })))
+        if (settingsData?.data)          setSettings(settingsData.data)
+        if (giftCardsData?.length)       setGiftCards(Object.fromEntries(giftCardsData.map(g => [g.code, g.balance])))
+        if (stockData?.length)           setStock(stockData.map(s => ({ id: s.id, name: s.name, category: s.category, unit: s.unit, quantity: parseFloat(s.quantity), minThreshold: parseFloat(s.min_threshold), costPrice: parseFloat(s.cost_price), supplier: s.supplier, supplierPhone: s.supplier_phone, supplierEmail: s.supplier_email, deliveryDay: s.delivery_day, menuItemId: s.menu_item_id, portionPerSale: parseFloat(s.portion_per_sale) })))
+        if (stockMovementsData?.length)  setStockMovements(stockMovementsData.map(m => ({ id: m.id, stockItemId: m.stock_item_id, stockItemName: m.stock_item_name, delta: parseFloat(m.delta), reason: m.reason, before: parseFloat(m.before_qty), after: parseFloat(m.after_qty), by: m.by_staff, at: m.created_at })))
+        if (customersData?.length)       setCustomers(customersData.map(c => ({ id: c.id, name: c.name, phone: c.phone, email: c.email, birthday: c.birthday, notes: c.notes, points: c.points, stamps: c.stamps, totalSpend: parseFloat(c.total_spend), visits: c.visits, visitHistory: c.visit_history || [] })))
+        if (bookingsData?.length)        setBookings(bookingsData.map(b => ({ id: b.id, name: b.name, phone: b.phone, email: b.email, guests: b.guests, date: b.date, time: b.time, duration: b.duration, status: b.status, notes: b.notes, depositPaid: b.deposit_paid, depositAmount: parseFloat(b.deposit_amount), preferredTable: b.preferred_table, favDishes: b.fav_dishes, favDrinks: b.fav_drinks })))
+        if (orderHistoryData?.length)    setOrderHistory(orderHistoryData.map(o => ({ id: o.id, table: o.table_id, items: o.items || [], total: parseFloat(o.total), status: o.status, payment: o.payment, placedBy: o.placed_by, closedAt: o.closed_at, covers: o.covers, isTakeaway: o.is_takeaway, takeawayName: o.takeaway_name, orderNum: o.order_num })))
+        if (modifierLibraryData?.length) setModifierLibrary(modifierLibraryData.map(m => ({ id: m.id, name: m.name, required: m.required, options: m.options || [] })))
+
+        if (categoriesData?.length && itemsData?.length) {
+          const menuObj = {}
+          categoriesData.forEach(cat => {
+            menuObj[cat.name] = itemsData
+              .filter(i => i.category_id === cat.id)
+              .map(i => ({ id: i.id, name: i.name, price: parseFloat(i.price), description: i.description, allergens: i.allergens, available: i.available, modifiers: i.modifiers || [] }))
+          })
+          setMenu(menuObj)
+        }
+
+        setLoaded(true)
+      } catch (err) {
+        console.error('Failed to load from Supabase:', err)
+        setLoaded(true)
+      }
+    }
+    loadAll()
+  }, [])
 
   const [orders,               setOrders]               = useState([])
   const [tabs, setTabs] = usePersist('tabs', [])
