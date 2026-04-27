@@ -216,162 +216,6 @@ const buildCourses = (items, menu, customCourses) => {
   return result
 }
 
-const printDocket = (type, order, paymentData = null) => {
-  const s = settings || {}
-  const config = s.printing?.[type]
-  if (!config) return
-  if (!config?.enabled) return
-
-  const now = new Date()
-  const date = now.toLocaleDateString('en-IE')
-  const time = now.toLocaleTimeString('en-IE', { hour: '2-digit', minute: '2-digit' })
-  const rName = s.restaurantName || 'My Restaurant'
-  const fontSize = config.fontSize === 'large' ? '1rem' : config.fontSize === 'small' ? '0.65rem' : '0.8rem'
-  const itemFontSize = config.fontSize === 'large' ? '1.1rem' : config.fontSize === 'small' ? '0.7rem' : '0.85rem'
-  const width = config.size === '57x40' ? '57mm' : '80mm'
-  const copies = config.copies || 1
-
-  let content = ''
-
-  const header = `
-    <div style="border-bottom:1px dashed #000;padding-bottom:0.5rem;margin-bottom:0.5rem;text-align:center">
-      <div style="font-size:1.2em;font-weight:bold">${rName}</div>
-      <div>${date} · ${time}</div>
-      <div style="font-size:1.1em;font-weight:bold">ORDER #${order.orderNum || order.id}</div>
-    </div>
-  `
-
-  if (type === 'kitchen') {
-    const foodItems = order.items.filter(i => getItemDestination(i.id, menu) === 'kitchen')
-    const courseGroups = {}
-    foodItems.forEach(i => {
-      const course = i._overrideCourse || getItemCourse(i.id, menu, s.courses)
-      if (!courseGroups[course]) courseGroups[course] = []
-      courseGroups[course].push(i)
-    })
-
-    const courseSections = Object.entries(courseGroups).map(([course, items]) => `
-      <div style="border-bottom:1px dashed #000;padding-bottom:0.5rem;margin-bottom:0.5rem">
-        <div style="font-size:0.75em;font-weight:bold;letter-spacing:0.1em">${course.toUpperCase()}</div>
-        ${items.map(item => `
-          <div style="font-size:${itemFontSize};font-weight:bold">${item.qty}x ${item.name}</div>
-          ${(item.modifiers || []).map(m => `<div style="font-size:0.8em;padding-left:0.5rem">› ${m.groupName}: ${m.optionName}</div>`).join('')}
-          ${item.note ? `<div style="font-size:0.8em;padding-left:0.5rem">📝 ${item.note}</div>` : ''}
-        `).join('')}
-      </div>
-    `).join('')
-
-    const tableInfo = order.isTakeaway
-      ? `🥡 ${order.takeawayName}${order.takeawayPhone ? ` · ${order.takeawayPhone}` : ''}${order.collectionTime ? ` · Collect: ${order.collectionTime}` : ''}`
-      : `Table ${order.table}${order.covers > 0 ? ` · ${order.covers} covers` : ''}`
-
-    for (let copy = 1; copy <= copies; copy++) {
-      content += `
-        ${copy > 1 ? '<div style="border-top:2px dashed #000;margin-top:1rem;padding-top:1rem"></div>' : ''}
-        ${header}
-        <div style="margin-bottom:0.5rem">
-          <div><strong>${tableInfo}</strong></div>
-          <div style="font-size:0.85em">by ${order.placedBy || 'Staff'}</div>
-          ${copies > 1 ? `<div style="background:#000;color:#fff;padding:2px 6px;display:inline-block;font-size:0.8em;margin-top:0.3rem">COPY ${copy} OF ${copies}</div>` : ''}
-        </div>
-        ${courseSections}
-      `
-    }
-  }
-
-  if (type === 'bar') {
-    const drinkItems = order.items.filter(i => getItemDestination(i.id, menu) === 'bar')
-    const tableInfo = order.isTakeaway ? `🥡 ${order.takeawayName}` : `Table ${order.table}`
-    content = `
-      ${header}
-      <div style="margin-bottom:0.5rem">
-        <strong>${tableInfo}</strong>${order.round > 1 ? ` · Round ${order.round}` : ''} · ${order.placedBy || 'Staff'}
-      </div>
-      ${drinkItems.map(item => `
-        <div style="font-size:${itemFontSize};font-weight:bold">${item.qty}x ${item.name}</div>
-        ${(item.modifiers || []).map(m => `<div style="font-size:0.8em;padding-left:0.5rem">› ${m.groupName}: ${m.optionName}</div>`).join('')}
-        ${item.note ? `<div style="font-size:0.8em;padding-left:0.5rem">📝 ${item.note}</div>` : ''}
-      `).join('')}
-    `
-  }
-
-  if (type === 'till' && paymentData) {
-    const grouped = Object.values(order.items.reduce((acc, i) => {
-      const key = i.name + JSON.stringify(i.modifiers || [])
-      if (acc[key]) acc[key] = { ...acc[key], qty: acc[key].qty + i.qty }
-      else acc[key] = { ...i }
-      return acc
-    }, {}))
-
-    content = `
-      <div style="border-bottom:1px dashed #000;padding-bottom:0.5rem;margin-bottom:0.5rem;text-align:center">
-        <div style="font-size:1.2em;font-weight:bold">${rName}</div>
-        <div>${s.address || ''}</div>
-        <div>${s.phone || ''}</div>
-        <div>${date} · ${time}</div>
-        <div style="font-size:1.1em;font-weight:bold">${order.isTakeaway ? `🥡 ${order.takeawayName}` : `Table ${order.table}`} · ORDER #${order.orderNum || order.id}</div>
-      </div>
-      <div style="border-bottom:1px dashed #000;padding-bottom:0.5rem;margin-bottom:0.5rem">
-        ${grouped.map(i => `
-          <div style="display:flex;justify-content:space-between">
-            <span>${i.name} x${i.qty}</span>
-            <span>€${((i.price + (i.modifierTotal || 0)) * i.qty).toFixed(2)}</span>
-          </div>
-          ${(i.modifiers || []).map(m => `<div style="font-size:0.8em;padding-left:0.5rem;display:flex;justify-content:space-between"><span>› ${m.groupName}: ${m.optionName}</span>${m.price !== 0 ? `<span>${m.price > 0 ? '+' : ''}€${m.price.toFixed(2)}</span>` : ''}</div>`).join('')}
-        `).join('')}
-      </div>
-      <div style="border-bottom:1px dashed #000;padding-bottom:0.5rem;margin-bottom:0.5rem">
-        <div style="display:flex;justify-content:space-between"><span>Subtotal</span><span>€${paymentData.subtotal.toFixed(2)}</span></div>
-        ${paymentData.discountAmount > 0 ? `<div style="display:flex;justify-content:space-between"><span>Discount</span><span>-€${paymentData.discountAmount.toFixed(2)}</span></div>` : ''}
-        ${paymentData.serviceChargeAmount > 0 ? `<div style="display:flex;justify-content:space-between"><span>Service Charge</span><span>€${paymentData.serviceChargeAmount.toFixed(2)}</span></div>` : ''}
-        ${paymentData.depositDeduction > 0 ? `<div style="display:flex;justify-content:space-between"><span>Deposit</span><span>-€${paymentData.depositDeduction.toFixed(2)}</span></div>` : ''}
-        <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:1.1em"><span>TOTAL</span><span>€${paymentData.finalTotal.toFixed(2)}</span></div>
-        ${paymentData.tip > 0 ? `<div style="display:flex;justify-content:space-between"><span>Tip 🙏</span><span>€${paymentData.tip.toFixed(2)}</span></div>` : ''}
-        ${paymentData.change > 0 ? `<div style="display:flex;justify-content:space-between"><span>Change</span><span>€${paymentData.change.toFixed(2)}</span></div>` : ''}
-      </div>
-      <div style="margin-bottom:0.5rem">
-        ${paymentData.payments.map(p => `<div style="display:flex;justify-content:space-between"><span>${p.method}${p.note ? ` (${p.note})` : ''}</span><span>€${parseFloat(p.amount).toFixed(2)}</span></div>`).join('')}
-      </div>
-      <div style="text-align:center;font-size:0.85em">${s.receiptFooter || 'Thank you for dining with us!'}</div>
-    `
-  }
-
-  if (type === 'card' && paymentData) {
-    const cardPayments = paymentData.payments.filter(p => p.method === 'Card')
-    for (let copy = 1; copy <= copies; copy++) {
-      content += `
-        ${copy > 1 ? '<div style="border-top:2px dashed #000;margin-top:1rem;padding-top:1rem"></div>' : ''}
-        <div style="border-bottom:1px dashed #000;padding-bottom:0.4rem;margin-bottom:0.4rem;text-align:center">
-          <div style="font-weight:bold">${rName}</div>
-          <div>${date} · ${time}</div>
-        </div>
-        <div style="border-bottom:1px dashed #000;padding-bottom:0.4rem;margin-bottom:0.4rem">
-          <div style="display:flex;justify-content:space-between">
-            <span>${order.isTakeaway ? `🥡 ${order.takeawayName}` : `Table ${order.table}`}</span>
-            <span>ORDER #${order.orderNum || order.id}</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:1.2em">
-            <span>TOTAL</span><span>€${cardPayments.length > 0 ? parseFloat(cardPayments[copy-1]?.amount || paymentData.finalTotal).toFixed(2) : paymentData.finalTotal.toFixed(2)}</span>
-          </div>
-          <div>Card Payment</div>
-        </div>
-        <div style="margin-top:1rem">
-          <div style="border-bottom:1px solid #000;margin-bottom:0.3rem;padding-bottom:1.5rem">Signature: _______________</div>
-          <div style="font-size:0.75em;text-align:center">${copy === 1 ? 'CUSTOMER COPY' : 'MERCHANT COPY'}</div>
-        </div>
-      `
-    }
-  }
-
-  const html = `<html><head><title>Docket</title><style>
-    body{font-family:monospace;width:${width};margin:0 auto;padding:0.5rem;color:#000;font-size:${fontSize}}
-    *{box-sizing:border-box}
-    @media print{body{width:${width}}}
-  </style></head><body>${content}</body></html>`
-
-  const printerName = settings.printing?.[type]?.printerName || null
-  qzPrint(html, printerName)
-}
 
 
 export function POSProvider({ children }) {
@@ -660,6 +504,162 @@ export function POSProvider({ children }) {
     at: new Date().toISOString(),
   }
   
+}
+const printDocket = (type, order, paymentData = null) => {
+  const s = settings || {}
+  const config = s.printing?.[type]
+  if (!config) return
+  if (!config?.enabled) return
+
+  const now = new Date()
+  const date = now.toLocaleDateString('en-IE')
+  const time = now.toLocaleTimeString('en-IE', { hour: '2-digit', minute: '2-digit' })
+  const rName = s.restaurantName || 'My Restaurant'
+  const fontSize = config.fontSize === 'large' ? '1rem' : config.fontSize === 'small' ? '0.65rem' : '0.8rem'
+  const itemFontSize = config.fontSize === 'large' ? '1.1rem' : config.fontSize === 'small' ? '0.7rem' : '0.85rem'
+  const width = config.size === '57x40' ? '57mm' : '80mm'
+  const copies = config.copies || 1
+
+  let content = ''
+
+  const header = `
+    <div style="border-bottom:1px dashed #000;padding-bottom:0.5rem;margin-bottom:0.5rem;text-align:center">
+      <div style="font-size:1.2em;font-weight:bold">${rName}</div>
+      <div>${date} · ${time}</div>
+      <div style="font-size:1.1em;font-weight:bold">ORDER #${order.orderNum || order.id}</div>
+    </div>
+  `
+
+  if (type === 'kitchen') {
+    const foodItems = order.items.filter(i => getItemDestination(i.id, menu) === 'kitchen')
+    const courseGroups = {}
+    foodItems.forEach(i => {
+      const course = i._overrideCourse || getItemCourse(i.id, menu, s.courses)
+      if (!courseGroups[course]) courseGroups[course] = []
+      courseGroups[course].push(i)
+    })
+
+    const courseSections = Object.entries(courseGroups).map(([course, items]) => `
+      <div style="border-bottom:1px dashed #000;padding-bottom:0.5rem;margin-bottom:0.5rem">
+        <div style="font-size:0.75em;font-weight:bold;letter-spacing:0.1em">${course.toUpperCase()}</div>
+        ${items.map(item => `
+          <div style="font-size:${itemFontSize};font-weight:bold">${item.qty}x ${item.name}</div>
+          ${(item.modifiers || []).map(m => `<div style="font-size:0.8em;padding-left:0.5rem">› ${m.groupName}: ${m.optionName}</div>`).join('')}
+          ${item.note ? `<div style="font-size:0.8em;padding-left:0.5rem">📝 ${item.note}</div>` : ''}
+        `).join('')}
+      </div>
+    `).join('')
+
+    const tableInfo = order.isTakeaway
+      ? `🥡 ${order.takeawayName}${order.takeawayPhone ? ` · ${order.takeawayPhone}` : ''}${order.collectionTime ? ` · Collect: ${order.collectionTime}` : ''}`
+      : `Table ${order.table}${order.covers > 0 ? ` · ${order.covers} covers` : ''}`
+
+    for (let copy = 1; copy <= copies; copy++) {
+      content += `
+        ${copy > 1 ? '<div style="border-top:2px dashed #000;margin-top:1rem;padding-top:1rem"></div>' : ''}
+        ${header}
+        <div style="margin-bottom:0.5rem">
+          <div><strong>${tableInfo}</strong></div>
+          <div style="font-size:0.85em">by ${order.placedBy || 'Staff'}</div>
+          ${copies > 1 ? `<div style="background:#000;color:#fff;padding:2px 6px;display:inline-block;font-size:0.8em;margin-top:0.3rem">COPY ${copy} OF ${copies}</div>` : ''}
+        </div>
+        ${courseSections}
+      `
+    }
+  }
+
+  if (type === 'bar') {
+    const drinkItems = order.items.filter(i => getItemDestination(i.id, menu) === 'bar')
+    const tableInfo = order.isTakeaway ? `🥡 ${order.takeawayName}` : `Table ${order.table}`
+    content = `
+      ${header}
+      <div style="margin-bottom:0.5rem">
+        <strong>${tableInfo}</strong>${order.round > 1 ? ` · Round ${order.round}` : ''} · ${order.placedBy || 'Staff'}
+      </div>
+      ${drinkItems.map(item => `
+        <div style="font-size:${itemFontSize};font-weight:bold">${item.qty}x ${item.name}</div>
+        ${(item.modifiers || []).map(m => `<div style="font-size:0.8em;padding-left:0.5rem">› ${m.groupName}: ${m.optionName}</div>`).join('')}
+        ${item.note ? `<div style="font-size:0.8em;padding-left:0.5rem">📝 ${item.note}</div>` : ''}
+      `).join('')}
+    `
+  }
+
+  if (type === 'till' && paymentData) {
+    const grouped = Object.values(order.items.reduce((acc, i) => {
+      const key = i.name + JSON.stringify(i.modifiers || [])
+      if (acc[key]) acc[key] = { ...acc[key], qty: acc[key].qty + i.qty }
+      else acc[key] = { ...i }
+      return acc
+    }, {}))
+
+    content = `
+      <div style="border-bottom:1px dashed #000;padding-bottom:0.5rem;margin-bottom:0.5rem;text-align:center">
+        <div style="font-size:1.2em;font-weight:bold">${rName}</div>
+        <div>${s.address || ''}</div>
+        <div>${s.phone || ''}</div>
+        <div>${date} · ${time}</div>
+        <div style="font-size:1.1em;font-weight:bold">${order.isTakeaway ? `🥡 ${order.takeawayName}` : `Table ${order.table}`} · ORDER #${order.orderNum || order.id}</div>
+      </div>
+      <div style="border-bottom:1px dashed #000;padding-bottom:0.5rem;margin-bottom:0.5rem">
+        ${grouped.map(i => `
+          <div style="display:flex;justify-content:space-between">
+            <span>${i.name} x${i.qty}</span>
+            <span>€${((i.price + (i.modifierTotal || 0)) * i.qty).toFixed(2)}</span>
+          </div>
+          ${(i.modifiers || []).map(m => `<div style="font-size:0.8em;padding-left:0.5rem;display:flex;justify-content:space-between"><span>› ${m.groupName}: ${m.optionName}</span>${m.price !== 0 ? `<span>${m.price > 0 ? '+' : ''}€${m.price.toFixed(2)}</span>` : ''}</div>`).join('')}
+        `).join('')}
+      </div>
+      <div style="border-bottom:1px dashed #000;padding-bottom:0.5rem;margin-bottom:0.5rem">
+        <div style="display:flex;justify-content:space-between"><span>Subtotal</span><span>€${paymentData.subtotal.toFixed(2)}</span></div>
+        ${paymentData.discountAmount > 0 ? `<div style="display:flex;justify-content:space-between"><span>Discount</span><span>-€${paymentData.discountAmount.toFixed(2)}</span></div>` : ''}
+        ${paymentData.serviceChargeAmount > 0 ? `<div style="display:flex;justify-content:space-between"><span>Service Charge</span><span>€${paymentData.serviceChargeAmount.toFixed(2)}</span></div>` : ''}
+        ${paymentData.depositDeduction > 0 ? `<div style="display:flex;justify-content:space-between"><span>Deposit</span><span>-€${paymentData.depositDeduction.toFixed(2)}</span></div>` : ''}
+        <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:1.1em"><span>TOTAL</span><span>€${paymentData.finalTotal.toFixed(2)}</span></div>
+        ${paymentData.tip > 0 ? `<div style="display:flex;justify-content:space-between"><span>Tip 🙏</span><span>€${paymentData.tip.toFixed(2)}</span></div>` : ''}
+        ${paymentData.change > 0 ? `<div style="display:flex;justify-content:space-between"><span>Change</span><span>€${paymentData.change.toFixed(2)}</span></div>` : ''}
+      </div>
+      <div style="margin-bottom:0.5rem">
+        ${paymentData.payments.map(p => `<div style="display:flex;justify-content:space-between"><span>${p.method}${p.note ? ` (${p.note})` : ''}</span><span>€${parseFloat(p.amount).toFixed(2)}</span></div>`).join('')}
+      </div>
+      <div style="text-align:center;font-size:0.85em">${s.receiptFooter || 'Thank you for dining with us!'}</div>
+    `
+  }
+
+  if (type === 'card' && paymentData) {
+    const cardPayments = paymentData.payments.filter(p => p.method === 'Card')
+    for (let copy = 1; copy <= copies; copy++) {
+      content += `
+        ${copy > 1 ? '<div style="border-top:2px dashed #000;margin-top:1rem;padding-top:1rem"></div>' : ''}
+        <div style="border-bottom:1px dashed #000;padding-bottom:0.4rem;margin-bottom:0.4rem;text-align:center">
+          <div style="font-weight:bold">${rName}</div>
+          <div>${date} · ${time}</div>
+        </div>
+        <div style="border-bottom:1px dashed #000;padding-bottom:0.4rem;margin-bottom:0.4rem">
+          <div style="display:flex;justify-content:space-between">
+            <span>${order.isTakeaway ? `🥡 ${order.takeawayName}` : `Table ${order.table}`}</span>
+            <span>ORDER #${order.orderNum || order.id}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:1.2em">
+            <span>TOTAL</span><span>€${cardPayments.length > 0 ? parseFloat(cardPayments[copy-1]?.amount || paymentData.finalTotal).toFixed(2) : paymentData.finalTotal.toFixed(2)}</span>
+          </div>
+          <div>Card Payment</div>
+        </div>
+        <div style="margin-top:1rem">
+          <div style="border-bottom:1px solid #000;margin-bottom:0.3rem;padding-bottom:1.5rem">Signature: _______________</div>
+          <div style="font-size:0.75em;text-align:center">${copy === 1 ? 'CUSTOMER COPY' : 'MERCHANT COPY'}</div>
+        </div>
+      `
+    }
+  }
+
+  const html = `<html><head><title>Docket</title><style>
+    body{font-family:monospace;width:${width};margin:0 auto;padding:0.5rem;color:#000;font-size:${fontSize}}
+    *{box-sizing:border-box}
+    @media print{body{width:${width}}}
+  </style></head><body>${content}</body></html>`
+
+  const printerName = settings.printing?.[type]?.printerName || null
+  qzPrint(html, printerName)
 }
 
   // ── Orders ──
