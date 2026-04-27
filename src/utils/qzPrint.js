@@ -57,7 +57,8 @@ export const getAvailablePrinters = async () => {
   try {
     const ok = await connectQZ()
     if (!ok) return []
-    return await qz.printers.find()
+    const result = await qz.printers.find()
+    return Array.isArray(result) ? result.map(p => typeof p === 'string' ? p : p.name || String(p)) : []
   } catch {
     return []
   }
