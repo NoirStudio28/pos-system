@@ -5,6 +5,9 @@ let connected = false
 export const connectQZ = async () => {
   if (connected) return true
   try {
+    qz.security.setCertificatePromise((resolve) => resolve(''))
+    qz.security.setSignatureAlgorithm('SHA512')
+    qz.security.setSignaturePromise(() => (toSign, promiseFactory) => promiseFactory(resolve => resolve('')))
     await qz.websocket.connect()
     connected = true
     console.log('QZ Tray connected')
