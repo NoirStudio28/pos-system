@@ -217,8 +217,9 @@ const buildCourses = (items, menu, customCourses) => {
 }
 
 const printDocket = (type, order, paymentData = null) => {
-  const s = settings
+  const s = settings || {}
   const config = s.printing?.[type]
+  if (!config) return
   if (!config?.enabled) return
 
   const now = new Date()
