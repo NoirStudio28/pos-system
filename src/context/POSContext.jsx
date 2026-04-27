@@ -120,6 +120,12 @@ const DEFAULT_SETTINGS = {
   defaultServiceCharge: 10,
   tableCount:           15,
   receiptFooter:        'Thank you for dining with us!',
+  printing: {
+    kitchen: { enabled: true, size: '80x80', copies: 2, fontSize: 'large' },
+    bar:     { enabled: true, size: '80x70', copies: 1, fontSize: 'normal' },
+    till:    { enabled: true, size: '80x80', copies: 1, fontSize: 'normal' },
+    card:    { enabled: true, size: '57x40', copies: 2, fontSize: 'small' },
+  },
   pointsPerEuro:        1,
   pointsRedeemRate:     100,
   stampTarget:          10,

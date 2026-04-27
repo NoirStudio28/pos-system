@@ -33,6 +33,7 @@ export default function SettingsView() {
     { id: 'courses',    label: '🍽️ Courses' },
     { id: 'loyalty',    label: '🏆 Loyalty' },
     { id: 'receipt',    label: '🧾 Receipt' },
+    { id: 'printing',   label: '🖨️ Printing' },
   ]
 
   return (
@@ -257,6 +258,165 @@ export default function SettingsView() {
       ↺ Restore Defaults
     </button>
   </Section>
+)}
+
+        {/* PRINTING */}
+{section === 'printing' && (
+  <div>
+    {[
+      { id: 'kitchen', label: '👨‍🍳 Kitchen Docket',    sizes: ['80x80','80x70'], canDouble: true },
+      { id: 'bar',     label: '🍺 Bar Docket',          sizes: ['80x80','80x70'], canDouble: false },
+      { id: 'till',    label: '🧾 Till Receipt',         sizes: ['80x80','80x70'], canDouble: false },
+      { id: 'card',    label: '💳 Credit Card Slip',     sizes: ['57x40','80x80'], canDouble: true },
+    ].map(printer => {
+      const config = form.printing?.[printer.id] || {}
+      const update = (key, val) => f('printing', { ...form.printing, [printer.id]: { ...config, [key]: val } })
+      return (
+        <Section key={printer.id} title={printer.label}>
+          <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', marginBottom: '1rem', alignItems: 'center' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.72rem', color: '#94A3B8' }}>
+              <input type="checkbox" checked={config.enabled ?? true} onChange={e => update('enabled', e.target.checked)} style={{ accentColor: '#F97316' }} />
+              Enabled
+            </label>
+            <div>
+              <span className="label">PAPER SIZE</span>
+              <select className="input" style={{ width: 'auto' }} value={config.size} onChange={e => update('size', e.target.value)}>
+                {printer.sizes.map(s => <option key={s} value={s}>{s}mm</option>)}
+              </select>
+            </div>
+            {printer.canDouble && (
+              <div>
+                <span className="label">COPIES</span>
+                <select className="input" style={{ width: 'auto' }} value={config.copies} onChange={e => update('copies', parseInt(e.target.value))}>
+                  <option value={1}>1 copy</option>
+                  <option value={2}>2 copies</option>
+                </select>
+              </div>
+            )}
+            <div>
+              <span className="label">FONT SIZE</span>
+              <select className="input" style={{ width: 'auto' }} value={config.fontSize} onChange={e => update('fontSize', e.target.value)}>
+                <option value="small">Small</option>
+                <option value="normal">Normal</option>
+                <option value="large">Large</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Preview button */}
+          <button className="btn btn-ghost btn-sm" onClick={() => {
+            const now = new Date()
+            const date = now.toLocaleDateString('en-IE')
+            const time = now.toLocaleTimeString('en-IE', { hour: '2-digit', minute: '2-digit' })
+            const rName = form.restaurantName || 'My Restaurant'
+            const fontSize = config.fontSize === 'large' ? '1rem' : config.fontSize === 'small' ? '0.65rem' : '0.8rem'
+            const itemFontSize = config.fontSize === 'large' ? '1.1rem' : config.fontSize === 'small' ? '0.7rem' : '0.85rem'
+            const width = config.size === '57x40' ? '57mm' : '80mm'
+
+            const kitchenContent = `
+              <div style="font-size:${fontSize};border-bottom:1px dashed #000;padding-bottom:0.5rem;margin-bottom:0.5rem;text-align:center">
+                <div style="font-size:1.2em;font-weight:bold">${rName}</div>
+                <div>${date} · ${time}</div>
+                <div style="font-size:1.1em;font-weight:bold">ORDER #001</div>
+              </div>
+              <div style="margin-bottom:0.5rem">
+                <div><strong>Table 5</strong> · 4 covers · Emma Walsh</div>
+                ${config.copies === 2 ? '<div style="background:#000;color:#fff;padding:2px 6px;display:inline-block;font-size:0.8em">COPY 1 OF 2</div>' : ''}
+              </div>
+              <div style="border-bottom:1px dashed #000;padding-bottom:0.5rem;margin-bottom:0.5rem">
+                <div style="font-size:0.75em;font-weight:bold;letter-spacing:0.1em">STARTERS</div>
+                <div style="font-size:${itemFontSize};font-weight:bold">2x Garlic Bread</div>
+                <div style="font-size:0.8em;padding-left:0.5rem">› No: Butter</div>
+                <div style="font-size:0.8em;padding-left:0.5rem">📝 Extra crispy</div>
+                <div style="font-size:${itemFontSize};font-weight:bold">1x Soup of the Day</div>
+              </div>
+              <div>
+                <div style="font-size:0.75em;font-weight:bold;letter-spacing:0.1em">MAINS ⏳ FIRE WHEN READY</div>
+                <div style="font-size:${itemFontSize};font-weight:bold">2x Beef Burger</div>
+                <div style="font-size:0.8em;padding-left:0.5rem">› No: Cheese · Extra: Bacon</div>
+                <div style="font-size:${itemFontSize};font-weight:bold">1x Grilled Salmon</div>
+              </div>
+            `
+
+            const barContent = `
+              <div style="font-size:${fontSize};border-bottom:1px dashed #000;padding-bottom:0.5rem;margin-bottom:0.5rem;text-align:center">
+                <div style="font-size:1.2em;font-weight:bold">${rName}</div>
+                <div>${date} · ${time}</div>
+                <div style="font-size:1.1em;font-weight:bold">ORDER #001</div>
+              </div>
+              <div style="margin-bottom:0.5rem"><strong>Table 5</strong> · Round 1 · Emma Walsh</div>
+              <div>
+                <div style="font-size:${itemFontSize};font-weight:bold">2x House Wine (glass)</div>
+                <div style="font-size:${itemFontSize};font-weight:bold">1x Pint of Beer</div>
+                <div style="font-size:0.8em;padding-left:0.5rem">› No: Ice</div>
+                <div style="font-size:${itemFontSize};font-weight:bold">1x Coke</div>
+              </div>
+            `
+
+            const tillContent = `
+              <div style="font-size:${fontSize};border-bottom:1px dashed #000;padding-bottom:0.5rem;margin-bottom:0.5rem;text-align:center">
+                <div style="font-size:1.2em;font-weight:bold">${rName}</div>
+                <div>${form.address || '123 Main Street'}</div>
+                <div>${form.phone || '01 234 5678'}</div>
+                <div>${date} · ${time}</div>
+                <div style="font-size:1.1em;font-weight:bold">ORDER #001 · Table 5</div>
+              </div>
+              <div style="border-bottom:1px dashed #000;padding-bottom:0.5rem;margin-bottom:0.5rem">
+                <div style="display:flex;justify-content:space-between"><span>Garlic Bread x2</span><span>€9.00</span></div>
+                <div style="display:flex;justify-content:space-between"><span>Beef Burger x1</span><span>€14.00</span></div>
+                <div style="display:flex;justify-content:space-between"><span>House Wine x2</span><span>€13.00</span></div>
+              </div>
+              <div style="border-bottom:1px dashed #000;padding-bottom:0.5rem;margin-bottom:0.5rem">
+                <div style="display:flex;justify-content:space-between"><span>Subtotal</span><span>€36.00</span></div>
+                <div style="display:flex;justify-content:space-between"><span>Service Charge 10%</span><span>€3.60</span></div>
+                <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:1.1em"><span>TOTAL</span><span>€39.60</span></div>
+              </div>
+              <div style="margin-bottom:0.5rem">
+                <div style="display:flex;justify-content:space-between"><span>Card</span><span>€39.60</span></div>
+              </div>
+              <div style="text-align:center;font-size:0.85em">${form.receiptFooter || 'Thank you for dining with us!'}</div>
+            `
+
+            const cardContent = `
+              <div style="font-size:${fontSize};border-bottom:1px dashed #000;padding-bottom:0.4rem;margin-bottom:0.4rem;text-align:center">
+                <div style="font-weight:bold">${rName}</div>
+                <div>${date} · ${time}</div>
+              </div>
+              <div style="border-bottom:1px dashed #000;padding-bottom:0.4rem;margin-bottom:0.4rem">
+                <div style="display:flex;justify-content:space-between"><span>Table 5</span><span>ORDER #001</span></div>
+                <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:1.2em"><span>TOTAL</span><span>€39.60</span></div>
+                <div>Card Payment</div>
+              </div>
+              <div style="margin-top:1rem">
+                <div style="border-bottom:1px solid #000;margin-bottom:0.3rem;padding-bottom:1.5rem">Signature: _______________</div>
+                <div style="font-size:0.75em;text-align:center">CUSTOMER COPY</div>
+              </div>
+              ${config.copies === 2 ? `
+              <div style="border-top:2px dashed #000;margin-top:1rem;padding-top:0.5rem">
+                <div style="text-align:center;font-weight:bold">${rName}</div>
+                <div style="text-align:center">${date} · ${time}</div>
+                <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:1.2em"><span>TOTAL</span><span>€39.60</span></div>
+                <div style="border-bottom:1px solid #000;margin-bottom:0.3rem;padding-bottom:1.5rem">Signature: _______________</div>
+                <div style="font-size:0.75em;text-align:center">MERCHANT COPY</div>
+              </div>` : ''}
+            `
+
+            const content = printer.id === 'kitchen' ? kitchenContent : printer.id === 'bar' ? barContent : printer.id === 'till' ? tillContent : cardContent
+
+            const html = `<html><head><title>Docket Preview</title><style>
+              body{font-family:monospace;width:${width};margin:0 auto;padding:0.5rem;color:#000;font-size:${fontSize}}
+              *{box-sizing:border-box}
+            </style></head><body>${content}</body></html>`
+            const win = window.open('', '_blank', `width=400,height=600`)
+            win.document.write(html)
+            win.document.close()
+          }}>
+            👁 Preview {config.size}mm Docket
+          </button>
+        </Section>
+      )
+    })}
+  </div>
 )}
 
         {/* RECEIPT */}
