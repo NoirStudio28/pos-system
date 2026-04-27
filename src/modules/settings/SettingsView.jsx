@@ -1,5 +1,5 @@
 import { connectQZ, getAvailablePrinters } from '../../utils/qzPrint'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePOS } from '../../context/POSContext'
 
 function Section({ title, children }) {
@@ -18,6 +18,19 @@ export default function SettingsView() {
   const [section, setSection] = useState('restaurant')
   const [printers, setPrinters] = useState([])
   const [qzStatus, setQzStatus] = useState('disconnected')
+
+  useEffect(() => {
+  if (section === 'printing') {
+    connectQZ().then(ok => {
+      if (ok) {
+        getAvailablePrinters().then(found => {
+          setPrinters(found)
+          setQzStatus('connected')
+        })
+      }
+    })
+  }
+}, [section])
 
   const f = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
