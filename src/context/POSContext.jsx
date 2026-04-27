@@ -492,19 +492,44 @@ export function POSProvider({ children }) {
   const deleteStaff   = (id) => setStaff(prev => prev.filter(s => s.id !== id))
 
   // ── Floors ──
-  const addFloor    = (floor) => setFloors(prev => [...prev, { ...floor, id: 'floor-' + Date.now() }])
-  const updateFloor = (floor) => setFloors(prev => prev.map(f => f.id === floor.id ? floor : f))
-  const deleteFloor = (id)    => { setFloors(prev => prev.filter(f => f.id !== id)); setTables(prev => prev.filter(t => t.floorId !== id)) }
+  const addFloor = async (floor) => {
+    const newFloor = { ...floor, id: 'floor-' + Date.now() }
+    setFloors(prev => [...prev, newFloor])
+    await db.floors.upsert({ id: newFloor.id, name: newFloor.name, color: newFloor.color })
+  }
+  const updateFloor = async (floor) => {
+    setFloors(prev => prev.map(f => f.id === floor.id ? floor : f))
+    await db.floors.upsert({ id: floor.id, name: floor.name, color: floor.color })
+  }
+  const deleteFloor = async (id) => {
+    setFloors(prev => prev.filter(f => f.id !== id))
+    setTables(prev => prev.filter(t => t.floorId !== id))
+    await db.floors.delete(id)
+  }
 
   // ── Tables ──
-  const updateTableStatus   = (id, status) => setTables(prev => prev.map(t => t.id === id ? { ...t, status } : t))
-  const updateTablePosition = (id, x, y)   => setTables(prev => prev.map(t => t.id === id ? { ...t, x, y } : t))
-  const updateTableData     = (updated)     => setTables(prev => prev.map(t => t.id === updated.id ? { ...t, ...updated } : t))
-  const addTableToFloor     = (floorId)     => {
-    const newId = Math.max(...tables.map(t => t.id), 0) + 1
-    setTables(prev => [...prev, { id: newId, floorId, x: 40, y: 40, shape: 'square', seats: 4 }])
+  const updateTableStatus = async (id, status) => {
+    setTables(prev => prev.map(t => t.id === id ? { ...t, status } : t))
+    await db.tables.upsert({ id, status })
   }
-  const removeTable = (id) => setTables(prev => prev.filter(t => t.id !== id))
+  const updateTablePosition = async (id, x, y) => {
+    setTables(prev => prev.map(t => t.id === id ? { ...t, x, y } : t))
+    await db.tables.upsert({ id, x, y })
+  }
+  const updateTableData = async (updated) => {
+    setTables(prev => prev.map(t => t.id === updated.id ? { ...t, ...updated } : t))
+    await db.tables.upsert({ id: updated.id, floor_id: updated.floorId, x: updated.x, y: updated.y, shape: updated.shape, seats: updated.seats, width: updated.width, height: updated.height, size_key: updated.sizeKey, note: updated.note, status: updated.status })
+  }
+  const addTableToFloor = async (floorId) => {
+    const newId = Math.max(...tables.map(t => t.id), 0) + 1
+    const newTable = { id: newId, floorId, x: 40, y: 40, shape: 'square', seats: 4 }
+    setTables(prev => [...prev, newTable])
+    await db.tables.upsert({ id: newId, floor_id: floorId, x: 40, y: 40, shape: 'square', seats: 4 })
+  }
+  const removeTable = async (id) => {
+    setTables(prev => prev.filter(t => t.id !== id))
+    await db.tables.delete(id)
+  }
 
   // ── Customers ──
   const addCustomer    = (c)  => setCustomers(prev => [...prev, { ...c, id: Date.now(), points: 0, stamps: 0, totalSpend: 0, visits: 0, visitHistory: [] }])
