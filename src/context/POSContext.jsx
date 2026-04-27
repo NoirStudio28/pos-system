@@ -503,7 +503,8 @@ export function POSProvider({ children }) {
     by: currentUser?.name || 'Unknown',
     at: new Date().toISOString(),
   }
-  
+  setStockMovements(prev => [...prev, movement])
+  await db.stockMovements.insert({ id: movement.id, stock_item_id: id, stock_item_name: item.name, delta, reason, before_qty: item.quantity, after_qty: newQty, by_staff: currentUser?.name || 'Unknown' })
 }
 const printDocket = (type, order, paymentData = null) => {
   const s = settings || {}
