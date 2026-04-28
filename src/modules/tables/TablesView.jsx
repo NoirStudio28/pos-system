@@ -1518,6 +1518,18 @@ export default function TablesView() {
             <div style={{ fontSize: '0.6rem', letterSpacing: '0.2em', color: '#475569', marginBottom: '0.3rem' }}>FLOOR PLAN</div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Tables</h1>
           </div>
+          {isMobile && (
+            <div style={{ display: 'flex', gap: '0.4rem' }}>
+              <button onClick={() => window.location.href = '/takeaway'}
+                style={{ border: '1px solid #F9731644', background: '#F9731622', color: '#F97316', borderRadius: 8, padding: '0.5rem 0.8rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem', fontWeight: 700 }}>
+                🥡 Takeaway
+              </button>
+              <button onClick={() => window.location.href = '/history'}
+                style={{ border: '1px solid #1E1E2E', background: '#13131A', color: '#94A3B8', borderRadius: 8, padding: '0.5rem 0.8rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem', fontWeight: 700 }}>
+                🗂️ History
+              </button>
+            </div>
+          )}
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
             {!isMobile && Object.entries(counts).map(([status, count]) => {
               const sc = STATUS_CONFIG[status]
