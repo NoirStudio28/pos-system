@@ -509,7 +509,6 @@ export function POSProvider({ children }) {
 const printDocket = (type, order, paymentData = null) => {
   const s = settings || {}
   const config = s.printing?.[type]
-  console.log('printDocket called:', type, 'config:', config, 'settings:', s)
   if (!config) return
   if (!config?.enabled) return
 
@@ -661,7 +660,6 @@ const printDocket = (type, order, paymentData = null) => {
   </style></head><body>${content}</body></html>`
 
   const printerName = settings.printing?.[type]?.printerName || null
-  console.log('Calling qzPrint with printer:', printerName, 'html length:', html.length)
   qzPrint(html, printerName)
 }
 
@@ -695,7 +693,7 @@ const printDocket = (type, order, paymentData = null) => {
     deductStock(order.items)
     const hasFoodItems = order.items.some(i => getItemDestination(i.id, menu) === 'kitchen')
     const hasDrinkItems = order.items.some(i => getItemDestination(i.id, menu) === 'bar')
-    if (hasFoodItems) setTimeout(() => { console.log('Printing kitchen docket...'); printDocket('kitchen', { ...newOrder, placedBy: currentUser?.name || 'Staff' }) }, 300)
+    if (hasFoodItems) setTimeout(() => { ; printDocket('kitchen', { ...newOrder, placedBy: currentUser?.name || 'Staff' }) }, 300)
 if (hasDrinkItems) setTimeout(() => { console.log('Printing bar docket...'); printDocket('bar', { ...newOrder, placedBy: currentUser?.name || 'Staff' }) }, 600)
   }
 

@@ -38,12 +38,11 @@ export const printDocket = async (htmlContent, printerName = null) => {
       setTimeout(() => win.print(), 500)
       return
     }
-    console.log('Sending to printer:', printerName)
     const config = qz.configs.create(printerName || null)
     const data = [{ type: 'pixel', format: 'html', flavor: 'plain', data: htmlContent }]
-    console.log('Print config:', config)
+    
     await qz.print(config, data)
-    console.log('Print sent successfully')
+    
   } catch (err) {
     console.error('Print error:', err)
     const win = window.open('', '_blank', 'width=400,height=600')
