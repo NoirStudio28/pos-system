@@ -1453,7 +1453,6 @@ function TableListView({ floors, tables, orders, bookings, onSelectTable }) {
 export default function TablesView() {
   const navigate = useNavigate()
   const [tableCovers, setTableCovers] = useState({})
-  const [tableCovers, setTableCovers] = useState({})
   const { tables, floors, orders, bookings, addTableToFloor } = usePOS()
   const { isMobile, isTablet } = useBreakpoint()
   const canvasScale = isMobile ? 0.32 : isTablet ? 0.55 : 0.88
