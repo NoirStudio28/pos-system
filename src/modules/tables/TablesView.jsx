@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { usePOS, getAutoTableStatus, getItemCourse, getItemDestination } from '../../context/POSContext'
 import useBreakpoint from '../../hooks/useBreakpoint'
 
@@ -1450,6 +1451,8 @@ function TableListView({ floors, tables, orders, bookings, onSelectTable }) {
 }
 // ─── Main TablesView ──────────────────────────────────────────────────────────
 export default function TablesView() {
+  const navigate = useNavigate()
+  const [tableCovers, setTableCovers] = useState({})
   const [tableCovers, setTableCovers] = useState({})
   const { tables, floors, orders, bookings, addTableToFloor } = usePOS()
   const { isMobile, isTablet } = useBreakpoint()
@@ -1520,14 +1523,14 @@ export default function TablesView() {
           </div>
           {isMobile && (
             <div style={{ display: 'flex', gap: '0.4rem' }}>
-              <button onClick={() => window.location.href = '/takeaway'}
-                style={{ border: '1px solid #F9731644', background: '#F9731622', color: '#F97316', borderRadius: 8, padding: '0.5rem 0.8rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem', fontWeight: 700 }}>
-                🥡 Takeaway
-              </button>
-              <button onClick={() => window.location.href = '/history'}
-                style={{ border: '1px solid #1E1E2E', background: '#13131A', color: '#94A3B8', borderRadius: 8, padding: '0.5rem 0.8rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem', fontWeight: 700 }}>
-                🗂️ History
-              </button>
+              <button onClick={() => navigate('/takeaway')}
+  style={{ border: '1px solid #F9731644', background: '#F9731622', color: '#F97316', borderRadius: 8, padding: '0.5rem 0.8rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem', fontWeight: 700 }}>
+  🥡 Takeaway
+</button>
+<button onClick={() => navigate('/history')}
+  style={{ border: '1px solid #1E1E2E', background: '#13131A', color: '#94A3B8', borderRadius: 8, padding: '0.5rem 0.8rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem', fontWeight: 700 }}>
+  🗂️ History
+</button>
             </div>
           )}
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
