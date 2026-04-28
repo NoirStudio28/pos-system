@@ -185,9 +185,11 @@ function AppRoutes() {
 
 export default function App() {
   useEffect(() => {
-    connectQZ().then(ok => {
-      if (ok) console.log('QZ Tray ready')
-    })
+    setTimeout(() => {
+      connectQZ().then(ok => {
+        if (ok) console.log('QZ Tray ready')
+      })
+    }, 1000)
   }, [])
 
   return (

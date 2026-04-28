@@ -276,7 +276,7 @@ export function POSProvider({ children }) {
         if (floorsData?.length)          setFloors(floorsData.map(f => ({ id: f.id, name: f.name, color: f.color })))
         if (tablesData?.length)          setTables(tablesData.map(t => ({ id: t.id, floorId: t.floor_id, x: t.x, y: t.y, shape: t.shape, seats: t.seats, width: t.width, height: t.height, sizeKey: t.size_key, note: t.note, status: t.status })))
         if (staffData?.length)           setStaff(staffData.map(s => ({ id: s.id, name: s.name, username: s.username, password: s.password, role: s.role, section: s.section, experience: s.experience, active: s.active, clockRecords: s.clock_records || [] })))
-        if (settingsData?.data)          setSettings(settingsData.data)
+        if (settingsData?.data) setSettings({ ...DEFAULT_SETTINGS, ...settingsData.data, printing: { ...DEFAULT_SETTINGS.printing, ...settingsData.data.printing } })
         if (giftCardsData?.length)       setGiftCards(Object.fromEntries(giftCardsData.map(g => [g.code, g.balance])))
         if (stockData?.length)           setStock(stockData.map(s => ({ id: s.id, name: s.name, category: s.category, unit: s.unit, quantity: parseFloat(s.quantity), minThreshold: parseFloat(s.min_threshold), costPrice: parseFloat(s.cost_price), supplier: s.supplier, supplierPhone: s.supplier_phone, supplierEmail: s.supplier_email, deliveryDay: s.delivery_day, menuItemId: s.menu_item_id, portionPerSale: parseFloat(s.portion_per_sale) })))
         if (stockMovementsData?.length)  setStockMovements(stockMovementsData.map(m => ({ id: m.id, stockItemId: m.stock_item_id, stockItemName: m.stock_item_name, delta: parseFloat(m.delta), reason: m.reason, before: parseFloat(m.before_qty), after: parseFloat(m.after_qty), by: m.by_staff, at: m.created_at })))
@@ -509,6 +509,7 @@ export function POSProvider({ children }) {
 const printDocket = (type, order, paymentData = null) => {
   const s = settings || {}
   const config = s.printing?.[type]
+  console.log('printDocket called:', type, 'config:', config, 'settings:', s)
   if (!config) return
   if (!config?.enabled) return
 
@@ -660,6 +661,7 @@ const printDocket = (type, order, paymentData = null) => {
   </style></head><body>${content}</body></html>`
 
   const printerName = settings.printing?.[type]?.printerName || null
+  console.log('Calling qzPrint with printer:', printerName, 'html length:', html.length)
   qzPrint(html, printerName)
 }
 
@@ -693,8 +695,8 @@ const printDocket = (type, order, paymentData = null) => {
     deductStock(order.items)
     const hasFoodItems = order.items.some(i => getItemDestination(i.id, menu) === 'kitchen')
     const hasDrinkItems = order.items.some(i => getItemDestination(i.id, menu) === 'bar')
-    if (hasFoodItems) setTimeout(() => printDocket('kitchen', { ...order, placedBy: currentUser?.name || 'Staff' }), 300)
-    if (hasDrinkItems) setTimeout(() => printDocket('bar', { ...order, placedBy: currentUser?.name || 'Staff' }), 600)
+    if (hasFoodItems) setTimeout(() => { console.log('Printing kitchen docket...'); printDocket('kitchen', { ...newOrder, placedBy: currentUser?.name || 'Staff' }) }, 300)
+if (hasDrinkItems) setTimeout(() => { console.log('Printing bar docket...'); printDocket('bar', { ...newOrder, placedBy: currentUser?.name || 'Staff' }) }, 600)
   }
 
   const closeOrder = async (id, paymentData = null) => {
