@@ -1,5 +1,5 @@
 import qz from 'qz-tray'
-import { QZ_CERT } from './qzCert'
+import { QZ_CERT } from '../lib/qzCert'
 
 let connected = false
 
