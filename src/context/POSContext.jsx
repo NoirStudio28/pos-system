@@ -311,7 +311,7 @@ export function POSProvider({ children }) {
   useEffect(() => {
     if (!supabase) return
     const channel = supabase
-      .channel('orders-realtime')
+      .channel('orders-realtime', { config: { presence: { key: 'pos' } } })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
         const o = payload.new
         setOrders(prev => {
@@ -343,7 +343,14 @@ export function POSProvider({ children }) {
       })
       .subscribe()
 
-    return () => supabase.removeChannel(channel)
+    const heartbeat = setInterval(() => {
+      channel.send({ type: 'broadcast', event: 'heartbeat', payload: {} })
+    }, 30000)
+
+    return () => {
+      clearInterval(heartbeat)
+      supabase.removeChannel(channel)
+    }
   }, [])
 
       
