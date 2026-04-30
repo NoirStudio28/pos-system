@@ -238,6 +238,8 @@ export function POSProvider({ children }) {
   const [stockMovements,  setStockMovements]  = useState([])
   const [modifierLibrary, setModifierLibrary] = useState([])
   const [loaded,          setLoaded]          = useState(false)
+  const [orders, setOrders] = useState([])
+
 
   // ── Load all data from Supabase on startup ──
   useEffect(() => {
@@ -307,6 +309,7 @@ export function POSProvider({ children }) {
 
   // ── Real-time subscriptions ──
   useEffect(() => {
+    if (!supabase) return
     const channel = supabase
       .channel('orders-realtime')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
@@ -346,7 +349,6 @@ export function POSProvider({ children }) {
       
 
 
-  const [orders,               setOrders]               = useState([])
   const refreshOrders = async () => {
     try {
       const { data: ordersData } = await db.orders.getAll()
