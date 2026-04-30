@@ -412,8 +412,12 @@ export function POSProvider({ children }) {
     const email = `${username}@restaurant.com`
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error || !data.user) return false
-    setCurrentUser({ username, role: 'loading' })
-    window.location.reload()
+    const member = staff.find(s => s.auth_id === data.user.id || s.username === username)
+    if (!member || !member.active) {
+      await supabase.auth.signOut()
+      return false
+    }
+    setCurrentUser(member)
     return true
   }
   const logout = async () => {
