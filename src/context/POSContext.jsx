@@ -244,11 +244,6 @@ export function POSProvider({ children }) {
   // ── Load all data from Supabase on startup ──
   useEffect(() => {
     const loadAll = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        setLoaded(true)
-        return
-      }
       try {
         const [
           { data: floorsData },
