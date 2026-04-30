@@ -315,6 +315,7 @@ export function POSProvider({ children }) {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
           if (payload.eventType === 'INSERT') {
             const o = payload.new
+            console.log('New order received:', o)
             setOrders(prev => {
               if (prev.find(x => x.id === o.id)) return prev
               return [...prev, {
