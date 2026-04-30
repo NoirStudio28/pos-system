@@ -143,6 +143,8 @@ function ItemPicker({ tableId, existingOrder, onClose, covers }) {
 const [activeModifierGroup, setActiveModifierGroup] = useState(null)
   const { menu, placeOrder, updateOrder, orders, currentUser, customers, settings } = usePOS()
   const { isMobile: pickerMobile } = useBreakpoint()
+  const [mobileTab, setMobileTab] = useState('menu')
+  
 
   const existing    = existingOrder || orders.find(o => o.table === tableId)
   const [activeCategory,   setActiveCategory]   = useState(Object.keys(menu)[0])
@@ -316,8 +318,20 @@ const [activeModifierGroup, setActiveModifierGroup] = useState(null)
         </div>
       </div>
 
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: pickerMobile ? '1fr' : '1fr 300px', gridTemplateRows: pickerMobile ? '1fr auto' : '1fr', overflow: 'hidden' }}>
-        <div style={{ overflow: 'auto', padding: '1rem' }}>
+      {pickerMobile && (
+  <div style={{ display: 'flex', borderBottom: '1px solid #1E1E2E', flexShrink: 0 }}>
+    <button onClick={() => setMobileTab('menu')}
+      style={{ flex: 1, padding: '0.75rem', border: 'none', background: mobileTab === 'menu' ? '#F9731622' : '#13131A', color: mobileTab === 'menu' ? '#F97316' : '#64748B', fontFamily: "'Courier New', monospace", fontSize: '0.78rem', fontWeight: 700, borderBottom: mobileTab === 'menu' ? '2px solid #F97316' : '2px solid transparent', cursor: 'pointer' }}>
+      🍽️ Menu
+    </button>
+    <button onClick={() => setMobileTab('order')}
+      style={{ flex: 1, padding: '0.75rem', border: 'none', background: mobileTab === 'order' ? '#F9731622' : '#13131A', color: mobileTab === 'order' ? '#F97316' : '#64748B', fontFamily: "'Courier New', monospace", fontSize: '0.78rem', fontWeight: 700, borderBottom: mobileTab === 'order' ? '2px solid #F97316' : '2px solid transparent', cursor: 'pointer', position: 'relative' }}>
+      📋 Order {currentItems.length > 0 && <span style={{ background: '#F97316', color: '#000', borderRadius: '50%', fontSize: '0.6rem', padding: '0 5px', marginLeft: 4 }}>{currentItems.length}</span>}
+    </button>
+  </div>
+)}
+<div style={{ flex: 1, display: 'grid', gridTemplateColumns: pickerMobile ? '1fr' : '1fr 300px', gridTemplateRows: '1fr', overflow: 'hidden' }}>
+        <div style={{ overflow: 'auto', padding: '1rem', display: pickerMobile && mobileTab !== 'menu' ? 'none' : 'block' }}>
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
             {Object.keys(menu).map(cat => (
               <button key={cat} className={`ip-tab ${activeCategory === cat ? 'active' : ''}`} onClick={() => setActiveCategory(cat)}>{cat}</button>
@@ -355,7 +369,7 @@ const [activeModifierGroup, setActiveModifierGroup] = useState(null)
           })}
         </div>
 
-        <div style={{ borderLeft: pickerMobile ? 'none' : '1px solid #1E1E2E', borderTop: pickerMobile ? '1px solid #1E1E2E' : 'none', display: 'flex', flexDirection: 'column', overflow: 'hidden', maxHeight: pickerMobile ? 220 : 'none', background: '#0A0A0F' }}>
+        <div style={{ borderLeft: pickerMobile ? 'none' : '1px solid #1E1E2E', display: pickerMobile && mobileTab !== 'order' ? 'none' : 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0A0A0F' }}>
           <div style={{ padding: '0.8rem 1rem', borderBottom: '1px solid #1E1E2E', fontSize: '0.6rem', color: '#475569', letterSpacing: '0.12em' }}>ORDER SUMMARY</div>
           <div style={{ flex: 1, overflowY: 'auto', padding: '0.8rem' }}>
             {currentItems.length === 0 ? (
