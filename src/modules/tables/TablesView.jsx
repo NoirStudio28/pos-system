@@ -225,16 +225,16 @@ const [activeModifierGroup, setActiveModifierGroup] = useState(null)
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#0A0A0F', zIndex: 900, display: 'flex', flexDirection: 'column', fontFamily: "'Courier New', monospace", color: '#E2E8F0' }}>
       <style>{`
-        .ip-btn{border:none;border-radius:8px;padding:0.5rem 1rem;cursor:pointer;font-family:'Courier New',monospace;font-size:0.78rem;font-weight:700;transition:all 0.15s}
+        .ip-btn{border:none;border-radius:8px;padding:${pickerMobile ? '0.7rem 1.2rem' : '0.5rem 1rem'};cursor:pointer;font-family:'Courier New',monospace;font-size:${pickerMobile ? '0.9rem' : '0.78rem'};font-weight:700;transition:all 0.15s}
         .ip-btn:hover{opacity:0.85}
         .ip-primary{background:#F97316;color:#000}
         .ip-ghost{background:#13131A;color:#94A3B8;border:1px solid #1E1E2E}
-        .ip-sm{padding:0.3rem 0.7rem;font-size:0.68rem}
-        .ip-tab{padding:0.4rem 0.9rem;border-radius:6px;border:1px solid #1E1E2E;background:transparent;color:#64748B;cursor:pointer;font-family:'Courier New',monospace;font-size:0.72rem;font-weight:700;transition:all 0.15s}
+        .ip-sm{padding:${pickerMobile ? '0.5rem 1rem' : '0.3rem 0.7rem'};font-size:${pickerMobile ? '0.82rem' : '0.68rem'}}
+        .ip-tab{padding:${pickerMobile ? '0.6rem 1.2rem' : '0.4rem 0.9rem'};border-radius:6px;border:1px solid #1E1E2E;background:transparent;color:#64748B;cursor:pointer;font-family:'Courier New',monospace;font-size:${pickerMobile ? '0.85rem' : '0.72rem'};font-weight:700;transition:all 0.15s}
         .ip-tab.active{background:#F9731622;border-color:#F97316;color:#F97316}
-        .ip-item{display:flex;justify-content:space-between;align-items:center;padding:0.65rem 0.8rem;border-radius:8px;background:#0D0D14;border:1px solid #1E1E2E;margin-bottom:0.4rem;transition:border-color 0.15s}
+        .ip-item{display:flex;justify-content:space-between;align-items:center;padding:${pickerMobile ? '1rem' : '0.65rem 0.8rem'};border-radius:8px;background:#0D0D14;border:1px solid #1E1E2E;margin-bottom:${pickerMobile ? '0.6rem' : '0.4rem'};transition:border-color 0.15s}
         .ip-item:hover{border-color:#3B3B52}
-        .qty-btn{width:26px;height:26px;border-radius:50%;border:1px solid #3B3B52;background:#13131A;color:#E2E8F0;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+        .qty-btn{width:${pickerMobile ? '36px' : '26px'};height:${pickerMobile ? '36px' : '26px'};border-radius:50%;border:1px solid #3B3B52;background:#13131A;color:#E2E8F0;cursor:pointer;font-size:${pickerMobile ? '1.1rem' : '0.9rem'};display:flex;align-items:center;justify-content:center;transition:all 0.15s}
         .qty-btn:hover{background:#F97316;border-color:#F97316;color:#000}
         .ip-input{background:#0D0D14;border:1px solid #2D2D3F;border-radius:8px;padding:0.4rem 0.6rem;color:#E2E8F0;font-family:'Courier New',monospace;font-size:0.75rem;outline:none;box-sizing:border-box}
         .ip-input:focus{border-color:#F97316}
@@ -345,11 +345,11 @@ const [activeModifierGroup, setActiveModifierGroup] = useState(null)
               <div className="ip-item" key={item.id} style={{ opacity: item.available ? 1 : 0.45, pointerEvents: item.available ? 'auto' : 'none' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#CBD5E1' }}>{item.name}</span>
+                    <span style={{ fontSize: pickerMobile ? '1rem' : '0.82rem', fontWeight: 600, color: '#CBD5E1' }}>{item.name}</span>
                     {!item.available && <span style={{ fontSize: '0.58rem', background: '#EF444422', color: '#EF4444', border: '1px solid #EF444433', borderRadius: 4, padding: '1px 6px', flexShrink: 0 }}>86'd</span>}
                     {item.modifiers?.length > 0 && <span style={{ fontSize: '0.58rem', color: '#8B5CF6', background: '#8B5CF622', border: '1px solid #8B5CF644', borderRadius: 4, padding: '1px 5px' }}>customisable</span>}
                   </div>
-                  <div style={{ fontSize: '0.7rem', color: '#F97316', marginTop: '0.1rem' }}>€{item.price.toFixed(2)}</div>
+                  <div style={{ fontSize: pickerMobile ? '0.9rem' : '0.7rem', color: '#F97316', marginTop: '0.1rem' }}>€{item.price.toFixed(2)}</div>
                   {item.allergens && item.allergens !== 'None' && (
                     <span title={item.allergens} style={{ fontSize: '0.62rem', color: '#F59E0B', cursor: 'help', marginTop: '0.1rem', display: 'inline-block' }}>⚠</span>
                   )}
