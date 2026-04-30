@@ -406,8 +406,8 @@ const [activeModifierGroup, setActiveModifierGroup] = useState(null)
     const key = e.dataTransfer.getData('itemKey')
     const item = currentItems.find(i => i._key === key)
     if (!item) return
-    const sourceCourse = getItemDestination(item.id, menu) === 'bar' ? 'drinks' : getItemCourse(item.id, menu)
-    if (sourceCourse === 'drinks' || sourceCourse === targetCourse) return
+    const sourceCourse = getItemDestination(item.id, menu) === 'bar' ? 'drinks' : getItemCourse(item.id, menu, customCourses)
+    if (sourceCourse === 'drinks') return
     setCurrentItems(prev => prev.map(i => i._key === key ? { ...i, _overrideCourse: targetCourse } : i))
   }
 
@@ -430,6 +430,16 @@ onDragLeave={e => { e.currentTarget.style.borderColor = cc.color + '33' }}
             onDragStart={e => handleDragStart(e, i)}
             style={{ marginBottom: '0.4rem', padding: '0.5rem', background: '#0D0D14', borderRadius: 8, border: '1px solid #1E1E2E', cursor: 'pointer' }}
             onClick={() => setEditingItem(i)}>
+            {pickerMobile && getItemDestination(i.id, menu) !== 'bar' && (
+              <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
+                {Object.keys(COURSE_CONFIG).filter(c => c !== 'drinks' && c !== 'other').map(c => (
+                  <button key={c} onClick={e => { e.stopPropagation(); setCurrentItems(prev => prev.map(item => item._key === i._key ? { ...item, _overrideCourse: c } : item)) }}
+                    style={{ fontSize: '0.55rem', padding: '1px 6px', borderRadius: 4, border: '1px solid', borderColor: (i._overrideCourse || getItemCourse(i.id, menu, customCourses)) === c ? COURSE_CONFIG[c].color : '#1E1E2E', background: (i._overrideCourse || getItemCourse(i.id, menu, customCourses)) === c ? COURSE_CONFIG[c].color + '33' : '#13131A', color: (i._overrideCourse || getItemCourse(i.id, menu, customCourses)) === c ? COURSE_CONFIG[c].color : '#475569', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontWeight: 700 }}>
+                    {COURSE_CONFIG[c].icon}
+                  </button>
+                ))}
+              </div>
+            )}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>{i.name} ×{i.qty}</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
