@@ -303,62 +303,46 @@ export function POSProvider({ children }) {
     }
     loadAll()
   }, [])
+  
 
   // ── Real-time subscriptions ──
   useEffect(() => {
-    useEffect(() => {
-    let channel
-
-    const subscribe = () => {
-      channel = supabase
-        .channel('orders-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
-          if (payload.eventType === 'INSERT') {
-            const o = payload.new
-            console.log('New order received:', o)
-            setOrders(prev => {
-              if (prev.find(x => x.id === o.id)) return prev
-              return [...prev, {
-                id: o.id, table: o.table_id, items: o.items || [], total: parseFloat(o.total),
-                status: o.status, courses: o.courses || {}, servedCourses: o.served_courses || {},
-                barStatus: o.bar_status, covers: o.covers, placedAt: o.placed_at,
-                placedBy: o.placed_by, modified: o.modified, modifiedAt: o.modified_at,
-                urgent: o.urgent, customerId: o.customer_id, mergedTables: o.merged_tables || [],
-                isTakeaway: o.is_takeaway, takeawayName: o.takeaway_name, takeawayPhone: o.takeaway_phone,
-                collectionTime: o.collection_time, orderNum: o.order_num, note: o.note,
-                round: o.round, time: o.time,
-              }]
-            })
-          }
-          if (payload.eventType === 'UPDATE') {
-            const o = payload.new
-            setOrders(prev => prev.map(x => x.id === o.id ? {
-              ...x,
-              items: o.items || [], total: parseFloat(o.total),
-              status: o.status, courses: o.courses || {}, servedCourses: o.served_courses || {},
-              barStatus: o.bar_status, modified: o.modified, modifiedAt: o.modified_at,
-              urgent: o.urgent, mergedTables: o.merged_tables || [], round: o.round,
-            } : x))
-          }
-          if (payload.eventType === 'DELETE') {
-            setOrders(prev => prev.filter(x => x.id !== payload.old.id))
-          }
+    const channel = supabase
+      .channel('orders-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
+        const o = payload.new
+        setOrders(prev => {
+          if (prev.find(x => x.id === o.id)) return prev
+          return [...prev, {
+            id: o.id, table: o.table_id, items: o.items || [], total: parseFloat(o.total),
+            status: o.status, courses: o.courses || {}, servedCourses: o.served_courses || {},
+            barStatus: o.bar_status, covers: o.covers, placedAt: o.placed_at,
+            placedBy: o.placed_by, modified: o.modified, modifiedAt: o.modified_at,
+            urgent: o.urgent, customerId: o.customer_id, mergedTables: o.merged_tables || [],
+            isTakeaway: o.is_takeaway, takeawayName: o.takeaway_name, takeawayPhone: o.takeaway_phone,
+            collectionTime: o.collection_time, orderNum: o.order_num, note: o.note,
+            round: o.round, time: o.time,
+          }]
         })
-        .on('system', {}, (status) => {
-          if (status.extension === 'postgres_changes' && status.status === 'CLOSED') {
-            console.log('Realtime disconnected, reconnecting...')
-            setTimeout(subscribe, 2000)
-          }
-        })
-        .subscribe((status) => {
-          console.log('Realtime status:', status)
-        })
-    }
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, (payload) => {
+        const o = payload.new
+        setOrders(prev => prev.map(x => x.id === o.id ? {
+          ...x,
+          items: o.items || [], total: parseFloat(o.total),
+          status: o.status, courses: o.courses || {}, servedCourses: o.served_courses || {},
+          barStatus: o.bar_status, modified: o.modified, modifiedAt: o.modified_at,
+          urgent: o.urgent, mergedTables: o.merged_tables || [], round: o.round,
+        } : x))
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'orders' }, (payload) => {
+        setOrders(prev => prev.filter(x => x.id !== payload.old.id))
+      })
+      .subscribe()
 
-    subscribe()
-
-    return () => { if (channel) supabase.removeChannel(channel) }
+    return () => supabase.removeChannel(channel)
   }, [])
+
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
         if (payload.eventType === 'INSERT') {
           const o = payload.new
