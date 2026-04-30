@@ -95,6 +95,24 @@ function TodayLog() {
 export default function KDSView() {
   const { orders, menu, orderHistory, tables, staff, currentUser, settings, advanceOrderStatus, toggleUrgent, acknowledgeOrder, serveCourse, toggleItemAvailability } = usePOS()
 
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen()
+      setIsFullscreen(true)
+    } else {
+      document.exitFullscreen()
+      setIsFullscreen(false)
+    }
+  }
+
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement)
+    document.addEventListener('fullscreenchange', handler)
+    return () => document.removeEventListener('fullscreenchange', handler)
+  }, [])
+
 const customCourses = settings?.courses || []
 const COURSE_CONFIG = customCourses.length
   ? Object.fromEntries(customCourses.sort((a,b) => a.position - b.position).map((c, i) => [c.id, { label: c.name, color: COURSE_COLORS[i % COURSE_COLORS.length], icon: COURSE_ICONS[i % COURSE_ICONS.length] }]))
@@ -170,7 +188,13 @@ const displayOrders = filter === 'previous'
     )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0A0A0F', fontFamily: "'Courier New', monospace", color: '#E2E8F0', padding: '1.5rem' }}>
+    <div className="kds-fullscreen" style={{ minHeight: '100vh', background: '#0A0A0F', fontFamily: "'Courier New', monospace", color: '#E2E8F0', padding: '1.5rem' }}>
+      {isFullscreen && (
+        <style>{`
+          nav { display: none !important; }
+          .kds-fullscreen { padding: 0.5rem !important; }
+        `}</style>
+      )}
       <style>{`
         .kds-btn{border:none;border-radius:8px;padding:0.45rem 0.9rem;cursor:pointer;font-family:'Courier New',monospace;font-size:0.72rem;font-weight:700;transition:all 0.15s}
         .kds-btn:hover{opacity:0.85}
@@ -210,6 +234,12 @@ const displayOrders = filter === 'previous'
                 <div style={{ fontSize: '0.55rem', color: '#F59E0B', letterSpacing: '0.08em' }}>UPDATED</div>
               </div>
             )}
+
+            <button onClick={toggleFullscreen}
+              style={{ border: '1px solid #1E1E2E', background: isFullscreen ? '#F9731622' : '#13131A', color: isFullscreen ? '#F97316' : '#64748B', borderRadius: 8, padding: '0.45rem 0.9rem', cursor: 'pointer', fontFamily: "'Courier New', monospace", fontSize: '0.72rem', fontWeight: 700 }}>
+              {isFullscreen ? '⛶ Exit' : '⛶ Fullscreen'}
+            </button>
+
           </div>
         </div>
 
