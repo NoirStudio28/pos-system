@@ -8,15 +8,13 @@ export default function LoginScreen() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleLogin = () => {
-    if (!username || !password) { setError('Enter username and password'); return }
+  
+  const handleLogin = async () => {
     setLoading(true)
-    setTimeout(() => {
-      const ok = login(username, password)
-      if (!ok) { setError('Invalid username or password'); setLoading(false) }
-    }, 300)
+    const ok = await login(username, password)
+    setLoading(false)
+    if (!ok) setError('Invalid username or password')
   }
-
   return (
     <div style={{
       minHeight: '100vh', background: '#0A0A0F',

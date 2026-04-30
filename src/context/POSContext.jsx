@@ -377,17 +377,48 @@ export function POSProvider({ children }) {
   }
   const [tabs, setTabs] = usePersist('tabs', [])
   const [activePaymentOrderId, setActivePaymentOrderId] = useState(null)
-  const [currentUser,          setCurrentUser]          = useState(null)
+  const [currentUser, setCurrentUser] = useState(null)
+
+  useEffect(() => {
+    // Restore session on page load
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const member = staff.find(s => s.auth_id === session.user.id)
+        if (member) setCurrentUser(member)
+      }
+    })
+
+    // Listen for auth changes across tabs
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const member = staff.find(s => s.auth_id === session.user.id)
+        if (member) setCurrentUser(member)
+      } else {
+        setCurrentUser(null)
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [staff])
   const [kitchenAlerts, setKitchenAlerts] = useState([])
 
   // ── Auth ──
-  const login = (username, password) => {
-    const member = staff.find(s => s.username === username && s.password === password && s.active)
-    if (!member) return false
+  const login = async (username, password) => {
+    const email = `${username}@restaurant.com`
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error || !data.user) return false
+    const member = staff.find(s => s.auth_id === data.user.id || s.username === username)
+    if (!member || !member.active) {
+      await supabase.auth.signOut()
+      return false
+    }
     setCurrentUser(member)
     return true
   }
-  const logout    = () => setCurrentUser(null)
+  const logout = async () => {
+    await supabase.auth.signOut()
+    setCurrentUser(null)
+  }
   const canAccess = (route) => {
     if (!currentUser) return false
     const allowed = ROLE_CONFIG[currentUser.role]?.routes || []
