@@ -244,6 +244,11 @@ export function POSProvider({ children }) {
   // ── Load all data from Supabase on startup ──
   useEffect(() => {
     const loadAll = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        setLoaded(true)
+        return
+      }
       try {
         const [
           { data: floorsData },
@@ -407,12 +412,8 @@ export function POSProvider({ children }) {
     const email = `${username}@restaurant.com`
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error || !data.user) return false
-    const member = staff.find(s => s.auth_id === data.user.id || s.username === username)
-    if (!member || !member.active) {
-      await supabase.auth.signOut()
-      return false
-    }
-    setCurrentUser(member)
+    setCurrentUser({ username, role: 'loading' })
+    window.location.reload()
     return true
   }
   const logout = async () => {
