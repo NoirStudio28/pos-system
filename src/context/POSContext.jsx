@@ -303,7 +303,7 @@ export function POSProvider({ children }) {
     }
     loadAll()
   }, [])
-  
+
 
   // ── Real-time subscriptions ──
   useEffect(() => {
@@ -376,8 +376,6 @@ export function POSProvider({ children }) {
       })
       .subscribe()
 
-    return () => supabase.removeChannel(channel)
-  }, [])
 
   const [orders,               setOrders]               = useState([])
   const refreshOrders = async () => {
