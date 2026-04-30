@@ -343,38 +343,7 @@ export function POSProvider({ children }) {
     return () => supabase.removeChannel(channel)
   }, [])
 
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          const o = payload.new
-          setOrders(prev => {
-            if (prev.find(x => x.id === o.id)) return prev
-            return [...prev, {
-              id: o.id, table: o.table_id, items: o.items || [], total: parseFloat(o.total),
-              status: o.status, courses: o.courses || {}, servedCourses: o.served_courses || {},
-              barStatus: o.bar_status, covers: o.covers, placedAt: o.placed_at,
-              placedBy: o.placed_by, modified: o.modified, modifiedAt: o.modified_at,
-              urgent: o.urgent, customerId: o.customer_id, mergedTables: o.merged_tables || [],
-              isTakeaway: o.is_takeaway, takeawayName: o.takeaway_name, takeawayPhone: o.takeaway_phone,
-              collectionTime: o.collection_time, orderNum: o.order_num, note: o.note,
-              round: o.round, time: o.time,
-            }]
-          })
-        }
-        if (payload.eventType === 'UPDATE') {
-          const o = payload.new
-          setOrders(prev => prev.map(x => x.id === o.id ? {
-            ...x,
-            items: o.items || [], total: parseFloat(o.total),
-            status: o.status, courses: o.courses || {}, servedCourses: o.served_courses || {},
-            barStatus: o.bar_status, modified: o.modified, modifiedAt: o.modified_at,
-            urgent: o.urgent, mergedTables: o.merged_tables || [], round: o.round,
-          } : x))
-        }
-        if (payload.eventType === 'DELETE') {
-          setOrders(prev => prev.filter(x => x.id !== payload.old.id))
-        }
-      })
-      .subscribe()
+      
 
 
   const [orders,               setOrders]               = useState([])
