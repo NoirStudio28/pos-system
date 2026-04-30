@@ -370,7 +370,7 @@ const [activeModifierGroup, setActiveModifierGroup] = useState(null)
         </div>
 
         <div style={{ borderLeft: pickerMobile ? 'none' : '1px solid #1E1E2E', display: pickerMobile && mobileTab !== 'order' ? 'none' : 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0A0A0F' }}>
-          <div style={{ padding: '0.8rem 1rem', borderBottom: '1px solid #1E1E2E', fontSize: '0.6rem', color: '#475569', letterSpacing: '0.12em' }}>ORDER SUMMARY</div>
+          <div style={{ padding: '0.8rem 1rem', borderBottom: '1px solid #1E1E2E', fontSize: pickerMobile ? '0.78rem' : '0.6rem', color: '#475569', letterSpacing: '0.12em' }}>ORDER SUMMARY</div>
           <div style={{ flex: 1, overflowY: 'auto', padding: '0.8rem' }}>
             {currentItems.length === 0 ? (
   <div style={{ textAlign: 'center', padding: '1.5rem 0', fontSize: '0.75rem', color: '#334155' }}>No items yet</div>
@@ -421,7 +421,7 @@ const [activeModifierGroup, setActiveModifierGroup] = useState(null)
 onDragLeave={e => { e.currentTarget.style.borderColor = cc.color + '33' }}
         onDrop={e => handleDrop(e, course)}
         style={{ marginBottom: '0.8rem', border: `1px dashed ${cc.color}33`, borderRadius: 8, padding: '0.4rem' }}>
-        <div style={{ fontSize: '0.58rem', color: cc.color, fontWeight: 700, letterSpacing: '0.1em', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+        <div style={{ fontSize: pickerMobile ? '0.75rem' : '0.58rem', color: cc.color, fontWeight: 700, letterSpacing: '0.1em', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
           <span>{cc.icon}</span>{cc.label}
         </div>
         {items.map(i => (
@@ -441,9 +441,9 @@ onDragLeave={e => { e.currentTarget.style.borderColor = cc.color + '33' }}
               </div>
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>{i.name} ×{i.qty}</span>
+              <span style={{ fontSize: pickerMobile ? '0.95rem' : '0.75rem', color: '#94A3B8' }}>{i.name} ×{i.qty}</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <span style={{ fontSize: '0.75rem', color: '#CBD5E1' }}>€{((i.price + (i.modifierTotal || 0)) * i.qty).toFixed(2)}</span>
+                <span style={{ fontSize: pickerMobile ? '0.95rem' : '0.75rem', color: '#CBD5E1' }}>€{((i.price + (i.modifierTotal || 0)) * i.qty).toFixed(2)}</span>
                 <button className="qty-btn" style={{ width: 20, height: 20, fontSize: '0.7rem' }} onClick={e => { e.stopPropagation(); removeItem(i._key) }}>−</button>
               </div>
             </div>
@@ -472,8 +472,8 @@ onDragLeave={e => { e.currentTarget.style.borderColor = cc.color + '33' }}
             </div>
           )}
           <div style={{ padding: '0.8rem', borderTop: '1px solid #1E1E2E', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>Total</span>
-            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F97316' }}>€{total.toFixed(2)}</span>
+            <span style={{ fontSize: pickerMobile ? '1.1rem' : '0.85rem', fontWeight: 700 }}>Total</span>
+            <span style={{ fontSize: pickerMobile ? '1.1rem' : '0.85rem', fontWeight: 700, color: '#F97316' }}>€{total.toFixed(2)}</span>
           </div>
         </div>
       </div>
