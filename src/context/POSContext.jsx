@@ -305,6 +305,25 @@ export function POSProvider({ children }) {
   }, [])
 
   const [orders,               setOrders]               = useState([])
+  const refreshOrders = async () => {
+    try {
+      const { data: ordersData } = await db.orders.getAll()
+      if (ordersData) {
+        setOrders(ordersData.map(o => ({
+          id: o.id, table: o.table_id, items: o.items || [], total: parseFloat(o.total),
+          status: o.status, courses: o.courses || {}, servedCourses: o.served_courses || {},
+          barStatus: o.bar_status, covers: o.covers, placedAt: o.placed_at,
+          placedBy: o.placed_by, modified: o.modified, modifiedAt: o.modified_at,
+          urgent: o.urgent, customerId: o.customer_id, mergedTables: o.merged_tables || [],
+          isTakeaway: o.is_takeaway, takeawayName: o.takeaway_name, takeawayPhone: o.takeaway_phone,
+          collectionTime: o.collection_time, orderNum: o.order_num, note: o.note,
+          round: o.round, time: o.time,
+        })))
+      }
+    } catch (err) {
+      console.error('Failed to refresh orders:', err)
+    }
+  }
   const [tabs, setTabs] = usePersist('tabs', [])
   const [activePaymentOrderId, setActivePaymentOrderId] = useState(null)
   const [currentUser,          setCurrentUser]          = useState(null)
@@ -1010,7 +1029,7 @@ const moveItems = (fromOrderId, itemKeys, toTableId) => {
       addStaff, updateStaff, deleteStaff,
       addFloor, updateFloor, deleteFloor,
       updateTableStatus, updateTablePosition, updateTableData, addTableToFloor, removeTable,
-      placeOrder, closeOrder, toggleOrderStatus, advanceOrderStatus, toggleUrgent,
+      placeOrder, closeOrder, toggleOrderStatus, advanceOrderStatus, toggleUrgent, refreshOrders,
       updateOrder, mergeTables, moveItems, fireCourse, serveCourse, acknowledgeOrder, updateBarStatus,tabs, openTab, updateTab, closeTab,
       openPayment, closePayment, processPayment, checkGiftCard,
       addBooking, updateBooking, deleteBooking, updateBookingStatus,

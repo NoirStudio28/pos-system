@@ -127,6 +127,18 @@ const COURSE_CONFIG = customCourses.length
     }
   }
   const [filter, setFilter] = useState('all')
+  const { refreshOrders } = usePOS()
+
+  useEffect(() => {
+    const t = setInterval(() => refreshOrders(), 30000)
+    return () => clearInterval(t)
+  }, [])
+  useEffect(() => {
+    const t = setInterval(() => {
+      window.location.reload()
+    }, 60000)
+    return () => clearInterval(t)
+  }, [])
 
   // Only show orders that have food items
   const ordersWithFood = orders.filter(o =>
