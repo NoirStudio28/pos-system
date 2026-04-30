@@ -380,7 +380,8 @@ export function POSProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null)
 
   useEffect(() => {
-    // Restore session on page load
+    if (!staff.length) return
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         const member = staff.find(s => s.auth_id === session.user.id)
@@ -388,7 +389,6 @@ export function POSProvider({ children }) {
       }
     })
 
-    // Listen for auth changes across tabs
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         const member = staff.find(s => s.auth_id === session.user.id)
